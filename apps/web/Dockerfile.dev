@@ -1,0 +1,28 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies
+RUN apk add --no-cache python3 make g++
+
+# Copy package files
+COPY package*.json pnpm-lock.yaml ./
+COPY apps/web/package.json ./apps/web/
+COPY packages/shared-kernel/package.json ./packages/shared-kernel/
+COPY packages/domain/package.json ./packages/domain/
+COPY packages/application/package.json ./packages/application/
+COPY packages/infrastructure/package.json ./packages/infrastructure/
+COPY packages/design-system/package.json ./packages/design-system/
+
+# Install pnpm
+RUN npm install -g pnpm@9.0.0
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy source code
+COPY . .
+
+EXPOSE 3000
+
+CMD ["pnpm", "run", "dev", "--filter=@aquasystem/web"]

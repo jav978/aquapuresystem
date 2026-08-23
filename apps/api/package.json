@@ -1,0 +1,60 @@
+{
+  "name": "@aquasystem/api",
+  "version": "0.0.0",
+  "description": "AquaSystem API - Feathers.js Backend",
+  "main": "dist/main.js",
+  "types": "dist/main.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@aquasystem/domain": "workspace:*",
+    "@aquasystem/application": "workspace:*",
+    "@aquasystem/infrastructure": "workspace:*",
+    "@aquasystem/shared-kernel": "workspace:*",
+    "@feathersjs/feathers": "^5.0.0",
+    "@feathersjs/socketio": "^5.0.0",
+    "@feathersjs/authentication": "^5.0.0",
+    "@feathersjs/authentication-local": "^5.0.0",
+    "@feathersjs/authentication-jwt": "^5.0.0",
+    "@prisma/client": "^5.10.0",
+    "inversify": "^6.0.0",
+    "reflect-metadata": "^0.2.0",
+    "bcryptjs": "^2.4.0",
+    "jsonwebtoken": "^9.0.0",
+    "ioredis": "^5.3.0",
+    "pino": "^8.19.0",
+    "zod": "^3.22.0",
+    "nodemailer": "^6.9.0",
+    "@aws-sdk/client-s3": "^3.500.0",
+    "helmet": "^7.1.0",
+    "cors": "^2.8.5",
+    "compression": "^1.7.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.0",
+    "@types/bcryptjs": "^2.4.0",
+    "@types/jsonwebtoken": "^9.0.0",
+    "@types/nodemailer": "^6.4.0",
+    "@types/cors": "^2.8.0",
+    "@types/compression": "^1.7.0",
+    "prisma": "^5.10.0",
+    "typescript": "^5.4.0",
+    "tsx": "^4.7.0",
+    "vitest": "^1.4.0",
+    "eslint": "^8.57.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

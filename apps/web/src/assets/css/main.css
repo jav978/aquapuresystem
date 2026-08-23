@@ -1,0 +1,150 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg: #f7f9fb;
+    --color-surface: #f7f9fb;
+    --color-surface-container: #eceef0;
+    --color-text: #191c1e;
+    --color-text-muted: #414755;
+    --color-border: #c1c6d7;
+    --color-primary: #0058bc;
+    --color-primary-hover: #004493;
+  }
+
+  .dark {
+    --color-bg: #191c1e;
+    --color-surface: #2d3133;
+    --color-surface-container: #3d4143;
+    --color-text: #eff1f3;
+    --color-text-muted: #c1c6d7;
+    --color-border: #484c4f;
+    --color-primary: #adc6ff;
+    --color-primary-hover: #d8e2ff;
+  }
+
+  * {
+    @apply border-outline-variant dark:border-outline-variant;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-background dark:bg-background-dark text-on-surface dark:text-on-surface-dark antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  ::selection {
+    @apply bg-primary/20 dark:bg-primary-dark/20 text-primary dark:text-primary-dark;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-surface dark:ring-offset-surface-dark;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary text-white hover:bg-primary/90 focus:ring-primary dark:bg-primary-dark dark:hover:bg-primary-dark/90 dark:focus:ring-primary-dark;
+  }
+
+  .btn-secondary {
+    @apply btn bg-transparent border border-primary text-primary hover:bg-primary/10 focus:ring-primary dark:border-primary-dark dark:text-primary-dark dark:hover:bg-primary-dark/10;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent text-primary hover:bg-primary/10 focus:ring-primary dark:text-primary-dark dark:hover:bg-primary-dark/10;
+  }
+
+  .btn-danger {
+    @apply btn bg-error text-white hover:bg-error/90 focus:ring-error dark:bg-error-dark dark:hover:bg-error-dark/90;
+  }
+
+  .btn-success {
+    @apply btn bg-success text-white hover:bg-success/90 focus:ring-success dark:bg-success-dark dark:hover:bg-success-dark/90;
+  }
+
+  .input {
+    @apply w-full bg-white dark:bg-surface-container border border-outline dark:border-outline-variant text-on-surface dark:text-on-surface placeholder-on-surface-variant dark:placeholder-on-surface-variant rounded-lg px-4 py-2 text-label-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .card {
+    @apply bg-surface dark:bg-surface-container rounded-xl border border-outline-variant dark:border-outline-variant shadow-level1 dark:shadow-level1;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-label-sm font-medium;
+  }
+
+  .badge-primary {
+    @apply badge bg-primary-container text-primary dark:bg-primary-container-dark dark:text-primary-dark;
+  }
+
+  .badge-success {
+    @apply badge bg-success-container text-success dark:bg-success-container-dark dark:text-success-dark;
+  }
+
+  .badge-warning {
+    @apply badge bg-warning-container text-warning dark:bg-warning-container-dark dark:text-warning-dark;
+  }
+
+  .badge-error {
+    @apply badge bg-error-container text-error dark:bg-error-container-dark dark:text-error-dark;
+  }
+
+  .badge-info {
+    @apply badge bg-tertiary-container text-tertiary dark:bg-tertiary-container-dark dark:text-tertiary-dark;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.outline') transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: theme('colors.outline');
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: theme('colors.on-surface-variant');
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-in {
+    animation: animateIn 0.3s ease-out forwards;
+  }
+
+  @keyframes animateIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

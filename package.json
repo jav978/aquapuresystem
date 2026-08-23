@@ -1,0 +1,41 @@
+{
+  "name": "aquasystem",
+  "private": true,
+  "version": "0.0.0",
+  "description": "AquaPure Pro - Water Purification Management System",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "db:generate": "turbo run db:generate --filter=@aquasystem/api",
+    "db:migrate": "turbo run db:migrate --filter=@aquasystem/api",
+    "db:seed": "turbo run db:seed --filter=@aquasystem/api",
+    "db:studio": "turbo run db:studio --filter=@aquasystem/api",
+    "format": "prettier --write \"**/*.{ts,tsx,vue,json,md,yml,yaml}\"",
+    "prepare": "husky install",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.0",
+    "@types/node": "^20.12.0",
+    "eslint": "^8.57.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.2.0",
+    "turbo": "^1.13.0",
+    "typescript": "^5.4.0"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "name": "@aquasystem/application",
+  "version": "0.0.0",
+  "description": "Application layer for AquaSystem - Use Cases and DTOs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./use-cases": {
+      "types": "./dist/use-cases/index.d.ts",
+      "import": "./dist/use-cases/index.js",
+      "require": "./dist/use-cases/index.js"
+    },
+    "./dto": {
+      "types": "./dist/dto/index.d.ts",
+      "import": "./dist/dto/index.js",
+      "require": "./dist/dto/index.js"
+    },
+    "./ports": {
+      "types": "./dist/ports/index.d.ts",
+      "import": "./dist/ports/index.js",
+      "require": "./dist/ports/index.js"
+    },
+    "./services": {
+      "types": "./dist/services/index.d.ts",
+      "import": "./dist/services/index.js",
+      "require": "./dist/services/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@aquasystem/domain": "workspace:*",
+    "@aquasystem/shared-kernel": "workspace:*",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^1.4.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

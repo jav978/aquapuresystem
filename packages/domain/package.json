@@ -1,0 +1,72 @@
+{
+  "name": "@aquasystem/domain",
+  "version": "0.0.0",
+  "description": "Domain layer for AquaSystem - Core Business Logic",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./entities": {
+      "types": "./dist/entities/index.d.ts",
+      "import": "./dist/entities/index.js",
+      "require": "./dist/entities/index.js"
+    },
+    "./value-objects": {
+      "types": "./dist/value-objects/index.d.ts",
+      "import": "./dist/value-objects/index.js",
+      "require": "./dist/value-objects/index.js"
+    },
+    "./aggregates": {
+      "types": "./dist/aggregates/index.d.ts",
+      "import": "./dist/aggregates/index.js",
+      "require": "./dist/aggregates/index.js"
+    },
+    "./domain-services": {
+      "types": "./dist/domain-services/index.d.ts",
+      "import": "./dist/domain-services/index.js",
+      "require": "./dist/domain-services/index.js"
+    },
+    "./events": {
+      "types": "./dist/events/index.d.ts",
+      "import": "./dist/events/index.js",
+      "require": "./dist/events/index.js"
+    },
+    "./repositories": {
+      "types": "./dist/repositories/index.d.ts",
+      "import": "./dist/repositories/index.js",
+      "require": "./dist/repositories/index.js"
+    },
+    "./specs": {
+      "types": "./dist/specs/index.d.ts",
+      "import": "./dist/specs/index.js",
+      "require": "./dist/specs/index.js"
+    },
+    "./exceptions": {
+      "types": "./dist/exceptions/index.d.ts",
+      "import": "./dist/exceptions/index.js",
+      "require": "./dist/exceptions/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@aquasystem/shared-kernel": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^1.4.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

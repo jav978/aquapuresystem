@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@aquasystem/shared-kernel": ["packages/shared-kernel/src"],
+      "@aquasystem/domain": ["packages/domain/src"],
+      "@aquasystem/application": ["packages/application/src"],
+      "@aquasystem/infrastructure": ["packages/infrastructure/src"],
+      "@aquasystem/design-system": ["packages/design-system/src"]
+    }
+  },
+  "exclude": ["node_modules", "dist", ".turbo", ".nuxt", ".output"]
+}

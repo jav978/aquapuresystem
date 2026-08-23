@@ -23,6 +23,8 @@ model User {
   sales         Sale[]
   invoices      Invoice[]
   activityLogs  ActivityLog[]
+  inventoryMovements InventoryMovement[]
+  returns       Return[]
 
   @@map("users")
 }
@@ -55,6 +57,7 @@ model Product {
   movements     InventoryMovement[]
   invoiceItems  InvoiceItem[]
   saleItems     SaleItem[]
+  returnItems   ReturnItem[]
 
   @@map("products")
 }
@@ -151,6 +154,7 @@ model Customer {
 
   sales       Sale[]
   invoices    Invoice[]
+  returns     Return[]
 
   @@map("customers")
 }
@@ -226,6 +230,7 @@ model Invoice {
   user          User          @relation(fields: [userId], references: [id])
   items         InvoiceItem[]
   payments      Payment[]
+  returns       Return[]
 
   @@map("invoices")
 }

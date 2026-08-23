@@ -2,6 +2,12 @@ import tailwindcss from '@nuxtjs/tailwindcss';
 import { defineNuxtConfig } from 'nuxt/config';
 
 export default defineNuxtConfig({
+  srcDir: 'src',
+
+  future: {
+    compatibilityVersion: 4,
+  },
+
   devtools: { enabled: true },
 
   modules: [

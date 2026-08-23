@@ -1,3 +1,5 @@
+import { Result } from './result';
+
 export type Option<T> =
   | { some: true; value: T }
   | { some: false; value: never };

@@ -2,6 +2,10 @@ import tailwindcss from '@nuxtjs/tailwindcss';
 import { defineNuxtConfig } from 'nuxt/config';
 
 export default defineNuxtConfig({
+  devServer: {
+    port: 3000,
+  },
+
   srcDir: 'src',
 
   future: {
@@ -32,17 +36,39 @@ export default defineNuxtConfig({
 
   app: {
     head: {
+      htmlAttrs: {
+        lang: 'es',
+      },
+      script: [
+        {
+          children: `(function() {
+            try {
+              var theme = localStorage.getItem('theme') || 'dark';
+              if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                document.documentElement.setAttribute('data-theme', 'dark');
+              } else {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('light');
+                document.documentElement.setAttribute('data-theme', 'light');
+              }
+            } catch (e) {}
+          })();`,
+          type: 'text/javascript',
+        },
+      ],
       title: 'AquaPure Pro',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'theme-color', content: '#f7f9fb' },
+        { name: 'theme-color', content: '#0b1326' },
         { name: 'description', content: 'AquaPure Pro - Water Purification Management System' },
       ],
       link: [
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
-        { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap' },
+        { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap' },
+        { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap' },
       ],
     },
   },

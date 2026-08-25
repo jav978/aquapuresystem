@@ -32,7 +32,10 @@ const badgeVariants = cva(
   }
 );
 
-interface Props extends VariantProps<typeof badgeVariants> {
+interface Props {
+  variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info';
+  size?: 'sm' | 'md' | 'lg';
+  dot?: boolean;
   dotColor?: string;
 }
 

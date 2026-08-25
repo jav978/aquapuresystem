@@ -17,7 +17,8 @@ const formFieldVariants = cva(
   }
 );
 
-interface Props extends VariantProps<typeof formFieldVariants> {
+interface Props {
+  layout?: 'vertical' | 'horizontal';
   label?: string;
   required?: boolean;
   hint?: string;

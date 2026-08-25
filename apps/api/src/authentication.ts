@@ -1,60 +1,67 @@
 import { AuthenticationService, JWTStrategy } from '@feathersjs/authentication';
 import { LocalStrategy } from '@feathersjs/authentication-local';
-import { expressOauth } from '@feathersjs/authentication-oauth';
-import { container, TYPES } from './infrastructure/config/di.container';
+import { NotAuthenticated } from '@feathersjs/errors';
+import bcrypt from 'bcryptjs';
+import { PrismaClient } from '@prisma/client';
 
-export const authentication = (app: any) => {
-  const config = app.get('authentication');
+class CustomLocalStrategy extends LocalStrategy {
+  async findEntity(email: string, params: any) {
+    if (!email) {
+      throw new NotAuthenticated('El correo electrónico es requerido');
+    }
+    const prisma: PrismaClient = this.app?.get('prisma');
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: email.toLowerCase() },
+          { email: email },
+        ],
+      },
+    });
 
-  // Register authentication service
-  app.use('/authentication', new AuthenticationService(app, config));
+    if (!user || !user.isActive) {
+      throw new NotAuthenticated('Credenciales incorrectas');
+    }
 
-  // Register JWT strategy
-  const jwtStrategy = new JWTStrategy();
-  app.authenticate('jwt', jwtStrategy);
-
-  // Register local strategy
-  const localStrategy = new LocalStrategy();
-  app.authenticate('local', localStrategy);
-
-  // Configure strategies
-  const jwtSecret = process.env.JWT_SECRET || config.secret;
-  const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET || config.refreshSecret;
-
-  // JWT Strategy options
-  app.set('jwtStrategy', {
-    name: 'jwt',
-    secret: jwtSecret,
-    expiresIn: process.env.JWT_EXPIRES_IN || '1h',
-  });
-
-  // Local Strategy options
-  app.set('localStrategy', {
-    name: 'local',
-    entity: 'user',
-    service: 'users',
-    usernameField: 'email',
-    passwordField: 'password',
-  });
-
-  // OAuth (optional - for future Google/Microsoft login)
-  if (config.oauth) {
-    app.configure(expressOauth());
+    return user;
   }
 
-  // Hook to validate JWT and attach user
-  app.hooks({
-    before: {
-      all: [
-        // Skip authentication for health check and auth endpoints
-        (context: any) => {
-          const skipPaths = ['/health', '/authentication'];
-          if (skipPaths.some((path) => context.path.startsWith(path))) {
-            return context;
-          }
-          return context;
-        },
-      ],
-    },
-  });
+  async comparePassword(entity: any, password: string) {
+    if (!entity.passwordHash) {
+      throw new NotAuthenticated('Credenciales incorrectas');
+    }
+    const isValid = await bcrypt.compare(password, entity.passwordHash);
+    if (!isValid) {
+      throw new NotAuthenticated('Credenciales incorrectas');
+    }
+    return entity;
+  }
+
+  async getEntity(result: any, params: any) {
+    const { passwordHash, ...userWithoutPassword } = result;
+    return userWithoutPassword;
+  }
+}
+
+class CustomJWTStrategy extends JWTStrategy {
+  async getEntity(id: string, params: any) {
+    const prisma: PrismaClient = this.app?.get('prisma');
+    const user = await prisma.user.findUnique({
+      where: { id },
+    });
+    if (!user || !user.isActive) {
+      throw new NotAuthenticated('Token inválido o usuario inactivo');
+    }
+    const { passwordHash, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  }
+}
+
+export const authentication = (app: any) => {
+  const authService = new AuthenticationService(app);
+
+  authService.register('jwt', new CustomJWTStrategy());
+  authService.register('local', new CustomLocalStrategy());
+
+  app.use('authentication', authService);
 };

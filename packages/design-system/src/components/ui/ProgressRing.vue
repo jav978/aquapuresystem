@@ -25,7 +25,9 @@ const progressRingVariants = cva(
   }
 );
 
-interface Props extends VariantProps<typeof progressRingVariants> {
+interface Props {
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  strokeWidth?: 'thin' | 'normal' | 'thick';
   value: number;
   max?: number;
   showValue?: boolean;

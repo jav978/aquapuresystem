@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { cva, type VariantProps } from 'class-variance-authority';
+import { cva } from 'class-variance-authority';
 import { computed, ref, watch } from 'vue';
 
 const tabsVariants = cva(
@@ -53,6 +53,8 @@ const emit = defineEmits<{
 
 const activeTab = ref(props.modelValue);
 const tabRefs = ref<HTMLElement[]>([]);
+const activeTabRef = ref<HTMLElement>();
+const indicatorRef = ref<HTMLElement>();
 
 const classes = computed(() => tabsVariants({ variant: props.variant, alignment: props.alignment }));
 
@@ -108,7 +110,7 @@ const handleKeydown = (event: KeyboardEvent, index: number) => {
 
 <template>
   <div :class="classes" role="tablist" :aria-label="props.variant === 'pills' ? 'Pill tabs' : 'Tabs'">
-    <div class="flex" :class="props.fullWidth ? 'w-full' : ''" :class="props.alignment">
+    <div class="flex" :class="[props.fullWidth ? 'w-full' : '', props.alignment]">
       <template v-for="(tab, index) in props.tabs" :key="tab.value">
         <button
           ref="tabRefs"
@@ -138,23 +140,3 @@ const handleKeydown = (event: KeyboardEvent, index: number) => {
     }" ref="indicatorRef"></div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed } from 'vue';
-
-const activeTabRef = ref<HTMLElement>();
-const indicatorRef = ref<HTMLElement>();
-
-const tabs = computed(() => props.tabs.filter((t) => !t.disabled));
-
-const activeTab = ref(props.modelValue);
-
-watch(() => props.modelValue, (val) => {
-  activeTab.value = val;
-});
-
-const selectTab = (tab: Tab) => {
-  if (tab.disabled) return;
-  activeTab.value = tab.value;
-};
-</script>

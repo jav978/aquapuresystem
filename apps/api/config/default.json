@@ -1,0 +1,30 @@
+{
+  "host": "localhost",
+  "port": 3030,
+  "public": "../public/",
+  "paginate": {
+    "default": 10,
+    "max": 50
+  },
+  "authentication": {
+    "entity": "user",
+    "entityId": "id",
+    "service": "users",
+    "secret": "aquapure-super-secret-jwt-key-min-32-chars-2026",
+    "refreshSecret": "aquapure-super-secret-refresh-jwt-key-min-32-chars-2026",
+    "authStrategies": ["jwt", "local"],
+    "jwtOptions": {
+      "header": {
+        "type": "access"
+      },
+      "audience": "https://aquasystem.com",
+      "issuer": "feathers",
+      "algorithm": "HS256",
+      "expiresIn": "8h"
+    },
+    "local": {
+      "usernameField": "email",
+      "passwordField": "password"
+    }
+  }
+}

@@ -37,7 +37,11 @@ const buttonVariants = cva(
   }
 );
 
-interface Props extends VariantProps<typeof buttonVariants> {
+interface Props {
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'warning';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  fullWidth?: boolean;
+  loading?: boolean;
   as?: 'button' | 'a' | 'router-link';
   to?: string;
   disabled?: boolean;

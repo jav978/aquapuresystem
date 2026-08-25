@@ -26,7 +26,9 @@ const modalVariants = cva(
   }
 );
 
-interface Props extends VariantProps<typeof modalVariants> {
+interface Props {
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+  fullScreen?: boolean;
   modelValue: boolean;
   title?: string;
   description?: string;

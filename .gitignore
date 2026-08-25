@@ -54,3 +54,4 @@ docker-compose.override.yml
 *.tgz
 .cache
 .temp
+skills-lock.json

@@ -103,7 +103,7 @@ const toggle = (value: string) => {
         @click="toggle(item.value)"
         :disabled="item.disabled"
         :aria-expanded="isOpen(item.value)"
-        :aria-controls=`panel-${item.value}`
+        :aria-controls="`panel-${item.value}`"
         class="w-full px-4 py-3 flex items-center justify-between text-left font-medium text-on-surface dark:text-on-surface hover:bg-surface-container-highest dark:hover:bg-surface-container-high transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <div class="flex items-center gap-3">

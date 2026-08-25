@@ -19,11 +19,11 @@ async function main() {
     },
   });
 
-  // Create admin user
+  // Create admin users
   const hashedPassword = await bcrypt.hash('admin123', 12);
   const admin = await prisma.user.upsert({
     where: { email: 'admin@aquasystem.com' },
-    update: {},
+    update: { passwordHash: hashedPassword, isActive: true },
     create: {
       email: 'admin@aquasystem.com',
       passwordHash: hashedPassword,
@@ -34,10 +34,23 @@ async function main() {
     },
   });
 
+  await prisma.user.upsert({
+    where: { email: 'admin@aquapure.com' },
+    update: { passwordHash: hashedPassword, isActive: true },
+    create: {
+      email: 'admin@aquapure.com',
+      passwordHash: hashedPassword,
+      firstName: 'Admin',
+      lastName: 'AquaPure',
+      role: Role.ADMIN,
+      isActive: true,
+    },
+  });
+
   // Create manager user
   const manager = await prisma.user.upsert({
     where: { email: 'manager@aquasystem.com' },
-    update: {},
+    update: { passwordHash: hashedPassword, isActive: true },
     create: {
       email: 'manager@aquasystem.com',
       passwordHash: hashedPassword,
@@ -51,7 +64,7 @@ async function main() {
   // Create operator user
   const operator = await prisma.user.upsert({
     where: { email: 'operator@aquasystem.com' },
-    update: {},
+    update: { passwordHash: hashedPassword, isActive: true },
     create: {
       email: 'operator@aquasystem.com',
       passwordHash: hashedPassword,

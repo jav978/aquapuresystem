@@ -26,7 +26,9 @@ const avatarVariants = cva(
   }
 );
 
-interface Props extends VariantProps<typeof avatarVariants> {
+interface Props {
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  shape?: 'circle' | 'square';
   src?: string;
   alt?: string;
   name?: string;

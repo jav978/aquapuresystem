@@ -75,6 +75,7 @@ export const container = new Container();
 
 // Core Services
 container.bind<PrismaService>(TYPES.PrismaService).to(PrismaService).inSingletonScope();
+container.bind<PrismaService>('PrismaService').to(PrismaService).inSingletonScope();
 
 // Repositories
 container.bind(TYPES.UserRepositoryPort).to(PrismaUserRepository).inRequestScope();

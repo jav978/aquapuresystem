@@ -30,18 +30,25 @@ export const useAuthStore = defineStore('auth', () => {
   const error = ref<string | null>(null);
 
   // Feathers client
+  const storage = typeof window !== 'undefined' ? window.localStorage : undefined;
+
   const socket = io(import.meta.env.NUXT_PUBLIC_WS_URL || 'ws://localhost:3030', {
     transports: ['websocket'],
-    autoConnect: false,
+    autoConnect: true,
+    reconnection: true,
+    reconnectionAttempts: 10,
+    reconnectionDelay: 1000,
   });
 
   const client = feathers();
   client.configure(socketio(socket));
-  client.configure(authentication({
-    storage: window.localStorage,
-    path: '/authentication',
-    jwtStrategy: 'jwt',
-  }));
+  if (storage) {
+    client.configure(authentication({
+      storage,
+      path: '/authentication',
+      jwtStrategy: 'jwt',
+    }));
+  }
 
   const isAuthenticated = computed(() => !!accessToken.value && !!user.value);
   const isAdmin = computed(() => user.value?.role === 'ADMIN');
@@ -58,7 +65,10 @@ export const useAuthStore = defineStore('auth', () => {
       if (authResult?.accessToken) {
         accessToken.value = authResult.accessToken;
         refreshToken.value = authResult.refreshToken;
-        await fetchUser();
+        user.value = authResult.user || null;
+        if (!user.value) {
+          await fetchUser();
+        }
       }
     } catch (err) {
       console.debug('No existing session');
@@ -71,7 +81,9 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = userData;
     } catch (err) {
       console.error('Failed to fetch user:', err);
-      logout();
+      if (!user.value) {
+        logout();
+      }
     }
   };
 
@@ -88,16 +100,16 @@ export const useAuthStore = defineStore('auth', () => {
 
       accessToken.value = authResult.accessToken;
       refreshToken.value = authResult.refreshToken;
+      user.value = authResult.user || null;
 
-      if (rememberMe) {
+      if (rememberMe && typeof localStorage !== 'undefined') {
         localStorage.setItem('rememberMe', 'true');
       }
 
-      await fetchUser();
-      toast.success('Welcome back!');
+      toast.success('¡Bienvenido!');
       router.push('/dashboard');
     } catch (err: any) {
-      error.value = err.message || 'Invalid credentials';
+      error.value = err.message || 'Credenciales inválidas';
       toast.error(error.value);
       throw err;
     } finally {
@@ -131,7 +143,9 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = null;
       accessToken.value = null;
       refreshToken.value = null;
-      localStorage.removeItem('rememberMe');
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('rememberMe');
+      }
       router.push('/login');
       toast.info('You have been logged out');
     }

@@ -1,5 +1,5 @@
 import { BaseFeathersService } from './base.service';
-import { container, TYPES } from '../config/di.container';
+import { container, TYPES } from '../../config/di.container';
 
 export class ReturnsService extends BaseFeathersService<any, any, any, any> {
   protected getUseCaseTokens() {

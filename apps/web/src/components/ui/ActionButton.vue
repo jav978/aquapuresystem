@@ -1,10 +1,18 @@
 <template>
-  <NuxtLink :to="to" class="block">
-    <div class="flex items-center gap-3 p-4 rounded-lg transition-all duration-200 hover:bg-surface-container-highest/50 dark:hover:bg-surface-container-high/50" :class="variantClasses">
-      <div :class="iconClasses" class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center">
-        <component :is="icon" class="w-5 h-5" />
+  <NuxtLink :to="to" class="block group">
+    <div
+      class="flex items-center gap-3 p-3.5 rounded-xl transition-all duration-200"
+      :class="variantClasses"
+    >
+      <div
+        :class="iconClasses"
+        class="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105"
+      >
+        <span v-if="typeof icon === 'string'" class="material-symbols-outlined text-[20px]">{{ icon }}</span>
+        <component v-else :is="icon" class="w-5 h-5" />
       </div>
-      <span class="text-label-md font-medium text-on-surface dark:text-on-surface">{{ label }}</span>
+      <span class="text-sm font-semibold text-on-surface group-hover:text-primary transition-colors">{{ label }}</span>
+      <span class="ml-auto material-symbols-outlined text-base text-on-surface-variant/40 group-hover:text-primary/60 transition-colors">chevron_right</span>
     </div>
   </NuxtLink>
 </template>
@@ -23,21 +31,22 @@ const props = withDefaults(defineProps<Props>(), {
   variant: 'primary',
 });
 
+// No borders — elevation through background color only
 const variantClasses = computed(() => {
   const variants: Record<string, string> = {
-    primary: 'bg-primary/10 dark:bg-primary-dark/10 border border-primary/20 dark:border-primary-dark/20',
-    secondary: 'bg-surface-container-highest dark:bg-surface-container-high border border-outline-variant dark:border-outline-variant',
-    ghost: 'bg-transparent border border-outline-variant dark:border-outline-variant',
+    primary:   'bg-primary/8 hover:bg-primary/14',
+    secondary: 'bg-surface-container hover:bg-surface-container-high',
+    ghost:     'bg-transparent hover:bg-surface-container',
   };
-  return variants[props.variant];
+  return variants[props.variant] || variants.primary;
 });
 
 const iconClasses = computed(() => {
   const variants: Record<string, string> = {
-    primary: 'bg-primary/10 dark:bg-primary-dark/10 text-primary dark:text-primary-dark',
-    secondary: 'bg-surface-container-high dark:bg-surface-container-high text-on-surface dark:text-on-surface',
-    ghost: 'bg-transparent text-on-surface-variant dark:text-on-surface-variant',
+    primary:   'bg-primary/15 text-primary',
+    secondary: 'bg-surface-container-high text-on-surface',
+    ghost:     'bg-surface-container text-on-surface-variant',
   };
-  return variants[props.variant];
-};
+  return variants[props.variant] || variants.primary;
+});
 </script>

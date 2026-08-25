@@ -1,5 +1,5 @@
 import { BaseFeathersService } from './base.service';
-import { container, TYPES } from '../config/di.container';
+import { container, TYPES } from '../../config/di.container';
 import { User } from '@aquasystem/domain';
 
 export class UsersService extends BaseFeathersService<User, any, any, any> {
@@ -28,6 +28,12 @@ export class UsersService extends BaseFeathersService<User, any, any, any> {
   }
 
   async get(id: string, params?: any): Promise<any> {
+    if (id === 'me') {
+      if (params?.user) {
+        return params.user;
+      }
+      throw new Error('No autenticado');
+    }
     return super.get(id, params);
   }
 

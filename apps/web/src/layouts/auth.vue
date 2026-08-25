@@ -24,5 +24,5 @@
 </template>
 
 <script setup lang="ts">
-import Card from '~/components/ui/Card.vue';
+import { Card } from '@aquasystem/design-system';
 </script>

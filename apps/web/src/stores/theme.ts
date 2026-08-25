@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia';
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 
 type Theme = 'light' | 'dark';
 
 export const useThemeStore = defineStore('theme', () => {
-  const theme = ref<Theme>('light');
-  const resolvedTheme = ref<Theme>('light');
+  const theme = ref<Theme>('dark');
+  const resolvedTheme = ref<Theme>('dark');
   let initialized = false;
 
   const init = () => {
@@ -14,8 +14,7 @@ export const useThemeStore = defineStore('theme', () => {
 
     if (import.meta.client) {
       const stored = localStorage.getItem('theme') as Theme | null;
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      theme.value = stored || (prefersDark ? 'dark' : 'light');
+      theme.value = stored || 'dark';
       applyTheme(theme.value);
 
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
@@ -29,24 +28,41 @@ export const useThemeStore = defineStore('theme', () => {
 
   const applyTheme = (t: Theme) => {
     resolvedTheme.value = t;
-    document.documentElement.classList.toggle('dark', t === 'dark');
-    document.documentElement.style.colorScheme = t;
+    theme.value = t;
+    if (typeof document !== 'undefined') {
+      if (t === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+        document.body?.classList.add('dark');
+        document.body?.classList.remove('light');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+        document.body?.classList.remove('dark');
+        document.body?.classList.add('light');
+      }
+      document.documentElement.setAttribute('data-theme', t);
+      document.documentElement.style.colorScheme = t;
 
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', t === 'dark' ? '#191c1e' : '#f7f9fb');
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', t === 'dark' ? '#0b1326' : '#f8fafc');
+      }
     }
   };
 
   const toggleTheme = () => {
-    theme.value = theme.value === 'light' ? 'dark' : 'light';
-    localStorage.setItem('theme', theme.value);
-    applyTheme(theme.value);
+    const nextTheme: Theme = resolvedTheme.value === 'dark' ? 'light' : 'dark';
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('theme', nextTheme);
+    }
+    applyTheme(nextTheme);
   };
 
   const setTheme = (t: Theme) => {
-    theme.value = t;
-    localStorage.setItem('theme', t);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('theme', t);
+    }
     applyTheme(t);
   };
 
@@ -63,5 +79,6 @@ export const useThemeStore = defineStore('theme', () => {
     toggleTheme,
     setTheme,
     init,
+    applyTheme,
   };
 });

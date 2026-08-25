@@ -103,10 +103,14 @@ cd "$PROJECT_ROOT/apps/api" && pnpm run db:migrate
 log_info "Seeding database..."
 cd "$PROJECT_ROOT/apps/api" && pnpm run db:seed
 
-# Function to cleanup on exit
+# Cleanup function to kill processes and free ports on exit
 cleanup() {
     log_info "Shutting down..."
     kill $(jobs -p) 2>/dev/null || true
+    if command -v fuser &> /dev/null; then
+        fuser -k 3030/tcp 2>/dev/null || true
+        fuser -k 3000/tcp 2>/dev/null || true
+    fi
     if [ "${USE_DOCKER}" = "true" ] && command -v docker &> /dev/null; then
         docker compose -f "$COMPOSE_FILE" stop postgres redis 2>/dev/null || true
     fi
@@ -114,14 +118,20 @@ cleanup() {
 }
 trap cleanup INT TERM EXIT
 
-# Start API in background
+# Ensure ports 3030 and 3000 are free before starting
+if command -v fuser &> /dev/null; then
+    fuser -k 3030/tcp 2>/dev/null || true
+    fuser -k 3000/tcp 2>/dev/null || true
+fi
+
+# Start API in background (port 3030)
 log_info "Starting API server (port 3030)..."
-cd "$PROJECT_ROOT/apps/api" && pnpm run dev &
+cd "$PROJECT_ROOT/apps/api" && PORT=3030 pnpm run dev &
 API_PID=$!
 
-# Start Web in background
+# Start Web in background (port 3000)
 log_info "Starting Web server (port 3000)..."
-cd "$PROJECT_ROOT/apps/web" && pnpm run dev &
+cd "$PROJECT_ROOT/apps/web" && PORT=3000 NITRO_PORT=3000 pnpm run dev &
 WEB_PID=$!
 
 # Wait for services
@@ -133,7 +143,7 @@ echo "=========================================="
 log_success "AquaSystem running in development mode!"
 echo "=========================================="
 echo ""
-echo "  Web (Nuxt 3):     http://localhost:3000"
+echo "  Web (Nuxt):       http://localhost:3000"
 echo "  API (Feathers):   http://localhost:3030"
 echo "  API Health:       http://localhost:3030/health"
 echo "  PostgreSQL:       localhost:5432"

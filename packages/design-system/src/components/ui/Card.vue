@@ -29,7 +29,10 @@ const cardVariants = cva(
   }
 );
 
-interface Props extends VariantProps<typeof cardVariants> {
+interface Props {
+  variant?: 'default' | 'elevated' | 'outlined';
+  padding?: 'none' | 'sm' | 'md' | 'lg';
+  hoverable?: boolean;
   as?: 'div' | 'article' | 'section';
 }
 

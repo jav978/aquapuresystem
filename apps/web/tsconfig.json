@@ -1,18 +1,10 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
-    "outDir": ".output",
-    "rootDir": "src",
-    "composite": true,
-    "tsBuildInfoFile": ".output/tsconfig.tsbuildinfo",
     "module": "ESNext",
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "bundler",
     "jsx": "preserve",
     "resolveJsonModule": true,
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
     "noEmit": true
-  },
-  "include": ["src/**/*", "nuxt.config.ts"],
-  "exclude": ["node_modules", ".output", "**/*.test.ts", "**/*.spec.ts"]
+  }
 }

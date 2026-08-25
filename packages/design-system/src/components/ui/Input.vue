@@ -25,7 +25,9 @@ const inputVariants = cva(
   }
 );
 
-interface Props extends VariantProps<typeof inputVariants> {
+interface Props {
+  size?: 'sm' | 'md' | 'lg';
+  state?: 'default' | 'error' | 'success';
   modelValue?: string;
   type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search';
   placeholder?: string;

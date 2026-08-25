@@ -1,38 +1,56 @@
 <template>
-  <Card class="p-4">
+  <div class="bg-surface-container/40 rounded-xl p-4 flex flex-col justify-between transition-all hover:bg-surface-container/70">
+    <!-- Header -->
     <div class="flex items-start justify-between mb-3">
       <div>
-        <p class="text-label-sm font-medium text-on-surface-variant dark:text-on-surface-variant">{{ tank.name }}</p>
-        <p class="text-label-sm text-on-surface-variant/70 dark:text-on-surface-variant/70">{{ formatNumber(tank.capacity) }} L capacity</p>
+        <p class="text-sm font-semibold text-on-surface">{{ tank.name }}</p>
+        <p class="text-xs text-on-surface-variant mt-0.5">{{ formatNumber(tank.capacity) }} L capacidad</p>
       </div>
-      <Badge :variant="statusVariant" :class="statusDot">{{ tank.status }}</Badge>
+      <!-- Status badge — no border, background only -->
+      <span
+        class="text-[11px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wide"
+        :class="{
+          'bg-billing-green/10 text-billing-green': tank.status === 'normal',
+          'bg-admin-gold/10 text-admin-gold': tank.status === 'warning',
+          'bg-error-red/10 text-error-red animate-pulse': tank.status === 'critical',
+        }"
+      >
+        {{ statusLabel }}
+      </span>
     </div>
 
-    <div class="relative h-24">
-      <ProgressRing
-        :value="tank.level"
-        :max="100"
-        size="md"
-        :strokeWidth="'normal'"
-        :showValue="true"
-        :label="tank.level + '%'"
-        :trackColor="trackColor"
-        :fillColor="fillColor"
-      />
+    <!-- Level Progress -->
+    <div class="space-y-1.5 my-2">
+      <div class="flex justify-between text-xs font-semibold">
+        <span class="text-on-surface-variant">Nivel</span>
+        <span :class="tank.status === 'critical' ? 'text-error-red' : tank.status === 'warning' ? 'text-admin-gold' : 'text-primary'">
+          {{ tank.level }}%
+        </span>
+      </div>
+      <!-- Progress bar track — no border -->
+      <div class="w-full h-2 bg-surface-container-highest/60 rounded-full overflow-hidden">
+        <div
+          class="h-full rounded-full transition-all duration-700 ease-out"
+          :class="{
+            'bg-primary': tank.status === 'normal',
+            'bg-admin-gold': tank.status === 'warning',
+            'bg-error-red': tank.status === 'critical',
+          }"
+          :style="{ width: `${tank.level}%` }"
+        />
+      </div>
     </div>
 
-    <div class="mt-3 pt-3 border-t border-outline-variant dark:border-outline-variant flex items-center justify-between text-label-sm">
-      <span class="text-on-surface-variant dark:text-on-surface-variant">Current</span>
-      <span class="font-medium text-on-surface dark:text-on-surface">{{ formatNumber(Math.round(tank.capacity * tank.level / 100)) }} L</span>
+    <!-- Footer info — subtle separator, no harsh border -->
+    <div class="mt-2 pt-2.5 flex items-center justify-between text-xs">
+      <span class="text-on-surface-variant/70">Volumen Actual</span>
+      <span class="font-bold text-on-surface">{{ formatNumber(Math.round(tank.capacity * tank.level / 100)) }} L</span>
     </div>
-  </Card>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import Card from '~/components/ui/Card.vue';
-import Badge from '~/components/ui/Badge.vue';
-import ProgressRing from '~/components/ui/ProgressRing.vue';
 import { formatNumber } from '@aquasystem/design-system';
 
 interface Props {
@@ -47,31 +65,12 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const statusVariant = computed(() => {
-  switch (props.tank.status) {
-    case 'critical': return 'error';
-    case 'warning': return 'warning';
-    default: return 'success';
-  }
-});
-
-const statusDot = computed(() => {
-  return props.tank.status === 'critical' ? 'animate-pulse' : '';
-});
-
-const trackColor = computed(() => {
-  switch (props.tank.status) {
-    case 'critical': return '#ba1a1a';
-    case 'warning': return '#8c5a00';
-    default: return 'var(--color-tertiary-container)';
-  }
-});
-
-const fillColor = computed(() => {
-  switch (props.tank.status) {
-    case 'critical': return '#ba1a1a';
-    case 'warning': return '#8c5a00';
-    default: return 'var(--color-primary)';
-  }
+const statusLabel = computed(() => {
+  const labels: Record<string, string> = {
+    normal:   'Normal',
+    warning:  'Alerta',
+    critical: 'Crítico',
+  };
+  return labels[props.tank.status] || props.tank.status;
 });
 </script>

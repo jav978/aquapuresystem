@@ -1,10 +1,10 @@
 <template>
-  <div class="w-full h-full" ref="chartRef"></div>
+  <canvas class="w-full h-full" ref="chartRef"></canvas>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, watch, nextTick } from 'vue';
-import * as Chart from 'chart.js/auto';
+import Chart from 'chart.js/auto';
 import { formatCurrency, formatDate } from '@aquasystem/design-system';
 
 interface Props {

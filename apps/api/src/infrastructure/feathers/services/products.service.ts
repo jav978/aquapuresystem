@@ -1,5 +1,5 @@
 import { BaseFeathersService } from './base.service';
-import { container, TYPES } from '../config/di.container';
+import { container, TYPES } from '../../config/di.container';
 import { Product } from '@aquasystem/domain';
 
 export class ProductsService extends BaseFeathersService<Product, any, any, any> {

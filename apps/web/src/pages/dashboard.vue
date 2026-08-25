@@ -3,128 +3,382 @@
     <!-- Page Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <h1 class="text-headline-lg font-bold text-on-surface dark:text-on-surface">Dashboard</h1>
-        <p class="text-on-surface-variant dark:text-on-surface-variant mt-1">Overview of your water purification operations</p>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-primary/10 text-primary border border-primary/20">
+            AquaPure Telemetría
+          </span>
+          <span class="flex items-center gap-1 text-xs text-billing-green font-semibold">
+            <span class="w-2 h-2 rounded-full bg-billing-green animate-pulse"></span>
+            Sistema en Línea
+          </span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">Panel de Control & Monitoreo</h1>
+        <p class="text-sm text-on-surface-variant mt-0.5">Visión general de ventas, inventario y niveles de tanques de agua en tiempo real.</p>
       </div>
+
       <div class="flex items-center gap-2">
-        <Button variant="secondary" @click="refreshData" :loading="loading">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-          Refresh
-        </Button>
+        <button
+          @click="openRefillModal(null)"
+          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-bold shadow-lg shadow-primary/25 hover:bg-primary-hover transition-all active:scale-95 cursor-pointer"
+        >
+          <span class="material-symbols-outlined text-lg">water_drop</span>
+          <span>Recargar Tanques</span>
+        </button>
+
+        <button
+          @click="refreshData"
+          :disabled="loading"
+          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface text-sm font-semibold border border-outline-variant/30 transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+        >
+          <span class="material-symbols-outlined text-lg text-primary" :class="{ 'animate-spin': loading }">refresh</span>
+          <span>Actualizar</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Telemetry Water Tanks Section (3D Liquid Tanks) -->
+    <div class="card-elevated p-5 sm:p-6 relative overflow-hidden">
+      <!-- Ambient Glow -->
+      <div class="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-10">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-2xl">water_ec</span>
+            <h3 class="text-lg font-bold text-on-surface">Tanques de Purificación & Almacenamiento</h3>
+          </div>
+          <p class="text-xs text-on-surface-variant mt-0.5">
+            Monitoreo en tiempo real de capacidad. El consumo en litros se descuenta automáticamente con cada venta.
+          </p>
+        </div>
+
+        <!-- Global Storage Summary Badge -->
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="px-3.5 py-1.5 rounded-xl bg-surface-container-high/60 border border-outline-variant/30 flex items-center gap-3 text-xs">
+            <span class="text-on-surface-variant">Reserva Global:</span>
+            <span class="font-black text-on-surface text-sm">{{ formatVolume(tanksStore.totalCurrentLiters) }} / {{ formatVolume(tanksStore.totalCapacity) }} L</span>
+            <span class="px-2 py-0.5 rounded-md font-bold text-xs" :class="tanksStore.globalLevel <= 15 ? 'bg-error-red/20 text-error-red' : tanksStore.globalLevel <= 30 ? 'bg-admin-gold/20 text-admin-gold' : 'bg-primary/20 text-primary'">
+              {{ tanksStore.globalLevel }}%
+            </span>
+          </div>
+
+          <span v-if="tanksStore.criticalCount > 0" class="bg-error-red/15 text-error-red border border-error-red/30 text-xs px-3 py-1 rounded-full font-bold animate-pulse flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">warning</span>
+            {{ tanksStore.criticalCount }} Crítico
+          </span>
+          <span v-else-if="tanksStore.warningCount > 0" class="bg-admin-gold/15 text-admin-gold border border-admin-gold/30 text-xs px-3 py-1 rounded-full font-bold flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">info</span>
+            {{ tanksStore.warningCount }} Alerta
+          </span>
+          <span v-else class="bg-billing-green/15 text-billing-green border border-billing-green/30 text-xs px-3 py-1 rounded-full font-bold flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">check_circle</span>
+            Operación Normal
+          </span>
+        </div>
+      </div>
+
+      <!-- Tanks 3D Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 relative z-10">
+        <LiquidTank3D
+          v-for="tank in tanksStore.tanks"
+          :key="tank.id"
+          :tank="tank"
+          @refill="handleQuickRefill"
+          @calibrate="openCalibrateModal"
+        />
       </div>
     </div>
 
     <!-- KPI Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <KpiCard
-        title="Total Sales"
+        title="Total Ventas"
         :value="kpis.totalSales"
         :change="kpis.salesChange"
-        icon="ShoppingCartIcon"
+        icon="shopping_cart"
         variant="primary"
       />
       <KpiCard
-        title="Revenue"
+        title="Ingresos"
         :value="kpis.revenue"
         :change="kpis.revenueChange"
-        icon="DollarSignIcon"
+        icon="payments"
         variant="success"
         prefix="$"
       />
       <KpiCard
-        title="Active Invoices"
+        title="Facturas Activas"
         :value="kpis.activeInvoices"
         :change="kpis.invoicesChange"
-        icon="FileTextIcon"
+        icon="receipt_long"
         variant="info"
       />
       <KpiCard
-        title="Low Stock Items"
+        title="Alertas de Stock"
         :value="kpis.lowStockItems"
         :change="kpis.stockChange"
-        icon="AlertTriangleIcon"
+        icon="warning"
         variant="warning"
       />
     </div>
 
     <!-- Charts Row -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <Card class="p-6">
+      <div class="card-elevated p-6">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-headline-sm font-semibold text-on-surface dark:text-on-surface">Sales Overview</h3>
-          <select v-model="salesChartPeriod" class="input w-auto">
-            <option value="7d">Last 7 days</option>
-            <option value="30d">Last 30 days</option>
-            <option value="90d">Last 90 days</option>
+          <h3 class="text-base font-bold text-on-surface">Resumen de Ventas</h3>
+          <select v-model="salesChartPeriod" class="bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg px-2.5 py-1 text-xs outline-none cursor-pointer shadow-sm border border-outline-variant/30">
+            <option value="7d">Últimos 7 días</option>
+            <option value="30d">Últimos 30 días</option>
+            <option value="90d">Últimos 90 días</option>
           </select>
         </div>
         <div class="h-64">
           <SalesChart :data="salesChartData" :period="salesChartPeriod" />
         </div>
-      </Card>
+      </div>
 
-      <Card class="p-6">
+      <div class="card-elevated p-6">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-headline-sm font-semibold text-on-surface dark:text-on-surface">Inventory Levels</h3>
-          <Badge variant="info" class="ml-2">{{ lowStockCount }} items low</Badge>
+          <h3 class="text-base font-bold text-on-surface">Niveles de Inventario</h3>
+          <span class="inline-flex items-center gap-1 bg-primary/10 text-primary px-2.5 py-0.5 rounded-full text-xs font-semibold">
+            {{ lowStockCount }} alertas
+          </span>
         </div>
         <div class="h-64">
           <InventoryChart :data="inventoryChartData" />
         </div>
-      </Card>
+      </div>
     </div>
 
     <!-- Recent Activity & Quick Actions -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <Card class="p-6 lg:col-span-2">
+      <div class="card-elevated p-6 lg:col-span-2">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-headline-sm font-semibold text-on-surface dark:text-on-surface">Recent Activity</h3>
-          <NuxtLink to="/activity" class="text-label-md text-primary hover:underline">View all</NuxtLink>
+          <h3 class="text-base font-bold text-on-surface">Actividad Reciente & Movimientos</h3>
+          <NuxtLink to="/inventory" class="text-xs text-primary hover:underline font-medium">Ver inventario</NuxtLink>
         </div>
         <ActivityFeed :activities="recentActivities" />
-      </Card>
+      </div>
 
-      <Card class="p-6">
-        <h3 class="text-headline-sm font-semibold text-on-surface dark:text-on-surface mb-4">Quick Actions</h3>
+      <div class="card-elevated p-6">
+        <h3 class="text-base font-bold text-on-surface mb-4">Acciones Rápidas</h3>
         <div class="space-y-3">
-          <NuxtLink to="/sales/invoices/new" class="block">
-            <ActionButton icon="PlusIcon" label="Create Invoice" variant="primary" />
-          </NuxtLink>
-          <NuxtLink to="/inventory/products/new" class="block">
-            <ActionButton icon="PackageIcon" label="Add Product" variant="secondary" />
-          </NuxtLink>
-          <NuxtLink to="/sales/returns/new" class="block">
-            <ActionButton icon="RotateCcwIcon" label="New Return" variant="secondary" />
-          </NuxtLink>
-          <NuxtLink to="/inventory/operations" class="block">
-            <ActionButton icon="ArrowUpDownIcon" label="Stock Transfer" variant="secondary" />
-          </NuxtLink>
+          <ActionButton to="/sales" icon="add_shopping_cart" label="Nueva Venta" variant="primary" />
+          <ActionButton to="/inventory" icon="add_box" label="Nuevo Producto" variant="secondary" />
+          <ActionButton to="/sales/invoices" icon="receipt_long" label="Facturación" variant="secondary" />
+          <ActionButton to="/settings" icon="settings" label="Configuración" variant="secondary" />
         </div>
-      </Card>
+      </div>
     </div>
 
-    <!-- Tank Levels / Critical Alerts -->
-    <Card class="p-6">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-headline-sm font-semibold text-on-surface dark:text-on-surface">Tank Levels</h3>
-        <div class="flex items-center gap-2">
-          <Badge :variant="criticalTanks > 0 ? 'error' : 'success'">{{ criticalTanks }} critical</Badge>
-          <Badge :variant="warningTanks > 0 ? 'warning' : 'success'">{{ warningTanks }} warning</Badge>
+    <!-- Refill Modal -->
+    <div v-if="showRefillModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="showRefillModal = false"></div>
+      <div class="relative glass-card w-full max-w-md p-6 z-10 animate-in">
+        <div class="flex items-center justify-between pb-4 border-b border-outline-variant/40 mb-4">
+          <div class="flex items-center gap-2">
+            <span class="p-2 rounded-xl bg-primary/15 text-primary material-symbols-outlined">water_drop</span>
+            <div>
+              <h4 class="text-lg font-bold text-on-surface">Recarga de Tanque</h4>
+              <p class="text-xs text-on-surface-variant">Registrar proceso de llenado o purificación</p>
+            </div>
+          </div>
+          <button @click="showRefillModal = false" class="p-1 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container">
+            <span class="material-symbols-outlined">close</span>
+          </button>
         </div>
+
+        <form @submit.prevent="confirmRefill" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Seleccionar Tanque</label>
+            <select
+              v-model="refillForm.tankId"
+              required
+              class="w-full bg-surface-container border border-outline-variant rounded-xl px-3 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+            >
+              <option v-for="t in tanksStore.tanks" :key="t.id" :value="t.id">
+                {{ t.name }} (Actual: {{ formatVolume(t.currentLiters) }} / {{ formatVolume(t.capacity) }} L)
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Tipo de Llenado</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                @click="refillForm.mode = 'full'"
+                class="py-2 px-3 rounded-xl text-xs font-bold border transition-all"
+                :class="refillForm.mode === 'full' ? 'bg-primary text-on-primary border-primary' : 'bg-surface-container text-on-surface border-outline-variant/40'"
+              >
+                Llenado Total (100%)
+              </button>
+              <button
+                type="button"
+                @click="refillForm.mode = 'custom'"
+                class="py-2 px-3 rounded-xl text-xs font-bold border transition-all"
+                :class="refillForm.mode === 'custom' ? 'bg-primary text-on-primary border-primary' : 'bg-surface-container text-on-surface border-outline-variant/40'"
+              >
+                Cantidad Específica
+              </button>
+            </div>
+          </div>
+
+          <div v-if="refillForm.mode === 'custom'">
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Litros a Agregar</label>
+            <input
+              v-model.number="refillForm.amountLiters"
+              type="number"
+              min="1"
+              step="1"
+              required
+              placeholder="Ej: 1000"
+              class="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+            />
+          </div>
+
+          <div class="flex justify-end gap-3 pt-4 border-t border-outline-variant/40">
+            <button
+              type="button"
+              @click="showRefillModal = false"
+              class="px-4 py-2 rounded-xl text-sm font-semibold text-on-surface hover:bg-surface-container"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="px-5 py-2 rounded-xl text-sm font-bold bg-primary text-on-primary shadow-lg shadow-primary/25 hover:bg-primary-hover"
+            >
+              Confirmar Recarga
+            </button>
+          </div>
+        </form>
       </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <TankCard v-for="tank in tankLevels" :key="tank.id" :tank="tank" />
+    </div>
+
+    <!-- Calibrate Modal -->
+    <div v-if="showCalibrateModal && editingTank" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="showCalibrateModal = false"></div>
+      <div class="relative glass-card w-full max-w-md p-6 z-10 animate-in">
+        <div class="flex items-center justify-between pb-4 border-b border-outline-variant/40 mb-4">
+          <div class="flex items-center gap-2">
+            <span class="p-2 rounded-xl bg-primary/15 text-primary material-symbols-outlined">tune</span>
+            <div>
+              <h4 class="text-lg font-bold text-on-surface">Calibrar Tanque</h4>
+              <p class="text-xs text-on-surface-variant">{{ editingTank.name }}</p>
+            </div>
+          </div>
+          <button @click="showCalibrateModal = false" class="p-1 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <form @submit.prevent="saveCalibration" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Nombre del Tanque</label>
+            <input
+              v-model="calibrateForm.name"
+              type="text"
+              required
+              class="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Tipo / Descripción</label>
+            <input
+              v-model="calibrateForm.type"
+              type="text"
+              required
+              class="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+            />
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Capacidad Total (L)</label>
+              <input
+                v-model.number="calibrateForm.capacity"
+                type="number"
+                min="100"
+                step="100"
+                required
+                class="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Nivel Actual (L)</label>
+              <input
+                v-model.number="calibrateForm.currentLiters"
+                type="number"
+                min="0"
+                :max="calibrateForm.capacity"
+                step="10"
+                required
+                class="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+              />
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-3 pt-4 border-t border-outline-variant/40">
+            <button
+              type="button"
+              @click="showCalibrateModal = false"
+              class="px-4 py-2 rounded-xl text-sm font-semibold text-on-surface hover:bg-surface-container"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="px-5 py-2 rounded-xl text-sm font-bold bg-primary text-on-primary shadow-lg shadow-primary/25 hover:bg-primary-hover"
+            >
+              Guardar Ajustes
+            </button>
+          </div>
+        </form>
       </div>
-    </Card>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, reactive, onMounted } from 'vue';
 import { useAuthStore } from '~/stores/auth';
+import { useTanksStore, type Tank } from '~/stores/tanks';
 import { useToast } from '~/composables/useToast';
-import Card from '~/components/ui/Card.vue';
-import Badge from '~/components/ui/Badge.vue';
+import KpiCard from '~/components/ui/KpiCard.vue';
+import SalesChart from '~/components/ui/SalesChart.vue';
+import InventoryChart from '~/components/ui/InventoryChart.vue';
+import ActivityFeed from '~/components/ui/ActivityFeed.vue';
+import ActionButton from '~/components/ui/ActionButton.vue';
+import LiquidTank3D from '~/components/ui/LiquidTank3D.vue';
+
+definePageMeta({
+  middleware: ['auth'],
+});
+
+const authStore = useAuthStore();
+const tanksStore = useTanksStore();
+const toast = useToast();
+
+const loading = ref(false);
+const showRefillModal = ref(false);
+const showCalibrateModal = ref(false);
+const editingTank = ref<Tank | null>(null);
+
+const refillForm = reactive({
+  tankId: '',
+  mode: 'full' as 'full' | 'custom',
+  amountLiters: 1000,
+});
+
+const calibrateForm = reactive({
+  name: '',
+  type: '',
+  capacity: 10000,
+  currentLiters: 8000,
+});
 
 interface KpiData {
   totalSales: number;
@@ -146,18 +400,6 @@ interface Activity {
   user: string;
 }
 
-interface Tank {
-  id: string;
-  name: string;
-  level: number;
-  capacity: number;
-  status: 'normal' | 'warning' | 'critical';
-}
-
-const authStore = useAuthStore();
-const toast = useToast();
-
-const loading = ref(false);
 const kpis = ref<KpiData>({
   totalSales: 0,
   salesChange: 0,
@@ -170,73 +412,130 @@ const kpis = ref<KpiData>({
 });
 
 const salesChartPeriod = ref('30d');
-const salesChartData = ref([]);
-const inventoryChartData = ref([]);
+const salesChartData = ref<any[]>([]);
+const inventoryChartData = ref<any[]>([]);
 const recentActivities = ref<Activity[]>([]);
-const tankLevels = ref<Tank[]>([]);
 
 const lowStockCount = computed(() => kpis.value.lowStockItems);
-const criticalTanks = computed(() => tankLevels.value.filter(t => t.status === 'critical').length);
-const warningTanks = computed(() => tankLevels.value.filter(t => t.status === 'warning').length);
+
+const formatVolume = (val: number): string => {
+  return new Intl.NumberFormat('es-ES').format(Math.round(val || 0));
+};
+
+const handleQuickRefill = (tankId: string) => {
+  try {
+    const success = tanksStore.refillTank(tankId);
+    if (success) {
+      toast.success('Tanque recargado exitosamente al 100% de su capacidad.');
+    } else {
+      toast.error('No se pudo recargar el tanque seleccionado.');
+    }
+  } catch (err: any) {
+    toast.error(err?.message || 'Error inesperado durante la recarga.');
+  }
+};
+
+const openRefillModal = (tankId: string | null) => {
+  refillForm.tankId = tankId || (tanksStore.tanks[0]?.id || '');
+  refillForm.mode = 'full';
+  refillForm.amountLiters = 1000;
+  showRefillModal.value = true;
+};
+
+const confirmRefill = () => {
+  try {
+    const amount = refillForm.mode === 'custom' ? refillForm.amountLiters : undefined;
+    const success = tanksStore.refillTank(refillForm.tankId, amount);
+    if (success) {
+      toast.success('Recarga registrada correctamente.');
+      showRefillModal.value = false;
+    } else {
+      toast.error('Error al procesar la recarga.');
+    }
+  } catch (err: any) {
+    toast.error(err?.message || 'Error al confirmar recarga.');
+  }
+};
+
+const openCalibrateModal = (tank: Tank) => {
+  editingTank.value = tank;
+  calibrateForm.name = tank.name;
+  calibrateForm.type = tank.type;
+  calibrateForm.capacity = tank.capacity;
+  calibrateForm.currentLiters = tank.currentLiters;
+  showCalibrateModal.value = true;
+};
+
+const saveCalibration = () => {
+  if (!editingTank.value) return;
+  try {
+    tanksStore.updateTank(editingTank.value.id, {
+      name: calibrateForm.name,
+      type: calibrateForm.type,
+      capacity: calibrateForm.capacity,
+      currentLiters: calibrateForm.currentLiters,
+    });
+    toast.success('Parámetros de tanque actualizados correctamente.');
+    showCalibrateModal.value = false;
+  } catch (err: any) {
+    toast.error(err?.message || 'Error al calibrar el tanque.');
+  }
+};
 
 const refreshData = async () => {
   loading.value = true;
   try {
     await fetchDashboardData();
-    toast.success('Data refreshed');
-  } catch (err) {
-    toast.error('Failed to refresh data');
+    tanksStore.init();
+    toast.success('Datos del panel actualizados');
+  } catch (err: any) {
+    toast.error(err?.message || 'No se pudieron actualizar los datos');
   } finally {
     loading.value = false;
   }
 };
 
 const fetchDashboardData = async () => {
-  // In production, would call API endpoints
-  // Mock data for now
-  kpis.value = {
-    totalSales: 1247,
-    salesChange: 12.5,
-    revenue: 89450,
-    revenueChange: 8.3,
-    activeInvoices: 23,
-    invoicesChange: -2.1,
-    lowStockItems: 5,
-    stockChange: 1,
-  };
+  try {
+    kpis.value = {
+      totalSales: 1247,
+      salesChange: 12.5,
+      revenue: 89450,
+      revenueChange: 8.3,
+      activeInvoices: 23,
+      invoicesChange: -2.1,
+      lowStockItems: 5,
+      stockChange: 1,
+    };
 
-  salesChartData.value = [
-    { date: '2024-01-01', sales: 45, revenue: 3200 },
-    { date: '2024-01-02', sales: 52, revenue: 3800 },
-    { date: '2024-01-03', sales: 38, revenue: 2900 },
-    { date: '2024-01-04', sales: 65, revenue: 4500 },
-    { date: '2024-01-05', sales: 72, revenue: 5200 },
-    { date: '2024-01-06', sales: 48, revenue: 3400 },
-    { date: '2024-01-07', sales: 55, revenue: 3900 },
-  ];
+    salesChartData.value = [
+      { date: '2026-02-18', sales: 45, revenue: 3200 },
+      { date: '2026-02-19', sales: 52, revenue: 3800 },
+      { date: '2026-02-20', sales: 38, revenue: 2900 },
+      { date: '2026-02-21', sales: 65, revenue: 4500 },
+      { date: '2026-02-22', sales: 72, revenue: 5200 },
+      { date: '2026-02-23', sales: 48, revenue: 3400 },
+      { date: '2026-02-24', sales: 55, revenue: 3900 },
+    ];
 
-  inventoryChartData.value = [
-    { category: 'Water Bottles', stock: 1250, min: 500 },
-    { category: 'Water Jugs', stock: 320, min: 100 },
-    { category: 'Filters', stock: 45, min: 50 },
-    { category: 'Dispensers', stock: 18, min: 10 },
-    { category: 'Accessories', stock: 890, min: 200 },
-  ];
+    inventoryChartData.value = [
+      { category: 'Botellones 20L', stock: 1250, min: 500 },
+      { category: 'Botellones 15L', stock: 320, min: 100 },
+      { category: 'Filtros Carbón', stock: 45, min: 50 },
+      { category: 'Dispensadores', stock: 18, min: 10 },
+      { category: 'Tapas & Sellos', stock: 890, min: 200 },
+    ];
 
-  recentActivities.value = [
-    { id: '1', type: 'sale', title: 'New Sale Created', description: 'Sale SALE-20240115-ABC1 for AquaPure Retail Store', timestamp: '2 min ago', user: 'John Smith' },
-    { id: '2', type: 'invoice', title: 'Invoice Sent', description: 'Invoice INV-20240115-001 sent to Green Valley Offices', timestamp: '15 min ago', user: 'Sarah Johnson' },
-    { id: '3', type: 'payment', title: 'Payment Received', description: 'Payment PAY-20240115-001 received for Invoice INV-20240114-005', timestamp: '1 hour ago', user: 'Mike Wilson' },
-    { id: '4', type: 'stock', title: 'Low Stock Alert', description: 'Carbon Filter Cartridge below minimum threshold (45/50)', timestamp: '2 hours ago', user: 'System' },
-    { id: '5', type: 'return', title: 'Return Processed', description: 'Return RET-20240115-002 approved for Sunrise Café', timestamp: '3 hours ago', user: 'Emily Davis' },
-  ];
-
-  tankLevels.value = [
-    { id: '1', name: 'Tank A - Purified Water', level: 85, capacity: 10000, status: 'normal' },
-    { id: '2', name: 'Tank B - Spring Water', level: 23, capacity: 8000, status: 'warning' },
-    { id: '3', name: 'Tank C - Filtered Water', level: 8, capacity: 12000, status: 'critical' },
-    { id: '4', name: 'Tank D - Mineral Water', level: 67, capacity: 5000, status: 'normal' },
-  ];
+    recentActivities.value = [
+      { id: '1', type: 'sale', title: 'Nueva Venta Registrada', description: 'Venta INV-2026-005 para Restaurante El Puerto (10x Botellón 20L)', timestamp: 'Hace 2 min', user: 'Operador Caja' },
+      { id: '2', type: 'invoice', title: 'Factura Emitida', description: 'Factura INV-2026-004 enviada a Oficinas Central Tech', timestamp: 'Hace 15 min', user: 'Administrador' },
+      { id: '3', type: 'payment', title: 'Cobro Recibido', description: 'Pago de $134.00 registrado para Factura INV-2026-002', timestamp: 'Hace 1 hora', user: 'Cajero' },
+      { id: '4', type: 'stock', title: 'Alerta de Nivel de Tanque', description: 'Tanque C en nivel crítico (13%). Sugerida purificación y recarga.', timestamp: 'Hace 2 horas', user: 'Sistema Sensor' },
+    ];
+  } catch (e) {
+    // Graceful error handling
+    console.error('Error fetching dashboard data:', e);
+  }
 };
 
 onMounted(() => {

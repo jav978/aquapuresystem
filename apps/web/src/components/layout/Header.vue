@@ -13,13 +13,13 @@
     <div class="flex-1 max-w-md">
       <div
         @click="showSearchModal = true"
-        class="relative flex items-center bg-surface-container/60 hover:bg-surface-container-high rounded-xl px-4 py-2 transition-all cursor-pointer group shadow-sm"
+        class="relative flex items-center bg-surface-container-high/80 hover:bg-surface-container-highest dark:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-xl px-4 py-2 transition-all cursor-pointer group shadow-sm ring-1 ring-black/5 dark:ring-white/10"
       >
-        <span class="material-symbols-outlined text-on-surface-variant mr-3 text-lg group-hover:text-primary transition-colors">search</span>
-        <span class="text-on-surface-variant/70 text-sm flex-1 truncate select-none">
+        <span class="material-symbols-outlined text-primary mr-3 text-lg group-hover:scale-110 transition-transform">search</span>
+        <span class="text-on-surface-variant font-medium text-sm flex-1 truncate select-none">
           Buscar productos, clientes, facturas...
         </span>
-        <kbd class="hidden sm:inline-flex items-center gap-0.5 px-2 py-0.5 text-[10px] font-mono bg-surface-container-highest/60 text-on-surface-variant rounded shadow-inner">
+        <kbd class="hidden sm:inline-flex items-center gap-0.5 px-2 py-0.5 text-[10px] font-mono font-semibold bg-surface-container-lowest/80 text-on-surface-variant rounded shadow-sm">
           Ctrl K
         </kbd>
       </div>
@@ -27,6 +27,9 @@
 
     <!-- Trailing Actions & Profile -->
     <div class="flex items-center gap-2 sm:gap-3 ml-4">
+      <!-- 30-Day Subscription Pill -->
+      <LicenseModal />
+
       <!-- Dark/Light Theme Toggle -->
       <button
         @click="toggleTheme"
@@ -337,6 +340,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '~/stores/auth';
 import { useThemeStore } from '~/stores/theme';
+import { useLicenseStore } from '~/stores/license';
+import LicenseModal from '~/components/layout/LicenseModal.vue';
 
 const props = defineProps<{
   menuOpen: boolean;
@@ -349,6 +354,11 @@ const emit = defineEmits<{
 const router = useRouter();
 const authStore = useAuthStore();
 const themeStore = useThemeStore();
+const licenseStore = useLicenseStore();
+
+if (import.meta.client) {
+  licenseStore.init();
+}
 
 const showUserMenu = ref(false);
 const showNotifications = ref(false);

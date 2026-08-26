@@ -1,5 +1,15 @@
 <template>
-  <div class="relative flex flex-col justify-between bg-surface-container-high/40 hover:bg-surface-container-high/70 rounded-2xl p-4 md:p-5 transition-all duration-300 shadow-card hover:shadow-card-hover group border-0">
+  <div
+    @click="$emit('select', tank.id)"
+    class="relative flex flex-col justify-between rounded-2xl p-4 md:p-5 transition-all duration-300 shadow-card hover:shadow-card-hover group border-0 cursor-pointer"
+    :class="selected ? 'bg-surface-container-high/90 ring-2 ring-primary shadow-primary/20 shadow-xl' : 'bg-surface-container-high/40 hover:bg-surface-container-high/70'"
+  >
+    <!-- Selected Active Indicator Pin -->
+    <div v-if="selected" class="absolute -top-2.5 right-4 px-2.5 py-0.5 rounded-full bg-primary text-on-primary text-[10px] font-extrabold shadow-md flex items-center gap-1 z-30">
+      <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+      Monitoreando
+    </div>
+
     <!-- Header -->
     <div class="flex items-start justify-between gap-2 mb-3">
       <div>
@@ -118,7 +128,7 @@
       <!-- Actions -->
       <div class="pt-1 flex items-center gap-2">
         <button
-          @click="$emit('refill', tank.id)"
+          @click.stop="$emit('refill', tank.id)"
           type="button"
           class="flex-1 py-1.5 px-3 rounded-xl text-xs font-bold bg-primary/10 hover:bg-primary text-primary hover:text-on-primary transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer shadow-sm border-0"
         >
@@ -127,10 +137,10 @@
         </button>
 
         <button
-          @click="$emit('calibrate', tank)"
+          @click.stop="$emit('calibrate', tank)"
           type="button"
           title="Ajustar / Calibrar"
-          class="p-1.5 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all cursor-pointer border-0 bg-surface-container/50"
+          class="p-1.5 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all cursor-pointer border-0 bg-surface-container/50 shadow-sm"
         >
           <span class="material-symbols-outlined text-sm">tune</span>
         </button>
@@ -145,10 +155,15 @@ import type { Tank } from '~/stores/tanks';
 
 interface Props {
   tank: Tank;
+  selected?: boolean;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  selected: false,
+});
+
 defineEmits<{
+  (e: 'select', tankId: string): void;
   (e: 'refill', tankId: string): void;
   (e: 'calibrate', tank: Tank): void;
 }>();

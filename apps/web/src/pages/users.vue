@@ -237,7 +237,8 @@
         </div>
 
         <!-- Modal Error Message -->
-        <div v-if="modalError" class="mb-4 p-3 rounded-xl bg-error-red/10 border border-error-red/30 text-error-red text-xs font-semibold flex items-center gap-2">
+        <!-- Inline Form Error Alert -->
+        <div v-if="modalError" class="mb-4 p-3 rounded-xl bg-error-red/10 text-error-red text-xs font-semibold flex items-center gap-2">
           <span class="material-symbols-outlined text-base">error</span>
           <span>{{ modalError }}</span>
         </div>
@@ -251,7 +252,7 @@
                 type="text"
                 required
                 placeholder="Ej: Elena"
-                class="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
               />
             </div>
             <div>
@@ -261,7 +262,7 @@
                 type="text"
                 required
                 placeholder="Ej: Castillo"
-                class="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
               />
             </div>
           </div>
@@ -273,7 +274,7 @@
               type="email"
               required
               placeholder="elena.c@aquapure.com"
-              class="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+              class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
             />
           </div>
 
@@ -282,7 +283,8 @@
               <label class="block text-xs font-semibold text-on-surface-variant mb-1">Rol en el Sistema *</label>
               <select
                 v-model="userForm.role"
-                class="w-full bg-surface-container border border-outline-variant rounded-xl px-3 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                required
+                class="w-full bg-surface-container border-0 rounded-xl px-3 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
               >
                 <option value="ADMIN">Administrador</option>
                 <option value="MANAGER">Supervisor</option>
@@ -293,7 +295,8 @@
               <label class="block text-xs font-semibold text-on-surface-variant mb-1">Estado de la Cuenta *</label>
               <select
                 v-model="userForm.isActive"
-                class="w-full bg-surface-container border border-outline-variant rounded-xl px-3 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                required
+                class="w-full bg-surface-container border-0 rounded-xl px-3 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
               >
                 <option :value="true">Activo</option>
                 <option :value="false">Inactivo</option>
@@ -308,7 +311,7 @@
               type="password"
               required
               placeholder="••••••••"
-              class="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+              class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
             />
           </div>
 
@@ -475,80 +478,87 @@ const openEditModal = (user: UserItem) => {
 
 const saveUser = () => {
   modalError.value = null;
-  try {
-    const validated = UserSchema.parse({
-      firstName: userForm.firstName,
-      lastName: userForm.lastName,
-      email: userForm.email,
-      role: userForm.role,
-      isActive: userForm.isActive,
-    });
+  const cleaned = sanitizeFormData(userForm);
 
-    const initials = `${validated.firstName.charAt(0)}${validated.lastName.charAt(0)}`.toUpperCase();
-    const fullName = `${validated.firstName} ${validated.lastName}`;
+  const fNameErr = validateRequired(cleaned.firstName, 'El nombre');
+  if (fNameErr) {
+    modalError.value = fNameErr;
+    return;
+  }
 
-    if (isEditing.value && editingUserId.value) {
-      const userIndex = users.value.findIndex((u) => u.id === editingUserId.value);
-      if (userIndex !== -1) {
-        users.value[userIndex] = {
-          ...users.value[userIndex],
-          firstName: validated.firstName,
-          lastName: validated.lastName,
-          fullName,
-          email: validated.email,
-          role: validated.role,
-          isActive: validated.isActive,
-          initials,
-        };
-        toast.success(`Usuario ${fullName} actualizado exitosamente.`);
-      }
-    } else {
-      const newId = `user-${Date.now()}`;
-      users.value.unshift({
-        id: newId,
-        firstName: validated.firstName,
-        lastName: validated.lastName,
-        fullName,
-        email: validated.email,
-        role: validated.role,
-        isActive: validated.isActive,
-        lastAccess: 'Recién creado',
-        initials,
-      });
-      toast.success(`Usuario ${fullName} registrado exitosamente.`);
-    }
+  const lNameErr = validateRequired(cleaned.lastName, 'El apellido');
+  if (lNameErr) {
+    modalError.value = lNameErr;
+    return;
+  }
 
-    showUserModal.value = false;
-  } catch (err: any) {
-    if (err instanceof z.ZodError) {
-      const msg = err.errors.map((e) => e.message).join(' | ');
-      modalError.value = msg;
-      toast.error(msg);
-    } else {
-      const msg = err?.message || 'Error al guardar usuario.';
-      modalError.value = msg;
-      toast.error(msg);
+  const emailErr = validateEmail(cleaned.email);
+  if (emailErr) {
+    modalError.value = emailErr;
+    return;
+  }
+
+  if (!isEditing.value) {
+    const passErr = validatePassword(cleaned.password, 6);
+    if (passErr) {
+      modalError.value = passErr;
+      return;
     }
   }
+
+  const initials = `${cleaned.firstName.charAt(0)}${cleaned.lastName.charAt(0)}`.toUpperCase();
+  const fullName = `${cleaned.firstName} ${cleaned.lastName}`;
+
+  if (isEditing.value && editingUserId.value) {
+    const userIndex = users.value.findIndex((u) => u.id === editingUserId.value);
+    if (userIndex !== -1) {
+      users.value[userIndex] = {
+        ...users.value[userIndex],
+        firstName: cleaned.firstName,
+        lastName: cleaned.lastName,
+        fullName,
+        email: cleaned.email,
+        role: cleaned.role,
+        isActive: cleaned.isActive,
+        initials,
+      };
+      toast.updateSuccess('Usuario', `Usuario ${fullName} actualizado exitosamente.`);
+    }
+  } else {
+    // Check duplicate email
+    if (users.value.some(u => u.email.toLowerCase() === cleaned.email.toLowerCase())) {
+      modalError.value = 'Ya existe un usuario con este correo electrónico.';
+      return;
+    }
+
+    const newId = `user-${Date.now()}`;
+    users.value.unshift({
+      id: newId,
+      firstName: cleaned.firstName,
+      lastName: cleaned.lastName,
+      fullName,
+      email: cleaned.email,
+      role: cleaned.role,
+      isActive: cleaned.isActive,
+      lastAccess: 'Recién creado',
+      initials,
+    });
+    toast.createSuccess('Usuario', `Usuario ${fullName} registrado exitosamente.`);
+  }
+
+  showUserModal.value = false;
 };
 
 const toggleUserStatus = (user: UserItem) => {
-  try {
-    user.isActive = !user.isActive;
-    toast.success(
-      `Usuario ${user.fullName} ${user.isActive ? 'activado' : 'desactivado'} correctamente.`
-    );
-  } catch (err: any) {
-    toast.error('Error al cambiar el estado del usuario.');
-  }
+  user.isActive = !user.isActive;
+  toast.info(
+    'Estado de usuario',
+    `Usuario ${user.fullName} ${user.isActive ? 'activado' : 'desactivado'} correctamente.`
+  );
 };
 
 const deleteUser = (user: UserItem) => {
-  try {
-    users.value = users.value.filter((u) => u.id !== user.id);
-    toast.success(`Usuario ${user.fullName} eliminado.`);
-  } catch (err: any) {
-    toast.error('Error al eliminar usuario.');
-  }
+  users.value = users.value.filter((u) => u.id !== user.id);
+  toast.deleteSuccess('Usuario', `Usuario ${user.fullName} eliminado.`);
 };
 </script>

@@ -2,6 +2,7 @@
   "name": "@aquasystem/api",
   "version": "0.0.0",
   "description": "AquaSystem API - Feathers.js Backend",
+  "license": "MIT",
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
   "scripts": {

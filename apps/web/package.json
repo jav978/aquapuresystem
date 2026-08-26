@@ -2,6 +2,7 @@
   "name": "@aquasystem/web",
   "version": "0.0.0",
   "description": "AquaSystem Web - Nuxt 4 Frontend",
+  "license": "MIT",
   "type": "module",
   "private": true,
   "scripts": {

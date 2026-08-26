@@ -1,77 +1,88 @@
 <template>
-  <div class="flex flex-col gap-space-lg">
+  <div class="flex flex-col gap-6 animate-in">
     <!-- Header Section -->
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-space-md">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <h2 class="font-headline-lg text-2xl md:text-3xl font-bold text-on-surface tracking-tight">Listado de Inventario</h2>
-        <p class="font-body-md text-sm md:text-base text-on-surface-variant mt-1">Gestión detallada de productos, stock y alertas tempranas.</p>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">Control de Inventario & Stock</h2>
+        <p class="text-sm text-on-surface-variant mt-1">Gestión en tiempo real de existencias, insumos y catálogo de purificación.</p>
       </div>
-      <button
-        @click="showCreateModal = true"
-        class="bg-primary text-on-primary font-label-md text-sm px-space-lg py-space-sm rounded-lg flex items-center gap-space-sm glow-cyan-hover transition-all font-semibold shadow-lg shadow-primary/20 cursor-pointer active:scale-95"
-      >
-        <span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
-        Nuevo Producto
-      </button>
+
+      <div class="flex gap-3">
+        <button
+          @click="openCreateModal"
+          class="bg-primary text-on-primary font-bold text-sm px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 glow-cyan-hover transition-all shadow-lg shadow-primary/25 cursor-pointer active:scale-95"
+        >
+          <span class="material-symbols-outlined text-lg">add_box</span>
+          Nuevo Producto
+        </button>
+      </div>
     </div>
 
-    <!-- KPIs Bento Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+    <!-- Inventory KPIs (3 Cards) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <!-- KPI 1: Valor Total -->
-      <div class="card-elevated p-space-lg flex flex-col justify-between relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
-        <div class="flex justify-between items-start mb-space-md">
-          <span class="font-label-md text-sm text-on-surface-variant">Valor Total Inventario</span>
-          <span class="p-2 bg-surface-container-highest rounded-lg text-primary flex items-center justify-center">
-            <span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+      <div class="card-elevated p-6 flex flex-col justify-between relative overflow-hidden">
+        <div class="flex justify-between items-start mb-4">
+          <span class="text-sm font-semibold text-on-surface-variant">Valor Total Inventario</span>
+          <span class="p-2 bg-primary/10 rounded-xl text-primary flex items-center justify-center">
+            <span class="material-symbols-outlined">account_balance_wallet</span>
           </span>
         </div>
         <div>
-          <h3 class="font-headline-xl text-3xl md:text-4xl font-bold text-on-surface tracking-tight">$45,230.50</h3>
-          <p class="font-label-sm text-xs text-billing-green mt-2 flex items-center gap-1 font-medium">
-            <span class="material-symbols-outlined text-[14px]" data-icon="trending_up">trending_up</span>
-            +2.4% vs mes anterior
+          <h3 class="text-3xl font-extrabold text-on-surface tracking-tight">${{ totalInventoryValue.toLocaleString('es-LA', { minimumFractionDigits: 2 }) }}</h3>
+          <p class="text-xs text-billing-green mt-2 flex items-center gap-1 font-semibold">
+            <span class="material-symbols-outlined text-sm">trending_up</span>
+            Catálogo activo y valorizado
           </p>
         </div>
       </div>
 
       <!-- KPI 2: Total SKUs -->
-      <div class="card-elevated p-space-lg flex flex-col justify-between relative overflow-hidden">
-        <div class="flex justify-between items-start mb-space-md">
-          <span class="font-label-md text-sm text-on-surface-variant">Total SKUs Activos</span>
-          <span class="p-2 bg-surface-container-highest rounded-lg text-primary flex items-center justify-center">
-            <span class="material-symbols-outlined" data-icon="category">category</span>
+      <div class="card-elevated p-6 flex flex-col justify-between relative overflow-hidden">
+        <div class="flex justify-between items-start mb-4">
+          <span class="text-sm font-semibold text-on-surface-variant">Total SKUs en Catálogo</span>
+          <span class="p-2 bg-primary/10 rounded-xl text-primary flex items-center justify-center">
+            <span class="material-symbols-outlined">category</span>
           </span>
         </div>
         <div>
-          <h3 class="font-headline-xl text-3xl md:text-4xl font-bold text-on-surface tracking-tight">{{ totalSkusCount }}</h3>
-          <p class="font-label-sm text-xs text-on-surface-variant mt-2">Productos en catálogo</p>
+          <h3 class="text-3xl font-extrabold text-on-surface tracking-tight">{{ products.length }}</h3>
+          <p class="text-xs text-on-surface-variant mt-2">Productos registrados</p>
         </div>
       </div>
 
       <!-- KPI 3: Alertas de Stock -->
-      <div class="card-elevated p-space-lg flex flex-col justify-between relative overflow-hidden border-error-red/20">
-        <div class="absolute top-0 right-0 w-32 h-32 bg-error-red/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
-        <div class="flex justify-between items-start mb-space-md">
-          <span class="font-label-md text-sm text-on-surface-variant">Alertas de Stock</span>
-          <span class="p-2 bg-error-red/20 rounded-lg text-error-red flex items-center justify-center">
-            <span class="material-symbols-outlined" data-icon="warning">warning</span>
+      <div class="card-elevated p-6 flex flex-col justify-between relative overflow-hidden">
+        <div class="flex justify-between items-start mb-4">
+          <span class="text-sm font-semibold text-on-surface-variant">Alertas de Stock</span>
+          <span class="p-2 bg-error-red/10 rounded-xl text-error-red flex items-center justify-center">
+            <span class="material-symbols-outlined">warning</span>
           </span>
         </div>
         <div>
-          <h3 class="font-headline-xl text-3xl md:text-4xl font-bold text-error-red tracking-tight">{{ stockAlertsCount }}</h3>
-          <p class="font-label-sm text-xs text-on-surface-variant mt-2">SKUs por debajo del nivel crítico</p>
+          <h3 class="text-3xl font-extrabold text-error-red tracking-tight">{{ stockAlertsCount }}</h3>
+          <p class="text-xs text-on-surface-variant mt-2">SKUs por debajo del nivel crítico</p>
         </div>
       </div>
     </div>
 
-    <!-- Controls Toolbar -->
-    <div class="flex flex-col md:flex-row gap-space-md justify-between items-stretch md:items-center card-inner p-space-md">
-      <div class="flex flex-wrap gap-space-md items-center w-full md:w-auto">
-        <span class="font-label-md text-sm text-on-surface-variant hidden md:block">Filtrar por:</span>
+    <!-- Search & Filter Controls Toolbar -->
+    <div class="card-elevated p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+      <!-- High-Contrast Search Input -->
+      <div class="relative flex-1 max-w-md">
+        <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-primary text-lg">search</span>
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Buscar por SKU o nombre de producto..."
+          class="w-full bg-surface-container border-0 rounded-xl pl-10 pr-4 py-2 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none placeholder:text-on-surface-variant/60 shadow-sm"
+        />
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3">
         <select
           v-model="selectedCategory"
-          class="bg-surface-container border border-outline-variant text-on-surface font-label-md text-sm rounded-lg px-space-md py-space-sm focus:ring-1 focus:ring-primary focus:border-primary glow-cyan-focus outline-none pr-8 min-w-[170px]"
+          class="bg-surface-container border-0 text-on-surface text-xs font-semibold rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary outline-none cursor-pointer shadow-sm"
         >
           <option value="">Todas las Categorías</option>
           <option value="Agua">Agua Purificada</option>
@@ -82,122 +93,120 @@
 
         <select
           v-model="selectedStatus"
-          class="bg-surface-container border border-outline-variant text-on-surface font-label-md text-sm rounded-lg px-space-md py-space-sm focus:ring-1 focus:ring-primary focus:border-primary glow-cyan-focus outline-none pr-8 min-w-[170px]"
+          class="bg-surface-container border-0 text-on-surface text-xs font-semibold rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary outline-none cursor-pointer shadow-sm"
         >
           <option value="">Cualquier Estado</option>
           <option value="ok">En Stock</option>
           <option value="low">Stock Bajo</option>
           <option value="out">Agotado</option>
         </select>
-      </div>
 
-      <div class="flex gap-space-sm w-full md:w-auto">
         <button
           @click="exportData"
-          class="flex-1 md:flex-none border border-admin-gold text-admin-gold hover:bg-admin-gold/10 font-label-md text-sm px-space-md py-space-sm rounded-lg flex items-center justify-center gap-space-sm transition-colors cursor-pointer"
+          class="bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
         >
-          <span class="material-symbols-outlined text-[18px]" data-icon="file_download">file_download</span>
+          <span class="material-symbols-outlined text-sm">file_download</span>
           Exportar
         </button>
       </div>
     </div>
 
-    <!-- Data Table (Glassmorphism card) -->
-    <div class="card-elevated overflow-hidden flex-1">
+    <!-- Data Table -->
+    <div class="card-elevated overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="bg-surface-container-highest/50 border-b border-outline-variant/50">
-              <th class="py-space-md px-space-lg font-label-sm text-xs text-on-surface-variant font-semibold">SKU</th>
-              <th class="py-space-md px-space-lg font-label-sm text-xs text-on-surface-variant font-semibold">Producto</th>
-              <th class="py-space-md px-space-lg font-label-sm text-xs text-on-surface-variant font-semibold">Categoría</th>
-              <th class="py-space-md px-space-lg font-label-sm text-xs text-on-surface-variant font-semibold text-right">Stock Actual</th>
-              <th class="py-space-md px-space-lg font-label-sm text-xs text-on-surface-variant font-semibold text-right hidden lg:table-cell">Nivel Crítico</th>
-              <th class="py-space-md px-space-lg font-label-sm text-xs text-on-surface-variant font-semibold text-right hidden xl:table-cell">Compra / Venta</th>
-              <th class="py-space-md px-space-lg font-label-sm text-xs text-on-surface-variant font-semibold text-center">Estado</th>
-              <th class="py-space-md px-space-lg font-label-sm text-xs text-on-surface-variant font-semibold text-right">Acciones</th>
+            <tr class="bg-surface-container-highest/40 border-b border-black/5 dark:border-white/5 text-[11px] font-extrabold text-on-surface-variant uppercase tracking-wider">
+              <th class="py-4 px-6">SKU</th>
+              <th class="py-4 px-6">Producto</th>
+              <th class="py-4 px-6">Categoría</th>
+              <th class="py-4 px-6 text-right">Stock Actual</th>
+              <th class="py-4 px-6 text-right hidden lg:table-cell">Nivel Crítico</th>
+              <th class="py-4 px-6 text-right hidden xl:table-cell">Precio Venta</th>
+              <th class="py-4 px-6 text-center">Estado</th>
+              <th class="py-4 px-6 text-right">Acciones</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-surface-container-lowest">
+          <tbody class="divide-y divide-black/5 dark:divide-white/5">
             <tr
               v-for="item in filteredProducts"
               :key="item.sku"
-              class="hover:bg-surface-container-highest/30 transition-colors group"
-              :class="{
-                'bg-admin-gold/5': item.status === 'low',
-                'bg-error-red/5': item.status === 'out',
-              }"
+              class="hover:bg-surface-container-high/40 transition-colors"
             >
               <!-- SKU -->
-              <td class="py-3.5 px-space-lg font-label-md text-sm font-semibold text-primary">
+              <td class="py-3.5 px-6 text-sm font-bold font-mono text-primary">
                 {{ item.sku }}
               </td>
 
               <!-- Producto -->
-              <td class="py-3.5 px-space-lg">
-                <p class="font-body-md text-sm text-on-surface" :class="{ 'opacity-60': item.status === 'out' }">
+              <td class="py-3.5 px-6">
+                <p class="text-sm font-semibold text-on-surface" :class="{ 'opacity-60': item.status === 'out' }">
                   {{ item.name }}
                 </p>
               </td>
 
               <!-- Categoría -->
-              <td class="py-3.5 px-space-lg">
-                <span class="bg-surface-container px-2.5 py-1 rounded text-xs font-medium text-on-surface-variant">
+              <td class="py-3.5 px-6">
+                <span class="text-xs px-2.5 py-1 rounded-lg bg-surface-container font-semibold text-on-surface-variant">
                   {{ item.category }}
                 </span>
               </td>
 
-              <!-- Stock Actual -->
-              <td class="py-3.5 px-space-lg text-right text-sm">
-                <span
-                  class="font-medium"
-                  :class="{
-                    'text-on-surface font-medium': item.status === 'ok',
-                    'text-admin-gold font-bold': item.status === 'low',
-                    'text-error-red font-bold': item.status === 'out',
-                  }"
-                >
-                  {{ item.currentStock }}
-                </span>
+              <!-- Stock -->
+              <td class="py-3.5 px-6 text-right font-mono font-bold text-sm text-on-surface">
+                {{ item.currentStock }}
               </td>
 
               <!-- Nivel Crítico -->
-              <td class="py-3.5 px-space-lg text-right hidden lg:table-cell text-sm text-on-surface-variant">
+              <td class="py-3.5 px-6 text-right font-mono text-xs text-on-surface-variant hidden lg:table-cell">
                 {{ item.minStock }}
               </td>
 
-              <!-- Compra / Venta -->
-              <td class="py-3.5 px-space-lg text-right hidden xl:table-cell text-sm text-on-surface" :class="{ 'opacity-60': item.status === 'out' }">
-                <span class="text-on-surface-variant mr-2">${{ item.cost.toFixed(2) }}</span> / ${{ item.price.toFixed(2) }}
+              <!-- Precio -->
+              <td class="py-3.5 px-6 text-right font-mono font-bold text-sm text-billing-green hidden xl:table-cell">
+                ${{ item.price.toFixed(2) }}
               </td>
 
               <!-- Estado -->
-              <td class="py-3.5 px-space-lg text-center">
+              <td class="py-3.5 px-6 text-center">
                 <span
                   v-if="item.status === 'ok'"
-                  class="inline-flex items-center gap-1.5 bg-billing-green/10 text-billing-green px-3 py-1 rounded-full text-xs font-semibold "
+                  class="inline-flex items-center gap-1.5 bg-billing-green/15 text-billing-green px-3 py-1 rounded-full text-xs font-bold"
                 >
-                  <div class="w-1.5 h-1.5 rounded-full bg-billing-green"></div> En Stock
+                  <span class="w-1.5 h-1.5 rounded-full bg-billing-green"></span> En Stock
                 </span>
                 <span
                   v-else-if="item.status === 'low'"
-                  class="inline-flex items-center gap-1.5 bg-admin-gold/10 text-admin-gold px-3 py-1 rounded-full text-xs font-semibold "
+                  class="inline-flex items-center gap-1.5 bg-admin-gold/15 text-admin-gold px-3 py-1 rounded-full text-xs font-bold"
                 >
-                  <div class="w-1.5 h-1.5 rounded-full bg-admin-gold animate-pulse"></div> Stock Bajo
+                  <span class="w-1.5 h-1.5 rounded-full bg-admin-gold animate-pulse"></span> Stock Bajo
                 </span>
                 <span
                   v-else
-                  class="inline-flex items-center gap-1.5 bg-error-red/10 text-error-red px-3 py-1 rounded-full text-xs font-semibold "
+                  class="inline-flex items-center gap-1.5 bg-error-red/15 text-error-red px-3 py-1 rounded-full text-xs font-bold"
                 >
-                  <div class="w-1.5 h-1.5 rounded-full bg-error-red"></div> Agotado
+                  <span class="w-1.5 h-1.5 rounded-full bg-error-red"></span> Agotado
                 </span>
               </td>
 
               <!-- Acciones -->
-              <td class="py-3.5 px-space-lg text-right">
-                <button class="p-1.5 text-on-surface-variant hover:text-primary transition-colors opacity-80 group-hover:opacity-100 rounded-md hover:bg-surface-container cursor-pointer">
-                  <span class="material-symbols-outlined text-xl" data-icon="more_vert">more_vert</span>
-                </button>
+              <td class="py-3.5 px-6 text-right">
+                <div class="flex items-center justify-end gap-1">
+                  <button
+                    @click="openEditModal(item)"
+                    class="p-1.5 text-on-surface-variant hover:text-primary hover:bg-surface-container rounded-lg transition-colors cursor-pointer"
+                    title="Editar producto"
+                  >
+                    <span class="material-symbols-outlined text-lg">edit</span>
+                  </button>
+                  <button
+                    @click="deleteProduct(item)"
+                    class="p-1.5 text-on-surface-variant hover:text-error-red hover:bg-surface-container rounded-lg transition-colors cursor-pointer"
+                    title="Eliminar producto"
+                  >
+                    <span class="material-symbols-outlined text-lg">delete</span>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -205,112 +214,143 @@
       </div>
 
       <!-- Pagination Footer -->
-      <div class="border-t border-outline-variant/50 bg-surface-container-highest/20 p-space-sm px-space-lg flex justify-between items-center">
-        <span class="font-label-sm text-xs text-on-surface-variant">
-          Mostrando 1 - {{ filteredProducts.length }} de {{ totalSkusCount }} items
+      <div class="p-4 border-t border-black/5 dark:border-white/5 flex items-center justify-between bg-surface-container-highest/20 text-xs">
+        <span class="text-on-surface-variant font-medium">
+          Mostrando {{ filteredProducts.length }} de {{ products.length }} productos
         </span>
-        <div class="flex gap-1">
-          <button class="p-1.5 rounded text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface disabled:opacity-40" disabled>
-            <span class="material-symbols-outlined text-lg" data-icon="chevron_left">chevron_left</span>
-          </button>
-          <button class="p-1.5 rounded text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface">
-            <span class="material-symbols-outlined text-lg" data-icon="chevron_right">chevron_right</span>
-          </button>
-        </div>
       </div>
     </div>
 
-    <!-- Modal Nuevo Producto -->
-    <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div class="glass-card max-w-lg w-full p-6 animate-in">
-        <div class="flex justify-between items-center pb-4 border-b border-outline-variant/40 mb-4">
-          <h3 class="text-xl font-bold text-on-surface">Crear Nuevo Producto</h3>
-          <button @click="showCreateModal = false" class="text-on-surface-variant hover:text-on-surface cursor-pointer">
+    <!-- Modal Formulario Producto (Crear / Editar) -->
+    <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="showModal = false"></div>
+      <div class="relative glass-card max-w-lg w-full p-6 z-10 animate-in">
+        <div class="flex justify-between items-center pb-4 border-b border-black/5 dark:border-white/5 mb-4">
+          <div class="flex items-center gap-2">
+            <span class="p-2 rounded-xl bg-primary/15 text-primary material-symbols-outlined">
+              {{ isEditing ? 'edit_note' : 'inventory_2' }}
+            </span>
+            <div>
+              <h3 class="text-lg font-bold text-on-surface">
+                {{ isEditing ? 'Editar Producto' : 'Registrar Nuevo Producto' }}
+              </h3>
+              <p class="text-xs text-on-surface-variant">Ingrese los datos técnicos y comerciales</p>
+            </div>
+          </div>
+          <button @click="showModal = false" class="p-1 text-on-surface-variant hover:text-on-surface rounded-lg cursor-pointer">
             <span class="material-symbols-outlined">close</span>
           </button>
         </div>
 
-        <form @submit.prevent="createProduct" class="space-y-4">
-          <div>
-            <label class="block text-xs font-semibold text-on-surface-variant mb-1">SKU</label>
-            <input
-              v-model="newProduct.sku"
-              required
-              class="w-full bg-surface-container border border-outline-variant rounded-lg px-3 py-2 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
-              placeholder="e.g. AQ-20L-RET"
-            />
-          </div>
+        <!-- Inline Form Error Alert -->
+        <div v-if="formError" class="mb-4 p-3 rounded-xl bg-error-red/10 text-error-red text-xs font-semibold flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm">error</span>
+          <span>{{ formError }}</span>
+        </div>
 
-          <div>
-            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Nombre del Producto</label>
-            <input
-              v-model="newProduct.name"
-              required
-              class="w-full bg-surface-container border border-outline-variant rounded-lg px-3 py-2 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
-              placeholder="e.g. Botellón Agua 20L"
-            />
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
+        <form @submit.prevent="saveProduct" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Categoría</label>
+              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Código SKU *</label>
+              <input
+                v-model="productForm.sku"
+                type="text"
+                required
+                :disabled="isEditing"
+                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none font-mono shadow-sm disabled:opacity-50"
+                placeholder="Ej: AQ-20L-RET"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Categoría *</label>
               <select
-                v-model="newProduct.category"
-                class="w-full bg-surface-container border border-outline-variant rounded-lg px-3 py-2 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                v-model="productForm.category"
+                required
+                class="w-full bg-surface-container border-0 rounded-xl px-3 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
               >
                 <option value="Agua">Agua</option>
                 <option value="Café">Café</option>
                 <option value="Accesorios">Accesorios</option>
                 <option value="Insumos">Insumos</option>
+                <option value="Snacks">Snacks</option>
               </select>
             </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Nombre del Producto *</label>
+            <input
+              v-model="productForm.name"
+              type="text"
+              required
+              class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
+              placeholder="Ej: Botellón Agua Purificada 20L"
+            />
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Stock Inicial</label>
+              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Stock Actual *</label>
               <input
-                v-model.number="newProduct.currentStock"
+                v-model.number="productForm.currentStock"
                 type="number"
+                min="0"
+                step="1"
                 required
-                class="w-full bg-surface-container border border-outline-variant rounded-lg px-3 py-2 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Stock Mínimo (Alerta) *</label>
+              <input
+                v-model.number="productForm.minStock"
+                type="number"
+                min="1"
+                step="1"
+                required
+                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
               />
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Costo ($)</label>
+              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Costo Unitario ($) *</label>
               <input
-                v-model.number="newProduct.cost"
+                v-model.number="productForm.cost"
                 type="number"
+                min="0.01"
                 step="0.01"
                 required
-                class="w-full bg-surface-container border border-outline-variant rounded-lg px-3 py-2 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm font-mono"
               />
             </div>
             <div>
-              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Precio Venta ($)</label>
+              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Precio Venta ($) *</label>
               <input
-                v-model.number="newProduct.price"
+                v-model.number="productForm.price"
                 type="number"
+                min="0.01"
                 step="0.01"
                 required
-                class="w-full bg-surface-container border border-outline-variant rounded-lg px-3 py-2 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm font-mono"
               />
             </div>
           </div>
 
-          <div class="flex justify-end gap-3 pt-4 border-t border-outline-variant/40">
+          <div class="flex justify-end gap-3 pt-4 border-t border-black/5 dark:border-white/5">
             <button
               type="button"
-              @click="showCreateModal = false"
-              class="px-4 py-2 text-sm text-on-surface-variant hover:bg-surface-container rounded-lg cursor-pointer"
+              @click="showModal = false"
+              class="px-4 py-2.5 rounded-xl text-xs font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              class="px-5 py-2 text-sm font-semibold bg-primary text-on-primary rounded-lg glow-cyan-hover cursor-pointer"
+              class="px-5 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-xs glow-cyan-hover transition-all cursor-pointer active:scale-95"
             >
-              Guardar Producto
+              {{ isEditing ? 'Guardar Cambios' : 'Registrar Producto' }}
             </button>
           </div>
         </form>
@@ -321,11 +361,17 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { useToast } from '~/composables/useToast';
+import {
+  validateRequired,
+  validatePositiveNumber,
+  validateNonNegativeNumber,
+  sanitizeFormData,
+} from '~/utils/validators';
 
 definePageMeta({
   middleware: ['auth'],
 });
-import { useToast } from '~/composables/useToast';
 
 interface ProductItem {
   sku: string;
@@ -340,12 +386,14 @@ interface ProductItem {
 
 const toast = useToast();
 
+const searchQuery = ref('');
 const selectedCategory = ref('');
 const selectedStatus = ref('');
-const showCreateModal = ref(false);
-const totalSkusCount = ref(142);
+const showModal = ref(false);
+const isEditing = ref(false);
+const formError = ref('');
 
-const newProduct = ref({
+const productForm = ref({
   sku: '',
   name: '',
   category: 'Agua',
@@ -399,14 +447,22 @@ const products = ref<ProductItem[]>([
 ]);
 
 const stockAlertsCount = computed(() => {
-  return products.value.filter(p => p.status === 'low' || p.status === 'out').length + 6;
+  return products.value.filter(p => p.status === 'low' || p.status === 'out').length;
+});
+
+const totalInventoryValue = computed(() => {
+  return products.value.reduce((acc, p) => acc + p.currentStock * p.cost, 0);
 });
 
 const filteredProducts = computed(() => {
   return products.value.filter(item => {
+    const matchSearch =
+      !searchQuery.value.trim() ||
+      item.sku.toLowerCase().includes(searchQuery.value.toLowerCase().trim()) ||
+      item.name.toLowerCase().includes(searchQuery.value.toLowerCase().trim());
     const matchCategory = !selectedCategory.value || item.category === selectedCategory.value;
     const matchStatus = !selectedStatus.value || item.status === selectedStatus.value;
-    return matchCategory && matchStatus;
+    return matchSearch && matchCategory && matchStatus;
   });
 });
 
@@ -414,30 +470,10 @@ const exportData = () => {
   toast.info('Exportando inventario a archivo CSV...');
 };
 
-const createProduct = () => {
-  const status: 'ok' | 'low' | 'out' =
-    newProduct.value.currentStock === 0
-      ? 'out'
-      : newProduct.value.currentStock <= newProduct.value.minStock
-      ? 'low'
-      : 'ok';
-
-  products.value.unshift({
-    sku: newProduct.value.sku,
-    name: newProduct.value.name,
-    category: newProduct.value.category,
-    currentStock: newProduct.value.currentStock,
-    minStock: newProduct.value.minStock,
-    cost: newProduct.value.cost,
-    price: newProduct.value.price,
-    status,
-  });
-
-  totalSkusCount.value += 1;
-  showCreateModal.value = false;
-  toast.success(`Producto ${newProduct.value.name} agregado exitosamente`);
-
-  newProduct.value = {
+const openCreateModal = () => {
+  isEditing.value = false;
+  formError.value = '';
+  productForm.value = {
     sku: '',
     name: '',
     category: 'Agua',
@@ -446,5 +482,112 @@ const createProduct = () => {
     cost: 2.5,
     price: 5.0,
   };
+  showModal.value = true;
+};
+
+const openEditModal = (item: ProductItem) => {
+  isEditing.value = true;
+  formError.value = '';
+  productForm.value = {
+    sku: item.sku,
+    name: item.name,
+    category: item.category,
+    currentStock: item.currentStock,
+    minStock: item.minStock,
+    cost: item.cost,
+    price: item.price,
+  };
+  showModal.value = true;
+};
+
+const saveProduct = () => {
+  formError.value = '';
+  const cleaned = sanitizeFormData(productForm.value);
+
+  // Strict Validations
+  const skuError = validateRequired(cleaned.sku, 'El código SKU');
+  if (skuError) {
+    formError.value = skuError;
+    return;
+  }
+
+  const nameError = validateRequired(cleaned.name, 'El nombre del producto');
+  if (nameError) {
+    formError.value = nameError;
+    return;
+  }
+
+  const stockError = validateNonNegativeNumber(cleaned.currentStock, 'El stock actual');
+  if (stockError) {
+    formError.value = stockError;
+    return;
+  }
+
+  const minStockError = validatePositiveNumber(cleaned.minStock, 'El stock mínimo');
+  if (minStockError) {
+    formError.value = minStockError;
+    return;
+  }
+
+  const costError = validatePositiveNumber(cleaned.cost, 'El costo unitario');
+  if (costError) {
+    formError.value = costError;
+    return;
+  }
+
+  const priceError = validatePositiveNumber(cleaned.price, 'El precio de venta');
+  if (priceError) {
+    formError.value = priceError;
+    return;
+  }
+
+  const status: 'ok' | 'low' | 'out' =
+    cleaned.currentStock === 0
+      ? 'out'
+      : cleaned.currentStock <= cleaned.minStock
+      ? 'low'
+      : 'ok';
+
+  if (isEditing.value) {
+    const idx = products.value.findIndex(p => p.sku === cleaned.sku);
+    if (idx !== -1) {
+      products.value[idx] = {
+        sku: cleaned.sku,
+        name: cleaned.name,
+        category: cleaned.category,
+        currentStock: cleaned.currentStock,
+        minStock: cleaned.minStock,
+        cost: cleaned.cost,
+        price: cleaned.price,
+        status,
+      };
+      toast.updateSuccess('Producto', `Producto ${cleaned.name} actualizado exitosamente.`);
+    }
+  } else {
+    // Check duplicate SKU
+    if (products.value.some(p => p.sku.toLowerCase() === cleaned.sku.toLowerCase())) {
+      formError.value = `Ya existe un producto con el SKU "${cleaned.sku}".`;
+      return;
+    }
+
+    products.value.unshift({
+      sku: cleaned.sku,
+      name: cleaned.name,
+      category: cleaned.category,
+      currentStock: cleaned.currentStock,
+      minStock: cleaned.minStock,
+      cost: cleaned.cost,
+      price: cleaned.price,
+      status,
+    });
+    toast.createSuccess('Producto', `Producto ${cleaned.name} registrado con SKU ${cleaned.sku}.`);
+  }
+
+  showModal.value = false;
+};
+
+const deleteProduct = (item: ProductItem) => {
+  products.value = products.value.filter(p => p.sku !== item.sku);
+  toast.deleteSuccess('Producto', `Producto ${item.name} (${item.sku}) eliminado.`);
 };
 </script>

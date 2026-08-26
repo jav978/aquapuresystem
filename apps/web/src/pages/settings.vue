@@ -54,10 +54,11 @@
 
               <!-- Commercial Name -->
               <div class="flex-1 flex flex-col justify-center">
-                <label class="block text-xs font-semibold text-on-surface-variant mb-1">Nombre Comercial</label>
+                <label class="block text-xs font-semibold text-on-surface-variant mb-1">Nombre Comercial *</label>
                 <input
                   v-model="companyForm.businessName"
                   type="text"
+                  required
                   class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
                 />
               </div>
@@ -65,28 +66,31 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-semibold text-on-surface-variant mb-1">RUC / NIT</label>
+                <label class="block text-xs font-semibold text-on-surface-variant mb-1">RUC / NIT *</label>
                 <input
                   v-model="companyForm.taxId"
                   type="text"
+                  required
                   class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none font-mono shadow-sm"
                 />
               </div>
               <div>
-                <label class="block text-xs font-semibold text-on-surface-variant mb-1">Teléfono</label>
+                <label class="block text-xs font-semibold text-on-surface-variant mb-1">Teléfono *</label>
                 <input
                   v-model="companyForm.phone"
                   type="text"
+                  required
                   class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none font-mono shadow-sm"
                 />
               </div>
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Dirección Principal</label>
+              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Dirección Principal *</label>
               <input
                 v-model="companyForm.address"
                 type="text"
+                required
                 class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
               />
             </div>
@@ -104,7 +108,7 @@
 
           <div class="space-y-3">
             <!-- Cash -->
-            <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container/40 hover:bg-surface-container/70 border border-outline-variant/20 transition-colors">
+            <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container/40 hover:bg-surface-container/70 transition-colors shadow-sm">
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-on-surface">
                   <span class="material-symbols-outlined text-xl">payments</span>
@@ -121,7 +125,7 @@
             </div>
 
             <!-- Transfer -->
-            <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container/40 hover:bg-surface-container/70 border border-outline-variant/20 transition-colors">
+            <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container/40 hover:bg-surface-container/70 transition-colors shadow-sm">
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-on-surface">
                   <span class="material-symbols-outlined text-xl">account_balance</span>
@@ -138,7 +142,7 @@
             </div>
 
             <!-- POS Terminal -->
-            <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container/40 hover:bg-surface-container/70 border border-outline-variant/20 transition-colors">
+            <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container/40 hover:bg-surface-container/70 transition-colors shadow-sm">
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-on-surface">
                   <span class="material-symbols-outlined text-xl">point_of_sale</span>
@@ -155,7 +159,7 @@
             </div>
 
             <!-- QR / Mobile -->
-            <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container/40 hover:bg-surface-container/70 border border-outline-variant/20 transition-colors">
+            <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container/40 hover:bg-surface-container/70 transition-colors shadow-sm">
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-on-surface">
                   <span class="material-symbols-outlined text-xl">qr_code_scanner</span>
@@ -246,7 +250,7 @@
             <div
               v-for="branch in branches"
               :key="branch.id"
-              class="flex items-center justify-between p-3.5 rounded-xl bg-surface-container/40 hover:bg-surface-container/70 border border-outline-variant/20 transition-colors"
+              class="flex items-center justify-between p-3.5 rounded-xl bg-surface-container/40 hover:bg-surface-container/70 transition-colors shadow-sm"
             >
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-primary">
@@ -259,17 +263,17 @@
                       class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded"
                       :class="branch.isMatrix ? 'bg-admin-gold/20 text-admin-gold' : 'bg-primary/20 text-primary'"
                     >
-                      {{ branch.isMatrix ? 'MATRIZ' : 'ACTIVA' }}
+                      {{ branch.isMatrix ? 'Casa Matriz' : 'Sucursal' }}
                     </span>
                   </div>
                   <p class="text-xs text-on-surface-variant mt-0.5">{{ branch.address }}</p>
                 </div>
               </div>
 
-              <div class="flex items-center gap-1 text-on-surface-variant">
+              <div class="flex items-center gap-1">
                 <button
                   @click="editBranch(branch)"
-                  class="p-2 hover:text-primary hover:bg-surface-container rounded-lg transition-colors cursor-pointer"
+                  class="p-2 hover:text-primary hover:bg-surface-container rounded-xl transition-colors cursor-pointer"
                   title="Editar Sucursal"
                 >
                   <span class="material-symbols-outlined text-lg">edit</span>
@@ -277,7 +281,7 @@
                 <button
                   v-if="!branch.isMatrix"
                   @click="deleteBranch(branch)"
-                  class="p-2 hover:text-error-red hover:bg-error-red/10 rounded-lg transition-colors cursor-pointer"
+                  class="p-2 hover:text-error-red hover:bg-error-red/10 rounded-xl transition-colors cursor-pointer"
                   title="Eliminar Sucursal"
                 >
                   <span class="material-symbols-outlined text-lg">delete</span>
@@ -299,6 +303,69 @@
         Guardar Configuración Global
       </button>
     </div>
+
+    <!-- Branch Modal -->
+    <div v-if="showBranchModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="showBranchModal = false"></div>
+      <div class="relative glass-card w-full max-w-md p-6 z-10 animate-in">
+        <div class="flex items-center justify-between pb-4 border-b border-black/5 dark:border-white/5 mb-4">
+          <div class="flex items-center gap-2">
+            <span class="p-2 rounded-xl bg-primary/15 text-primary material-symbols-outlined">storefront</span>
+            <h4 class="text-base font-bold text-on-surface">
+              {{ isEditingBranch ? 'Editar Sucursal' : 'Nueva Sucursal' }}
+            </h4>
+          </div>
+          <button @click="showBranchModal = false" class="p-1 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <div v-if="branchError" class="mb-4 p-3 rounded-xl bg-error-red/10 text-error-red text-xs font-semibold flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm">error</span>
+          <span>{{ branchError }}</span>
+        </div>
+
+        <form @submit.prevent="saveBranch" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Nombre de la Sucursal *</label>
+            <input
+              v-model="branchForm.name"
+              type="text"
+              required
+              placeholder="Ej: Sucursal Norte"
+              class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Dirección *</label>
+            <input
+              v-model="branchForm.address"
+              type="text"
+              required
+              placeholder="Ej: Av. Las Américas 450"
+              class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
+            />
+          </div>
+
+          <div class="flex justify-end gap-3 pt-4 border-t border-black/5 dark:border-white/5">
+            <button
+              type="button"
+              @click="showBranchModal = false"
+              class="px-4 py-2.5 rounded-xl text-xs font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="px-5 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-xs glow-cyan-hover transition-all cursor-pointer active:scale-95"
+            >
+              {{ isEditingBranch ? 'Guardar Cambios' : 'Registrar Sucursal' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -306,6 +373,12 @@
 import { reactive, ref } from 'vue';
 import { useThemeStore } from '~/stores/theme';
 import { useToast } from '~/composables/useToast';
+import {
+  validateRequired,
+  validateTaxId,
+  validatePhone,
+  sanitizeFormData,
+} from '~/utils/validators';
 
 definePageMeta({
   middleware: ['auth'],
@@ -313,6 +386,16 @@ definePageMeta({
 
 const themeStore = useThemeStore();
 const toast = useToast();
+
+const showBranchModal = ref(false);
+const isEditingBranch = ref(false);
+const editingBranchId = ref<string | null>(null);
+const branchError = ref('');
+
+const branchForm = reactive({
+  name: '',
+  address: '',
+});
 
 const companyForm = reactive({
   businessName: 'AquaPure Pro S.A.',
@@ -350,12 +433,8 @@ const branches = ref([
 ]);
 
 const setTheme = (mode: 'light' | 'dark') => {
-  try {
-    themeStore.setTheme(mode);
-    toast.info(`Tema cambiado a ${mode === 'dark' ? 'Modo Oscuro' : 'Modo Claro'}`);
-  } catch (err: any) {
-    toast.error('Error al cambiar de tema.');
-  }
+  themeStore.setTheme(mode);
+  toast.info(`Tema cambiado a ${mode === 'dark' ? 'Modo Oscuro' : 'Modo Claro'}`);
 };
 
 const triggerUploadLogo = () => {
@@ -363,37 +442,85 @@ const triggerUploadLogo = () => {
 };
 
 const openAddBranchModal = () => {
-  const branchName = prompt('Nombre de la nueva sucursal:');
-  if (branchName) {
-    const address = prompt('Dirección de la sucursal:') || 'Sin dirección especificada';
-    branches.value.push({
-      id: `b-${Date.now()}`,
-      name: branchName,
-      address,
-      isMatrix: false,
-    });
-    toast.success(`Sucursal ${branchName} agregada.`);
-  }
+  isEditingBranch.value = false;
+  editingBranchId.value = null;
+  branchError.value = '';
+  branchForm.name = '';
+  branchForm.address = '';
+  showBranchModal.value = true;
 };
 
 const editBranch = (branch: any) => {
-  const newName = prompt('Nuevo nombre:', branch.name);
-  if (newName) {
-    branch.name = newName;
-    toast.success('Sucursal actualizada.');
+  isEditingBranch.value = true;
+  editingBranchId.value = branch.id;
+  branchError.value = '';
+  branchForm.name = branch.name;
+  branchForm.address = branch.address;
+  showBranchModal.value = true;
+};
+
+const saveBranch = () => {
+  branchError.value = '';
+  const cleaned = sanitizeFormData(branchForm);
+
+  const nameError = validateRequired(cleaned.name, 'El nombre de la sucursal');
+  if (nameError) {
+    branchError.value = nameError;
+    return;
   }
+
+  const addressError = validateRequired(cleaned.address, 'La dirección');
+  if (addressError) {
+    branchError.value = addressError;
+    return;
+  }
+
+  if (isEditingBranch.value && editingBranchId.value) {
+    const idx = branches.value.findIndex(b => b.id === editingBranchId.value);
+    if (idx !== -1) {
+      branches.value[idx].name = cleaned.name;
+      branches.value[idx].address = cleaned.address;
+      toast.updateSuccess('Sucursal', `Sucursal ${cleaned.name} actualizada.`);
+    }
+  } else {
+    branches.value.push({
+      id: `b-${Date.now()}`,
+      name: cleaned.name,
+      address: cleaned.address,
+      isMatrix: false,
+    });
+    toast.createSuccess('Sucursal', `Sucursal ${cleaned.name} agregada al sistema.`);
+  }
+
+  showBranchModal.value = false;
 };
 
 const deleteBranch = (branch: any) => {
   branches.value = branches.value.filter((b) => b.id !== branch.id);
-  toast.success(`Sucursal ${branch.name} eliminada.`);
+  toast.deleteSuccess('Sucursal', `Sucursal ${branch.name} eliminada.`);
 };
 
 const saveAllSettings = () => {
-  try {
-    toast.success('Configuración global guardada correctamente.');
-  } catch (err: any) {
-    toast.error('Error al guardar la configuración.');
+  const cleanedCompany = sanitizeFormData(companyForm);
+
+  const nameErr = validateRequired(cleanedCompany.businessName, 'El nombre comercial');
+  if (nameErr) {
+    toast.error('Error de validación', nameErr);
+    return;
   }
+
+  const taxErr = validateTaxId(cleanedCompany.taxId, 'El RUC/NIT');
+  if (taxErr) {
+    toast.error('Error de validación', taxErr);
+    return;
+  }
+
+  const phoneErr = validatePhone(cleanedCompany.phone, 'El teléfono');
+  if (phoneErr) {
+    toast.error('Error de validación', phoneErr);
+    return;
+  }
+
+  toast.success('Configuración guardada', 'Todos los parámetros corporativos fueron actualizados.');
 };
 </script>

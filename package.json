@@ -7,6 +7,9 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
+    "build:desktop": "pnpm --filter=@aquasystem/web generate",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",

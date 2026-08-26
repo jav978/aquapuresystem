@@ -638,7 +638,7 @@
 
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, onBeforeRouteLeave } from 'vue-router';
 import { useTanksStore } from '~/stores/tanks';
 import { useCurrencyStore } from '~/stores/currency';
 import { useCustomersStore } from '~/stores/customers';
@@ -932,4 +932,20 @@ const submitSale = () => {
   // Open printable receipt with QR Code
   openPrintModal(newInvoice);
 };
+
+// Route protection: prevent accidental navigation when cart has items
+onBeforeRouteLeave((to, from, next) => {
+  if (showSaleModal.value && cartItems.value.length > 0) {
+    const confirmLeave = window.confirm(
+      '¿Desea salir del Punto de Venta? Hay una venta en proceso y los productos en el carrito se perderán.'
+    );
+    if (confirmLeave) {
+      next();
+    } else {
+      next(false);
+    }
+  } else {
+    next();
+  }
+});
 </script>

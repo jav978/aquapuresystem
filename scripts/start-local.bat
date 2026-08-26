@@ -3,6 +3,9 @@ REM ============================================================================
 REM AquaPure Pro - Script de Inicio en 1 Clic (Windows)
 REM =============================================================================
 
+REM Asegurar que el script siempre se ejecute desde la raíz del proyecto
+cd /d "%~dp0\.."
+
 echo.
 echo =========================================================
 echo   Iniciando AquaPure Pro en Servidor Local / Intranet...

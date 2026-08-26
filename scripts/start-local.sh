@@ -5,8 +5,13 @@
 
 set -e
 
+# Asegurar que el script siempre se ejecute desde la raíz del proyecto
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$PROJECT_ROOT"
+
 echo "💧 ========================================================="
 echo "💧  Iniciando AquaPure Pro en Servidor Local / Intranet..."
+echo "💧  Directorio raíz: $PROJECT_ROOT"
 echo "💧 ========================================================="
 
 # Verificar si Docker está instalado
@@ -31,9 +36,18 @@ fi
 echo "🚀 Levantando contenedores (Web App + PostgreSQL Aislado)..."
 docker compose up -d --build
 
+# Obtener IP local de la máquina de forma segura
+LOCAL_IP="localhost"
+if command -v hostname &> /dev/null; then
+    DETECTED_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+    if [ -n "$DETECTED_IP" ]; then
+        LOCAL_IP="$DETECTED_IP"
+    fi
+fi
+
 echo ""
 echo "✅ ========================================================="
 echo "✅  AquaPure Pro está listo y operando de forma segura."
 echo "✅  Acceso Local:    http://localhost:3000"
-echo "✅  Acceso Intranet: http://$(hostname -I | awk '{print $1}'):3000"
+echo "✅  Acceso Intranet: http://${LOCAL_IP}:3000"
 echo "✅ ========================================================="

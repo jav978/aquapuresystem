@@ -13,6 +13,9 @@ export const useThemeStore = defineStore('theme', () => {
     const root = document.documentElement;
     const body = document.body;
 
+    // Prevent any CSS transition lag/flickering during theme flip
+    root.classList.add('disable-theme-transitions');
+
     if (theme === 'dark') {
       root.classList.add('dark');
       root.classList.remove('light');
@@ -36,6 +39,13 @@ export const useThemeStore = defineStore('theme', () => {
     if (metaThemeColor) {
       metaThemeColor.setAttribute('content', theme === 'dark' ? '#070d1a' : '#f8fafc');
     }
+
+    // Restore transitions cleanly in next frame
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        root.classList.remove('disable-theme-transitions');
+      });
+    });
   };
 
   const init = () => {
@@ -48,7 +58,7 @@ export const useThemeStore = defineStore('theme', () => {
         currentTheme.value = stored;
       } else {
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        currentTheme.value = prefersDark ? 'dark' : 'dark'; // Default dark per Google Stitch
+        currentTheme.value = prefersDark ? 'dark' : 'dark';
       }
       applyDomTheme(currentTheme.value);
 

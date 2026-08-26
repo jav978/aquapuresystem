@@ -2,43 +2,55 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useTanksStore } from './tanks';
 
-describe('Tanks Store - Telemetry & Deductions', () => {
+describe('Tanks Store (Master Consolidated Tank & Water Balance)', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
   });
 
-  it('should parse water liters from product description accurately', () => {
+  it('should initialize with master consolidated tank and operational parameters', () => {
     const store = useTanksStore();
-
-    expect(store.parseLitersFromItemText('10x Botellón 20L')).toBe(200);
-    expect(store.parseLitersFromItemText('5x Botella 5L')).toBe(25);
-    expect(store.parseLitersFromItemText('20x Botellón 20L + 2x Botella 5L')).toBe(410);
-    expect(store.parseLitersFromItemText('1x Dispensador Frío/Calor')).toBe(0);
+    expect(store.masterTank).toBeDefined();
+    expect(store.masterTank.capacity).toBe(30000);
+    expect(store.washWastePercentage).toBe(15);
   });
 
-  it('should deduct liters from tank on sale and update status', () => {
+  it('should deduct sales liters and automatically calculate wash waste (15%)', () => {
     const store = useTanksStore();
-    const initialLiters = store.tanks[0].currentLiters;
+    store.masterTank.currentLiters = 20000;
+    store.masterTank.capacity = 30000;
+    store.washWastePercentage = 15;
 
-    const result = store.deductLiters(500, store.tanks[0].id, 'Test Sale');
+    // Deduct 1000L for sale -> should also deduct 150L for wash waste
+    const result = store.deductLiters(1000, undefined, 'Venta Test');
 
-    expect(result.success).toBe(true);
-    expect(result.dispensed).toBe(500);
-    expect(store.tanks[0].currentLiters).toBe(initialLiters - 500);
-    expect(store.movements.length).toBeGreaterThan(0);
-    expect(store.movements[0].type).toBe('DISPENSE');
+    expect(result.dispensed).toBe(1000);
+    expect(result.washWaste).toBe(150);
+    expect(store.masterTank.currentLiters).toBe(18850);
   });
 
-  it('should refill tank to maximum capacity', () => {
+  it('should record cistern truck refill and update level and status', () => {
     const store = useTanksStore();
-    const tankId = store.tanks[1].id;
+    store.masterTank.currentLiters = 10000;
+    store.masterTank.capacity = 30000;
 
-    const refilled = store.refillTank(tankId);
+    const res = store.recordCisternRefill({
+      liters: 10000,
+      supplier: 'Cisterna Test C.A.',
+      cost: 100,
+    });
 
-    expect(refilled).toBe(true);
-    const tank = store.tanks.find((t) => t.id === tankId);
-    expect(tank?.currentLiters).toBe(tank?.capacity);
-    expect(tank?.level).toBe(100);
-    expect(tank?.status).toBe('normal');
+    expect(res.refilled).toBe(10000);
+    expect(store.masterTank.currentLiters).toBe(20000);
+    expect(store.masterTank.level).toBe(67);
+  });
+
+  it('should calculate estimated days of autonomy remaining accurately', () => {
+    const store = useTanksStore();
+    store.masterTank.currentLiters = 18400;
+    store.averageDailySalesLiters = 2000;
+    store.washWastePercentage = 15; // 2000 * 1.15 = 2300 L/day
+
+    // 18400 / 2300 = 8.0 days
+    expect(store.estimatedDaysRemaining).toBe(8.0);
   });
 });

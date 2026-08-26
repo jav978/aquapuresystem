@@ -1,377 +1,376 @@
 <template>
   <div class="flex flex-col gap-6 animate-in">
     <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
       <div>
         <div class="flex items-center gap-2 mb-1">
           <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-primary/10 text-primary">
-            AquaPure Telemetría IoT
+            Planta de Purificación & Envasado
           </span>
-          <span class="flex items-center gap-1 text-xs text-billing-green font-semibold">
-            <span class="w-2 h-2 rounded-full bg-billing-green animate-pulse"></span>
-            Sensores en Línea (100% Operativo)
+          <span class="text-xs text-on-surface-variant flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm text-billing-green">verified</span>
+            Tanque Maestro Consolidado
           </span>
         </div>
-        <h2 class="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">Panel de Control & Monitoreo</h2>
-        <p class="text-sm text-on-surface-variant mt-0.5">
-          Supervisión hidrológica en tiempo real, telemetría IoT y balance de almacenamiento.
-        </p>
+        <h2 class="text-2xl md:text-3xl font-extrabold text-on-surface tracking-tight">Panel de Control Operativo</h2>
+        <p class="text-sm text-on-surface-variant mt-0.5">Control volumétrico de agua, balance de merma por lavado de botellones y proyección para recarga de cisterna.</p>
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex items-center gap-3">
+      <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
         <button
-          @click="openQuickRefillModal"
-          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-bold shadow-lg shadow-primary/25 glow-cyan-hover transition-all active:scale-95 cursor-pointer"
+          @click="openWashModal"
+          class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
         >
-          <span class="material-symbols-outlined text-lg">water_drop</span>
-          <span>Nueva Recarga</span>
+          <span class="material-symbols-outlined text-base text-primary">cleaning_services</span>
+          <span>Merma & Lavado ({{ tanksStore.washWastePercentage }}%)</span>
         </button>
 
         <button
-          @click="refreshData"
-          :disabled="loading"
-          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface text-sm font-semibold transition-all active:scale-95 cursor-pointer disabled:opacity-50 shadow-sm border-0"
+          @click="openRefillModal"
+          class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-primary text-on-primary text-xs font-bold transition-all glow-cyan-hover shadow-lg shadow-primary/25 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
         >
-          <span class="material-symbols-outlined text-lg text-primary" :class="{ 'animate-spin': loading }">refresh</span>
-          <span>Actualizar</span>
+          <span class="material-symbols-outlined text-base">local_shipping</span>
+          <span>Recargar Cisterna</span>
         </button>
       </div>
     </div>
 
-    <!-- Tanks 3D Visualization & Telemetry Section -->
-    <div class="card-elevated p-5 sm:p-6 relative overflow-hidden">
-      <!-- Ambient Glow -->
-      <div class="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-10">
+    <!-- Operational KPIs Bento Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <!-- KPI 1: Agua en Tanque Consolidado -->
+      <div class="card-elevated p-5 flex flex-col justify-between relative overflow-hidden">
+        <div class="flex justify-between items-start mb-3">
+          <span class="text-xs font-semibold text-on-surface-variant">Agua en Tanque Maestro</span>
+          <span class="p-2 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
+            <span class="material-symbols-outlined text-lg">water_drop</span>
+          </span>
+        </div>
         <div>
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-primary text-2xl">water_ec</span>
-            <h3 class="text-lg font-bold text-on-surface">Tanques de Purificación & Almacenamiento</h3>
+          <div class="flex items-baseline gap-2">
+            <h3 class="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">
+              {{ formatNumber(tanksStore.masterTank.currentLiters) }} L
+            </h3>
+            <span
+              class="text-xs font-extrabold px-2 py-0.5 rounded-lg"
+              :class="tanksStore.masterTank.status === 'critical' ? 'bg-error-red/15 text-error-red' : tanksStore.masterTank.status === 'warning' ? 'bg-admin-gold/15 text-admin-gold' : 'bg-billing-green/15 text-billing-green'"
+            >
+              {{ tanksStore.masterTank.level }}%
+            </span>
           </div>
-          <p class="text-xs text-on-surface-variant mt-0.5">
-            Seleccione un tanque para inspeccionar sus sensores de pureza, temperatura y presión en tiempo real.
+          <div class="w-full bg-surface-container-highest rounded-full h-1.5 mt-3 overflow-hidden">
+            <div
+              class="h-full transition-all duration-700 rounded-full"
+              :class="tanksStore.masterTank.status === 'critical' ? 'bg-error-red' : tanksStore.masterTank.status === 'warning' ? 'bg-admin-gold' : 'bg-primary'"
+              :style="{ width: `${tanksStore.masterTank.level}%` }"
+            ></div>
+          </div>
+          <p class="text-[11px] text-on-surface-variant mt-2">Capacidad: {{ formatNumber(tanksStore.masterTank.capacity) }} Litros</p>
+        </div>
+      </div>
+
+      <!-- KPI 2: Autonomía Hídrica Estimada -->
+      <div class="card-elevated p-5 flex flex-col justify-between relative overflow-hidden">
+        <div class="flex justify-between items-start mb-3">
+          <span class="text-xs font-semibold text-on-surface-variant">Autonomía para Cisterna</span>
+          <span class="p-2 rounded-xl flex items-center justify-center" :class="tanksStore.isRefillNeeded ? 'bg-error-red/15 text-error-red' : 'bg-cyan-500/10 text-cyan-400'">
+            <span class="material-symbols-outlined text-lg">timelapse</span>
+          </span>
+        </div>
+        <div>
+          <h3 class="text-2xl sm:text-3xl font-extrabold tracking-tight" :class="tanksStore.isRefillNeeded ? 'text-error-red' : 'text-cyan-400'">
+            ≈ {{ tanksStore.estimatedDaysRemaining }} Días
+          </h3>
+          <p class="text-xs mt-1.5 flex items-center gap-1 font-semibold" :class="tanksStore.isRefillNeeded ? 'text-error-red' : 'text-billing-green'">
+            <span class="material-symbols-outlined text-sm">{{ tanksStore.isRefillNeeded ? 'warning' : 'check_circle' }}</span>
+            <span>{{ tanksStore.isRefillNeeded ? 'Solicitar Cisterna Urgente' : 'Abastecimiento Estable' }}</span>
           </p>
         </div>
+      </div>
 
-        <!-- Global Storage Summary Badge & Quick Filters -->
-        <div class="flex flex-wrap items-center gap-3">
-          <div class="px-3.5 py-1.5 rounded-xl bg-surface-container-high/60 flex items-center gap-3 text-xs shadow-sm">
-            <span class="text-on-surface-variant">Reserva Global:</span>
-            <span class="font-black text-on-surface text-sm">{{ formatVolume(tanksStore.totalCurrentLiters) }} / {{ formatVolume(tanksStore.totalCapacity) }} L</span>
-            <span class="px-2 py-0.5 rounded-md font-bold text-xs" :class="tanksStore.globalLevel <= 15 ? 'bg-error-red/20 text-error-red' : tanksStore.globalLevel <= 30 ? 'bg-admin-gold/20 text-admin-gold' : 'bg-primary/20 text-primary'">
-              {{ tanksStore.globalLevel }}%
+      <!-- KPI 3: Merma por Lavado de Botellones -->
+      <div class="card-elevated p-5 flex flex-col justify-between relative overflow-hidden">
+        <div class="flex justify-between items-start mb-3">
+          <span class="text-xs font-semibold text-on-surface-variant">Merma / Lavado Botellones</span>
+          <span class="p-2 bg-admin-gold/10 text-admin-gold rounded-xl flex items-center justify-center">
+            <span class="material-symbols-outlined text-lg">cleaning_services</span>
+          </span>
+        </div>
+        <div>
+          <div class="flex items-baseline gap-2">
+            <h3 class="text-2xl sm:text-3xl font-extrabold text-admin-gold tracking-tight">
+              {{ tanksStore.washWastePercentage }}%
+            </h3>
+            <span class="text-xs text-on-surface-variant font-medium">del volumen</span>
+          </div>
+          <p class="text-xs text-on-surface-variant mt-2">
+            Total lavado: <strong class="text-on-surface font-mono">{{ formatNumber(tanksStore.masterTank.totalWashWasteLiters || 0) }} L</strong>
+          </p>
+        </div>
+      </div>
+
+      <!-- KPI 4: Ventas y Facturación del Turno -->
+      <div class="card-elevated p-5 flex flex-col justify-between relative overflow-hidden">
+        <div class="flex justify-between items-start mb-3">
+          <span class="text-xs font-semibold text-on-surface-variant">Ventas Totales</span>
+          <span class="p-2 bg-billing-green/10 text-billing-green rounded-xl flex items-center justify-center">
+            <span class="material-symbols-outlined text-lg">payments</span>
+          </span>
+        </div>
+        <div>
+          <h3 class="text-2xl sm:text-3xl font-extrabold text-billing-green tracking-tight">
+            $442.50
+          </h3>
+          <p class="text-xs text-billing-green font-mono font-bold mt-1">
+            ≈ {{ currencyStore.formatVes(currencyStore.toVes(442.50)) }}
+          </p>
+          <p class="text-[11px] text-on-surface-variant mt-1.5">Tasa BCV: Bs. {{ currencyStore.formattedRate }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Tank & Operational Hub Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Columna Izquierda: Tanque Consolidado 3D (Lg: 5 Cols) -->
+      <div class="lg:col-span-5 flex flex-col gap-4">
+        <div class="card-elevated p-6 flex flex-col items-center justify-between relative overflow-hidden">
+          <div class="w-full flex items-center justify-between mb-2">
+            <div>
+              <span class="text-xs font-bold text-primary uppercase tracking-wider">Tanque Único Maestro</span>
+              <h3 class="text-lg font-extrabold text-on-surface">{{ tanksStore.masterTank.name }}</h3>
+              <p class="text-xs text-on-surface-variant">Capacidad Total: {{ formatNumber(tanksStore.masterTank.capacity) }} Litros</p>
+            </div>
+            <span
+              class="px-3 py-1 rounded-full text-xs font-extrabold uppercase"
+              :class="tanksStore.masterTank.status === 'critical' ? 'bg-error-red/15 text-error-red animate-pulse' : tanksStore.masterTank.status === 'warning' ? 'bg-admin-gold/15 text-admin-gold' : 'bg-billing-green/15 text-billing-green'"
+            >
+              {{ tanksStore.masterTank.status === 'critical' ? 'Crítico' : tanksStore.masterTank.status === 'warning' ? 'Alerta' : 'Óptimo' }}
             </span>
           </div>
 
-          <!-- Status Filters -->
-          <div class="flex items-center gap-1 bg-surface-container p-1 rounded-xl shadow-sm text-xs">
-            <button
-              @click="tankFilter = 'all'"
-              class="px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer"
-              :class="tankFilter === 'all' ? 'bg-surface-container-high text-on-surface font-bold shadow-sm' : 'text-on-surface-variant hover:text-on-surface'"
-            >
-              Todos ({{ tanksStore.tanks.length }})
-            </button>
-            <button
-              @click="tankFilter = 'critical'"
-              class="px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1"
-              :class="tankFilter === 'critical' ? 'bg-error-red/20 text-error-red font-bold shadow-sm' : 'text-on-surface-variant hover:text-error-red'"
-            >
-              <span class="w-1.5 h-1.5 rounded-full bg-error-red"></span>
-              Crítico ({{ tanksStore.criticalCount }})
-            </button>
-            <button
-              @click="tankFilter = 'warning'"
-              class="px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1"
-              :class="tankFilter === 'warning' ? 'bg-admin-gold/20 text-admin-gold font-bold shadow-sm' : 'text-on-surface-variant hover:text-admin-gold'"
-            >
-              <span class="w-1.5 h-1.5 rounded-full bg-admin-gold"></span>
-              Alerta ({{ tanksStore.warningCount }})
-            </button>
+          <!-- Componente 3D Liquid Tank -->
+          <div class="w-full py-4 flex justify-center">
+            <LiquidTank3D
+              :tank="tanksStore.masterTank"
+              @refill="openRefillModal"
+              @calibrate="openCapacityModal"
+            />
+          </div>
+
+          <!-- Indicadores de Nivel en Litros -->
+          <div class="w-full grid grid-cols-2 gap-3 pt-3 border-t border-black/5 dark:border-white/5 text-xs">
+            <div class="p-2.5 rounded-xl bg-surface-container/60">
+              <span class="text-on-surface-variant">Agua Disponible:</span>
+              <p class="text-sm font-extrabold text-primary font-mono mt-0.5">
+                {{ formatNumber(tanksStore.masterTank.currentLiters) }} L
+              </p>
+            </div>
+            <div class="p-2.5 rounded-xl bg-surface-container/60">
+              <span class="text-on-surface-variant">Agua Despachada:</span>
+              <p class="text-sm font-extrabold text-billing-green font-mono mt-0.5">
+                {{ formatNumber(tanksStore.masterTank.totalDispensedLiters) }} L
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Tanks 3D Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 relative z-10">
-        <LiquidTank3D
-          v-for="tank in filteredTanks"
-          :key="tank.id"
-          :tank="tank"
-          :selected="selectedTank?.id === tank.id"
-          @select="selectTank"
-          @refill="handleQuickRefill"
-          @calibrate="openCalibrateModal"
-        />
-      </div>
-
-      <!-- Dynamic Live Telemetry & Control Panel for Selected Tank -->
-      <div v-if="selectedTank" class="mt-6 pt-6 border-t border-black/5 dark:border-white/5 relative z-10">
-        <div class="bg-surface-container-high/40 rounded-2xl p-5 shadow-inner">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-4 border-b border-black/5 dark:border-white/5">
+      <!-- Columna Derecha: Balance Hídrico, Alerta de Cisterna y Módulo IoT Opcional (Lg: 7 Cols) -->
+      <div class="lg:col-span-7 flex flex-col gap-6">
+        <!-- Tarjeta de Alerta de Cisterna & Autonomía -->
+        <div
+          class="card-elevated p-6 relative overflow-hidden"
+          :class="tanksStore.isRefillNeeded ? 'border-2 border-error-red/40 bg-error-red/5' : 'bg-surface-container-high/30'"
+        >
+          <div class="flex items-start justify-between gap-4">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center font-bold">
-                <span class="material-symbols-outlined text-xl">sensors</span>
+              <div
+                class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl"
+                :class="tanksStore.isRefillNeeded ? 'bg-error-red/20 text-error-red' : 'bg-primary/15 text-primary'"
+              >
+                <span class="material-symbols-outlined text-2xl">local_shipping</span>
               </div>
               <div>
-                <div class="flex items-center gap-2">
-                  <h4 class="text-base font-bold text-on-surface">Telemetría IoT: {{ selectedTank.name }}</h4>
-                  <span class="text-[10px] px-2 py-0.5 rounded-md bg-billing-green/15 text-billing-green font-extrabold uppercase">
-                    Transmisión en Vivo
-                  </span>
-                </div>
-                <p class="text-xs text-on-surface-variant">Diagnóstico de sensores integrados de purificación e impulsión</p>
+                <h4 class="text-base font-bold text-on-surface">
+                  {{ tanksStore.isRefillNeeded ? '¡Alerta de Cisterna Activada!' : 'Proyección de Suministro de Cisterna' }}
+                </h4>
+                <p class="text-xs text-on-surface-variant mt-0.5">
+                  {{ tanksStore.isRefillNeeded ? 'El volumen de agua ha caído por debajo del umbral de seguridad (25%). Se recomienda llamar a la cisterna.' : 'El inventario de agua actual cubre la demanda proyectada sin riesgo de agotamiento inmediato.' }}
+                </p>
               </div>
             </div>
 
-            <!-- Quick Telemetry Actions -->
-            <div class="flex items-center gap-2">
-              <button
-                @click="simulatePurificationTest"
-                :disabled="isTestingFlow"
-                class="px-3.5 py-2 rounded-xl text-xs font-bold bg-primary/10 hover:bg-primary text-primary hover:text-on-primary transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-sm"
-              >
-                <span class="material-symbols-outlined text-sm" :class="{ 'animate-spin': isTestingFlow }">science</span>
-                <span>{{ isTestingFlow ? 'Analizando...' : 'Test de Pureza' }}</span>
-              </button>
-              <button
-                @click="toggleValve"
-                class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
-                :class="valveOpen ? 'bg-billing-green/15 text-billing-green hover:bg-billing-green/25' : 'bg-error-red/15 text-error-red hover:bg-error-red/25'"
-              >
-                <span class="material-symbols-outlined text-sm">{{ valveOpen ? 'valve' : 'lock' }}</span>
-                <span>Válvula: {{ valveOpen ? 'Abierta' : 'Cerrada' }}</span>
-              </button>
-            </div>
+            <button
+              @click="openRefillModal"
+              class="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer active:scale-95"
+              :class="tanksStore.isRefillNeeded ? 'bg-error-red text-white hover:bg-rose-700 animate-pulse' : 'bg-primary text-on-primary glow-cyan-hover'"
+            >
+              <span class="material-symbols-outlined text-sm">add</span>
+              <span>Registrar Cisterna</span>
+            </button>
           </div>
 
-          <!-- 4 Sensor Metrics Cards Grid -->
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-            <!-- Sensor 1: TDS / Purity -->
-            <div class="p-3.5 rounded-xl bg-surface-container/60 flex flex-col justify-between shadow-sm">
-              <div class="flex items-center justify-between text-xs text-on-surface-variant mb-1">
-                <span>Pureza (TDS)</span>
-                <span class="material-symbols-outlined text-cyan-400 text-sm">water_drop</span>
-              </div>
-              <div class="flex items-baseline gap-1">
-                <span class="text-xl font-extrabold font-mono text-on-surface">{{ tankTelemetry.tds }}</span>
-                <span class="text-xs font-semibold text-on-surface-variant">ppm</span>
-              </div>
-              <span class="text-[10px] text-billing-green font-bold mt-1 flex items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-billing-green"></span> Grado Alimentario Óptimo
-              </span>
-            </div>
-
-            <!-- Sensor 2: Temperatura -->
-            <div class="p-3.5 rounded-xl bg-surface-container/60 flex flex-col justify-between shadow-sm">
-              <div class="flex items-center justify-between text-xs text-on-surface-variant mb-1">
-                <span>Temperatura</span>
-                <span class="material-symbols-outlined text-amber-400 text-sm">device_thermostat</span>
-              </div>
-              <div class="flex items-baseline gap-1">
-                <span class="text-xl font-extrabold font-mono text-on-surface">{{ tankTelemetry.temp }}</span>
-                <span class="text-xs font-semibold text-on-surface-variant">°C</span>
-              </div>
-              <span class="text-[10px] text-on-surface-variant font-medium mt-1">
-                Rango normal (15 - 22 °C)
-              </span>
-            </div>
-
-            <!-- Sensor 3: Presión de Red -->
-            <div class="p-3.5 rounded-xl bg-surface-container/60 flex flex-col justify-between shadow-sm">
-              <div class="flex items-center justify-between text-xs text-on-surface-variant mb-1">
-                <span>Presión Impulsión</span>
-                <span class="material-symbols-outlined text-primary text-sm">speed</span>
-              </div>
-              <div class="flex items-baseline gap-1">
-                <span class="text-xl font-extrabold font-mono text-on-surface">{{ tankTelemetry.pressure }}</span>
-                <span class="text-xs font-semibold text-on-surface-variant">PSI</span>
-              </div>
-              <span class="text-[10px] text-billing-green font-semibold mt-1">
-                Presión constante
-              </span>
-            </div>
-
-            <!-- Sensor 4: Caudal de Flujo -->
-            <div class="p-3.5 rounded-xl bg-surface-container/60 flex flex-col justify-between shadow-sm">
-              <div class="flex items-center justify-between text-xs text-on-surface-variant mb-1">
-                <span>Caudal de Flujo</span>
-                <span class="material-symbols-outlined text-primary text-sm">waves</span>
-              </div>
-              <div class="flex items-baseline gap-1">
-                <span class="text-xl font-extrabold font-mono text-on-surface">{{ valveOpen ? tankTelemetry.flowRate : 0 }}</span>
-                <span class="text-xs font-semibold text-on-surface-variant">L/min</span>
-              </div>
-              <span class="text-[10px] text-on-surface-variant font-medium mt-1">
-                {{ valveOpen ? 'Dispensado en curso' : 'Circuito cerrado' }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- KPI Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <KpiCard
-        title="Total Ventas"
-        :value="kpis.totalSales"
-        :change="kpis.salesChange"
-        icon="shopping_cart"
-        variant="primary"
-      />
-      <KpiCard
-        title="Ingresos"
-        :value="kpis.revenue"
-        :change="kpis.revenueChange"
-        icon="payments"
-        variant="success"
-        prefix="$"
-      />
-      <KpiCard
-        title="Facturas Activas"
-        :value="kpis.activeInvoices"
-        :change="kpis.invoicesChange"
-        icon="receipt_long"
-        variant="info"
-      />
-      <KpiCard
-        title="Alertas de Stock"
-        :value="kpis.lowStockItems"
-        :change="kpis.stockChange"
-        icon="warning"
-        variant="warning"
-      />
-    </div>
-
-    <!-- Sales Trends & Quick Operations Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Sales Chart -->
-      <div class="card-elevated p-6 lg:col-span-2 flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between mb-4">
+          <!-- Indicadores de Balance Hídrico -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-4 border-t border-black/5 dark:border-white/5">
             <div>
-              <h3 class="text-base font-bold text-on-surface">Tendencia de Ventas & Consumo de Agua</h3>
-              <p class="text-xs text-on-surface-variant">Relación entre ingresos generados y litros despachados</p>
+              <span class="text-[11px] text-on-surface-variant">1. Entrada Cisterna:</span>
+              <p class="text-xs font-bold text-on-surface mt-0.5 font-mono">+{{ formatNumber(tanksStore.totalWaterPurchased) }} L</p>
             </div>
-            <select v-model="salesChartPeriod" class="bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg px-2.5 py-1 text-xs outline-none cursor-pointer shadow-sm border-0">
-              <option value="7d">Últimos 7 días</option>
-              <option value="30d">Últimos 30 días</option>
-              <option value="90d">Últimos 90 días</option>
-            </select>
+            <div>
+              <span class="text-[11px] text-on-surface-variant">2. Ventas a Clientes:</span>
+              <p class="text-xs font-bold text-primary mt-0.5 font-mono">-{{ formatNumber(tanksStore.totalWaterSold) }} L</p>
+            </div>
+            <div>
+              <span class="text-[11px] text-on-surface-variant">3. Merma Lavado ({{ tanksStore.washWastePercentage }}%):</span>
+              <p class="text-xs font-bold text-admin-gold mt-0.5 font-mono">-{{ formatNumber(tanksStore.totalWaterWasted) }} L</p>
+            </div>
+            <div>
+              <span class="text-[11px] text-on-surface-variant">4. Saldo Disponible:</span>
+              <p class="text-xs font-bold text-billing-green mt-0.5 font-mono">{{ formatNumber(tanksStore.masterTank.currentLiters) }} L</p>
+            </div>
           </div>
+        </div>
 
-          <div class="h-64 flex items-end justify-between gap-3 pt-6 pb-2 px-2">
-            <div
-              v-for="(day, idx) in chartData"
-              :key="idx"
-              class="flex-1 flex flex-col items-center gap-2 group cursor-pointer"
-            >
-              <div class="relative w-full flex items-end justify-center h-48">
-                <!-- Hover Tooltip -->
-                <div class="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity bg-surface-container-highest px-2 py-1 rounded-md text-[10px] font-bold text-on-surface pointer-events-none shadow-md z-30 whitespace-nowrap">
-                  ${{ day.amount }} ({{ day.liters }}L)
-                </div>
-                <!-- Bar Container -->
-                <div
-                  class="w-full max-w-[28px] rounded-t-lg bg-primary/30 group-hover:bg-primary transition-all duration-300 relative overflow-hidden"
-                  :style="{ height: `${(day.amount / maxChartAmount) * 100}%` }"
-                >
-                  <div class="absolute inset-0 bg-gradient-to-t from-transparent to-white/20"></div>
-                </div>
+        <!-- Módulo de Telemetría IoT Físico (Deshabilitado / Opcional) -->
+        <div class="card-elevated p-6">
+          <div class="flex items-center justify-between mb-4 pb-3 border-b border-black/5 dark:border-white/5">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-xl">sensors</span>
+              <div>
+                <h4 class="text-base font-bold text-on-surface">Telemetría de Sensores IoT</h4>
+                <p class="text-xs text-on-surface-variant">Presión de impulsión, temperatura y pureza TDS</p>
               </div>
-              <span class="text-[11px] font-semibold text-on-surface-variant group-hover:text-on-surface transition-colors">
-                {{ day.label }}
+            </div>
+
+            <!-- Toggle IoT Mode -->
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-semibold" :class="iotEnabled ? 'text-billing-green' : 'text-on-surface-variant'">
+                {{ iotEnabled ? 'Sensores Conectados' : 'Sensores Desconectados' }}
               </span>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" v-model="iotEnabled" class="sr-only peer" />
+                <div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
             </div>
           </div>
-        </div>
 
-        <div class="pt-4 border-t border-black/5 dark:border-white/5 flex items-center justify-between text-xs text-on-surface-variant">
-          <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-sm bg-primary"></span>
-            <span>Ventas Facturadas</span>
+          <!-- Si los sensores están desconectados (Estado real del cliente) -->
+          <div v-if="!iotEnabled" class="p-4 rounded-2xl bg-surface-container/60 text-xs text-on-surface-variant flex items-center gap-3">
+            <span class="material-symbols-outlined text-2xl text-on-surface-variant/60">sensors_off</span>
+            <div>
+              <p class="font-bold text-on-surface">Modo de Balance Volumétrico Activo (Sin sensores físicos)</p>
+              <p class="text-[11px] text-on-surface-variant mt-0.5">
+                La planta opera mediante control de entradas de cisterna, ventas y porcentaje de merma de lavado. Active esta opción cuando instale sondas de TDS, sensores de presión o caudalímetros físicos.
+              </p>
+            </div>
           </div>
-          <span>Total período: <strong>${{ chartTotalAmount.toLocaleString('es-LA') }}</strong></span>
-        </div>
-      </div>
 
-      <!-- Quick Shortcuts & Quick Dispatch -->
-      <div class="card-elevated p-6 flex flex-col justify-between">
-        <div>
-          <h3 class="text-base font-bold text-on-surface mb-1">Acciones Rápidas</h3>
-          <p class="text-xs text-on-surface-variant mb-4">Accesos directos a los módulos operativos</p>
-
-          <div class="space-y-3">
-            <NuxtLink
-              to="/sales/invoices"
-              class="p-3.5 rounded-xl bg-surface-container/60 hover:bg-surface-container-high flex items-center justify-between transition-all group shadow-sm"
-            >
-              <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-primary/15 text-primary flex items-center justify-center">
-                  <span class="material-symbols-outlined text-lg">receipt_long</span>
-                </div>
-                <div>
-                  <p class="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">Nueva Factura</p>
-                  <p class="text-xs text-on-surface-variant">Emitir venta y descontar agua</p>
-                </div>
+          <!-- Si el usuario habilita los sensores físicos -->
+          <div v-else class="space-y-4 animate-in">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div class="p-3 rounded-xl bg-surface-container/80 flex flex-col justify-between">
+                <span class="text-[10px] text-on-surface-variant">Pureza TDS</span>
+                <p class="text-base font-extrabold text-cyan-400 font-mono">12 ppm</p>
+                <span class="text-[9px] text-billing-green font-semibold">Grado Alimentario</span>
               </div>
-              <span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">arrow_forward</span>
-            </NuxtLink>
-
-            <NuxtLink
-              to="/inventory"
-              class="p-3.5 rounded-xl bg-surface-container/60 hover:bg-surface-container-high flex items-center justify-between transition-all group shadow-sm"
-            >
-              <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-billing-green/15 text-billing-green flex items-center justify-center">
-                  <span class="material-symbols-outlined text-lg">inventory_2</span>
-                </div>
-                <div>
-                  <p class="text-sm font-bold text-on-surface group-hover:text-billing-green transition-colors">Catálogo de Stock</p>
-                  <p class="text-xs text-on-surface-variant">Gestionar botellones e insumos</p>
-                </div>
+              <div class="p-3 rounded-xl bg-surface-container/80 flex flex-col justify-between">
+                <span class="text-[10px] text-on-surface-variant">Temperatura</span>
+                <p class="text-base font-extrabold text-on-surface font-mono">18.4 °C</p>
+                <span class="text-[9px] text-on-surface-variant">Rango Óptimo</span>
               </div>
-              <span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">arrow_forward</span>
-            </NuxtLink>
-
-            <NuxtLink
-              to="/users"
-              class="p-3.5 rounded-xl bg-surface-container/60 hover:bg-surface-container-high flex items-center justify-between transition-all group shadow-sm"
-            >
-              <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-admin-gold/15 text-admin-gold flex items-center justify-center">
-                  <span class="material-symbols-outlined text-lg">group</span>
-                </div>
-                <div>
-                  <p class="text-sm font-bold text-on-surface group-hover:text-admin-gold transition-colors">Control de Usuarios</p>
-                  <p class="text-xs text-on-surface-variant">Roles y operadores</p>
-                </div>
+              <div class="p-3 rounded-xl bg-surface-container/80 flex flex-col justify-between">
+                <span class="text-[10px] text-on-surface-variant">Presión Impulsión</span>
+                <p class="text-base font-extrabold text-on-surface font-mono">44.5 PSI</p>
+                <span class="text-[9px] text-billing-green font-semibold">Bomba Estable</span>
               </div>
-              <span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">arrow_forward</span>
-            </NuxtLink>
+              <div class="p-3 rounded-xl bg-surface-container/80 flex flex-col justify-between">
+                <span class="text-[10px] text-on-surface-variant">Caudal Llenado</span>
+                <p class="text-base font-extrabold text-cyan-400 font-mono">16.0 L/min</p>
+                <span class="text-[9px] text-billing-green font-semibold">Flujo Activo</span>
+              </div>
+            </div>
           </div>
-        </div>
-
-        <div class="pt-4 border-t border-black/5 dark:border-white/5 flex items-center gap-2 text-xs text-on-surface-variant">
-          <span class="material-symbols-outlined text-sm text-primary">verified</span>
-          <span>AquaPure System v1.0.0 (MIT License)</span>
         </div>
       </div>
     </div>
 
-    <!-- Modal Recarga de Tanque -->
+    <!-- Movimientos Hídricos Recientes Table -->
+    <div class="card-elevated overflow-hidden">
+      <div class="p-5 border-b border-black/5 dark:border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-surface-container-highest/30">
+        <div>
+          <h3 class="text-base font-bold text-on-surface">Historial de Movimientos Hídricos</h3>
+          <p class="text-xs text-on-surface-variant mt-0.5">Registro de recargas de cisterna, ventas despachadas y merma de lavado</p>
+        </div>
+        <span class="text-xs px-3 py-1 bg-surface-container rounded-full text-on-surface-variant font-medium border-0 shadow-sm">
+          {{ tanksStore.movements.length }} Registros
+        </span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-surface-container-highest/40 border-b border-black/5 dark:border-white/5 text-[11px] font-extrabold text-on-surface-variant uppercase tracking-wider">
+              <th class="py-4 px-6">Tipo</th>
+              <th class="py-4 px-6">Fecha & Hora</th>
+              <th class="py-4 px-6">Motivo / Concepto</th>
+              <th class="py-4 px-6 text-right">Volumen</th>
+              <th class="py-4 px-6 text-right">Saldo en Tanque</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-black/5 dark:divide-white/5">
+            <tr v-for="mov in tanksStore.movements" :key="mov.id" class="hover:bg-surface-container-high/40 transition-colors">
+              <td class="py-4 px-6">
+                <span
+                  v-if="mov.type === 'REFILL'"
+                  class="inline-flex items-center gap-1 text-xs font-bold text-billing-green bg-billing-green/15 px-2.5 py-1 rounded-lg"
+                >
+                  <span class="material-symbols-outlined text-xs">local_shipping</span>
+                  Cisterna
+                </span>
+                <span
+                  v-else-if="mov.type === 'DISPENSE'"
+                  class="inline-flex items-center gap-1 text-xs font-bold text-primary bg-primary/15 px-2.5 py-1 rounded-lg"
+                >
+                  <span class="material-symbols-outlined text-xs">shopping_bag</span>
+                  Venta
+                </span>
+                <span
+                  v-else
+                  class="inline-flex items-center gap-1 text-xs font-bold text-admin-gold bg-admin-gold/15 px-2.5 py-1 rounded-lg"
+                >
+                  <span class="material-symbols-outlined text-xs">cleaning_services</span>
+                  Lavado / Merma
+                </span>
+              </td>
+              <td class="py-4 px-6 text-xs text-on-surface-variant font-medium">
+                {{ formatDateTime(mov.timestamp) }}
+              </td>
+              <td class="py-4 px-6 text-sm text-on-surface font-semibold">
+                {{ mov.reason }}
+                <span v-if="mov.supplier" class="text-xs text-primary block font-normal">{{ mov.supplier }}</span>
+              </td>
+              <td class="py-4 px-6 text-sm text-right font-mono font-bold" :class="mov.type === 'REFILL' ? 'text-billing-green' : mov.type === 'DISPENSE' ? 'text-primary' : 'text-admin-gold'">
+                {{ mov.type === 'REFILL' ? '+' : '-' }}{{ formatNumber(mov.liters) }} L
+              </td>
+              <td class="py-4 px-6 text-sm text-right font-mono font-bold text-on-surface">
+                {{ formatNumber(mov.remainingLiters) }} L
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Modal 1: Recarga de Agua por Camión Cisterna -->
     <div v-if="showRefillModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="showRefillModal = false"></div>
-      <div class="relative glass-card w-full max-w-md p-6 z-10 animate-in">
+      <div class="relative glass-card w-full max-w-lg p-6 z-10 animate-in">
         <div class="flex items-center justify-between pb-4 border-b border-black/5 dark:border-white/5 mb-4">
           <div class="flex items-center gap-2">
-            <span class="p-2 rounded-xl bg-primary/15 text-primary material-symbols-outlined">water_drop</span>
+            <span class="p-2 rounded-xl bg-primary/15 text-primary material-symbols-outlined">local_shipping</span>
             <div>
-              <h4 class="text-lg font-bold text-on-surface">Recarga de Tanque</h4>
-              <p class="text-xs text-on-surface-variant">Registrar proceso de llenado o purificación</p>
+              <h4 class="text-base font-bold text-on-surface">Registrar Recarga de Cisterna</h4>
+              <p class="text-xs text-on-surface-variant">Ingreso formal de agua al Tanque Consolidado</p>
             </div>
           </div>
           <button @click="showRefillModal = false" class="p-1 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer">
@@ -379,66 +378,77 @@
           </button>
         </div>
 
-        <!-- Inline Error Alert -->
         <div v-if="refillError" class="mb-4 p-3 rounded-xl bg-error-red/10 text-error-red text-xs font-semibold flex items-center gap-2">
           <span class="material-symbols-outlined text-sm">error</span>
           <span>{{ refillError }}</span>
         </div>
 
-        <form @submit.prevent="confirmRefill" class="space-y-4">
+        <form @submit.prevent="submitRefill" class="space-y-4">
           <div>
-            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Seleccionar Tanque *</label>
-            <select
-              v-model="refillForm.tankId"
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Volumen de la Cisterna (Litros) *</label>
+            <input
+              v-model.number="refillForm.liters"
+              type="number"
+              min="100"
+              step="100"
               required
-              class="w-full bg-surface-container border-0 rounded-xl px-3 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
-            >
-              <option v-for="t in tanksStore.tanks" :key="t.id" :value="t.id">
-                {{ t.name }} (Actual: {{ formatVolume(t.currentLiters) }} / {{ formatVolume(t.capacity) }} L)
-              </option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Tipo de Llenado</label>
-            <div class="grid grid-cols-2 gap-2">
+              class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none font-bold font-mono shadow-sm"
+            />
+            <!-- Quick Presets -->
+            <div class="flex gap-2 mt-2">
               <button
                 type="button"
-                @click="refillForm.mode = 'full'"
-                class="py-2 px-3 rounded-xl text-xs font-bold transition-all border-0 shadow-sm cursor-pointer"
-                :class="refillForm.mode === 'full' ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface hover:bg-surface-container-high'"
+                @click="refillForm.liters = 10000"
+                class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-surface-container-high hover:bg-primary/20 text-on-surface hover:text-primary transition-colors cursor-pointer"
               >
-                Llenado Total (100%)
+                +10.000 L (Cisterna Mediana)
               </button>
               <button
                 type="button"
-                @click="refillForm.mode = 'custom'"
-                class="py-2 px-3 rounded-xl text-xs font-bold transition-all border-0 shadow-sm cursor-pointer"
-                :class="refillForm.mode === 'custom' ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface hover:bg-surface-container-high'"
+                @click="refillForm.liters = 30000"
+                class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-surface-container-high hover:bg-primary/20 text-on-surface hover:text-primary transition-colors cursor-pointer"
               >
-                Cantidad Específica
+                +30.000 L (Cisterna Grande)
               </button>
             </div>
           </div>
 
-          <div v-if="refillForm.mode === 'custom'">
-            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Litros a Agregar *</label>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Proveedor del Camión Cisterna *</label>
             <input
-              v-model.number="refillForm.amountLiters"
-              type="number"
-              min="1"
-              step="1"
+              v-model="refillForm.supplier"
+              type="text"
               required
-              placeholder="Ej: 1000"
+              placeholder="Ej: Cisternas HidroOriente C.A."
               class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
             />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Costo ($ USD)</label>
+              <input
+                v-model.number="refillForm.cost"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="120.00"
+                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none font-mono font-bold shadow-sm"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Equivalente BCV</label>
+              <div class="h-10 px-3 py-2 bg-surface-container-high/60 rounded-xl flex items-center justify-between text-xs font-mono font-bold text-billing-green shadow-sm">
+                <span>{{ currencyStore.formatVes(currencyStore.toVes(refillForm.cost || 0)) }}</span>
+              </div>
+            </div>
           </div>
 
           <div class="flex justify-end gap-3 pt-4 border-t border-black/5 dark:border-white/5">
             <button
               type="button"
               @click="showRefillModal = false"
-              class="px-4 py-2 text-xs font-semibold text-on-surface-variant hover:text-on-surface rounded-xl hover:bg-surface-container cursor-pointer"
+              class="px-4 py-2.5 rounded-xl text-xs font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer"
             >
               Cancelar
             </button>
@@ -453,333 +463,263 @@
       </div>
     </div>
 
-    <!-- Modal Calibración de Tanque -->
-    <div v-if="showCalibrateModal && editingTank" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="showCalibrateModal = false"></div>
+    <!-- Modal 2: Ajuste de Merma y Lavado de Botellones -->
+    <div v-if="showWashModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="showWashModal = false"></div>
       <div class="relative glass-card w-full max-w-md p-6 z-10 animate-in">
         <div class="flex items-center justify-between pb-4 border-b border-black/5 dark:border-white/5 mb-4">
           <div class="flex items-center gap-2">
-            <span class="p-2 rounded-xl bg-primary/15 text-primary material-symbols-outlined">tune</span>
+            <span class="p-2 rounded-xl bg-admin-gold/15 text-admin-gold material-symbols-outlined">cleaning_services</span>
             <div>
-              <h4 class="text-lg font-bold text-on-surface">Calibrar Sensores</h4>
-              <p class="text-xs text-on-surface-variant">{{ editingTank.name }}</p>
+              <h4 class="text-base font-bold text-on-surface">Configuración de Merma & Lavado</h4>
+              <p class="text-xs text-on-surface-variant">Control del porcentaje de agua para desinfección</p>
             </div>
           </div>
-          <button @click="showCalibrateModal = false" class="p-1 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer">
+          <button @click="showWashModal = false" class="p-1 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer">
             <span class="material-symbols-outlined">close</span>
           </button>
         </div>
 
-        <!-- Inline Error Alert -->
-        <div v-if="calibrateError" class="mb-4 p-3 rounded-xl bg-error-red/10 text-error-red text-xs font-semibold flex items-center gap-2">
-          <span class="material-symbols-outlined text-sm">error</span>
-          <span>{{ calibrateError }}</span>
-        </div>
-
-        <form @submit.prevent="saveCalibration" class="space-y-4">
+        <div class="space-y-4">
           <div>
-            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Nombre del Tanque *</label>
-            <input
-              v-model="calibrateForm.name"
-              type="text"
-              required
-              class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
-            />
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Tipo / Descripción *</label>
-            <input
-              v-model="calibrateForm.type"
-              type="text"
-              required
-              class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
-            />
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Capacidad Total (L) *</label>
-              <input
-                v-model.number="calibrateForm.capacity"
-                type="number"
-                min="100"
-                step="100"
-                required
-                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
-              />
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-semibold text-on-surface-variant">Porcentaje de Merma Operativa (10% - 20%):</label>
+              <span class="text-sm font-extrabold text-admin-gold font-mono">{{ tempWastePercentage }}%</span>
             </div>
-            <div>
-              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Nivel Actual (L) *</label>
+            <input
+              v-model.number="tempWastePercentage"
+              type="range"
+              min="10"
+              max="20"
+              step="1"
+              class="w-full accent-primary cursor-pointer"
+            />
+            <p class="text-[11px] text-on-surface-variant mt-1.5 leading-relaxed">
+              Por cada 100 Litros de agua despachada, el sistema deducirá automáticamente {{ tempWastePercentage }} Litros adicionales por concepto de lavado y purga de botellones.
+            </p>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-surface-container/60 text-xs text-on-surface-variant">
+            <span class="font-bold text-on-surface block mb-1">Registrar Merma Extraordinaria (Opcional):</span>
+            <div class="flex gap-2 mt-2">
               <input
-                v-model.number="calibrateForm.currentLiters"
+                v-model.number="manualWasteLiters"
                 type="number"
-                min="0"
-                :max="calibrateForm.capacity"
+                min="10"
                 step="10"
-                required
-                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
+                placeholder="Litros (ej: 200)"
+                class="flex-1 bg-surface-container-high border-0 rounded-xl px-3 py-1.5 text-on-surface text-xs font-mono font-bold outline-none focus:ring-1 focus:ring-primary shadow-sm"
               />
+              <button
+                type="button"
+                @click="submitManualWaste"
+                class="px-3 py-1.5 rounded-xl bg-admin-gold text-slate-950 font-bold text-xs cursor-pointer active:scale-95"
+              >
+                Deducir
+              </button>
             </div>
           </div>
 
           <div class="flex justify-end gap-3 pt-4 border-t border-black/5 dark:border-white/5">
             <button
               type="button"
-              @click="showCalibrateModal = false"
-              class="px-4 py-2 text-xs font-semibold text-on-surface-variant hover:text-on-surface rounded-xl hover:bg-surface-container cursor-pointer"
+              @click="showWashModal = false"
+              class="px-4 py-2.5 rounded-xl text-xs font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer"
+            >
+              Cerrar
+            </button>
+            <button
+              type="button"
+              @click="saveWastePercentage"
+              class="px-5 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-xs glow-cyan-hover transition-all cursor-pointer active:scale-95"
+            >
+              Guardar Porcentaje
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 3: Capacidad Total del Tanque -->
+    <div v-if="showCapacityModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="showCapacityModal = false"></div>
+      <div class="relative glass-card w-full max-w-sm p-6 z-10 animate-in">
+        <div class="flex items-center justify-between pb-4 border-b border-black/5 dark:border-white/5 mb-4">
+          <h4 class="text-base font-bold text-on-surface">Capacidad del Tanque</h4>
+          <button @click="showCapacityModal = false" class="p-1 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Capacidad Total (Litros) *</label>
+            <input
+              v-model.number="tempCapacity"
+              type="number"
+              min="1000"
+              step="1000"
+              class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none font-bold font-mono shadow-sm"
+            />
+          </div>
+
+          <div class="flex justify-end gap-3 pt-4 border-t border-black/5 dark:border-white/5">
+            <button
+              type="button"
+              @click="showCapacityModal = false"
+              class="px-4 py-2.5 rounded-xl text-xs font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer"
             >
               Cancelar
             </button>
             <button
-              type="submit"
+              type="button"
+              @click="saveCapacity"
               class="px-5 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-xs glow-cyan-hover transition-all cursor-pointer active:scale-95"
             >
-              Guardar Calibración
+              Actualizar
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { useTanksStore, type Tank } from '~/stores/tanks';
+import { ref, reactive, onMounted } from 'vue';
+import { useTanksStore } from '~/stores/tanks';
+import { useCurrencyStore } from '~/stores/currency';
 import { useToast } from '~/composables/useToast';
-import {
-  validateRequired,
-  validatePositiveNumber,
-  validateNonNegativeNumber,
-  sanitizeFormData,
-} from '~/utils/validators';
+import LiquidTank3D from '~/components/ui/LiquidTank3D.vue';
+import { validateRequired, validatePositiveNumber, sanitizeFormData } from '~/utils/validators';
 
 definePageMeta({
   middleware: ['auth'],
 });
 
 const tanksStore = useTanksStore();
+const currencyStore = useCurrencyStore();
 const toast = useToast();
 
-const loading = ref(false);
+const iotEnabled = ref(false); // Default disabled per user requirements
 const showRefillModal = ref(false);
-const showCalibrateModal = ref(false);
-const editingTank = ref<Tank | null>(null);
-const tankFilter = ref<'all' | 'critical' | 'warning'>('all');
-const selectedTankId = ref<string>('tank-1');
-const valveOpen = ref(true);
-const isTestingFlow = ref(false);
+const showWashModal = ref(false);
+const showCapacityModal = ref(false);
+const refillError = ref<string | null>(null);
 
-const refillError = ref('');
-const calibrateError = ref('');
+const tempWastePercentage = ref<number>(tanksStore.washWastePercentage);
+const manualWasteLiters = ref<number | null>(null);
+const tempCapacity = ref<number>(tanksStore.masterTank.capacity);
 
-const refillForm = ref({
-  tankId: 'tank-1',
-  mode: 'full' as 'full' | 'custom',
-  amountLiters: 1000,
+const refillForm = reactive({
+  liters: 10000,
+  supplier: 'Cisternas HidroOriente C.A.',
+  cost: 120.00,
 });
 
-const calibrateForm = ref({
-  name: '',
-  type: '',
-  capacity: 10000,
-  currentLiters: 5000,
+onMounted(() => {
+  tanksStore.init();
+  tempWastePercentage.value = tanksStore.washWastePercentage;
+  tempCapacity.value = tanksStore.masterTank.capacity;
 });
 
-const selectedTank = computed(() => {
-  return tanksStore.tanks.find(t => t.id === selectedTankId.value) || tanksStore.tanks[0] || null;
-});
-
-const filteredTanks = computed(() => {
-  if (tankFilter.value === 'critical') {
-    return tanksStore.tanks.filter(t => t.status === 'critical');
-  }
-  if (tankFilter.value === 'warning') {
-    return tanksStore.tanks.filter(t => t.status === 'warning');
-  }
-  return tanksStore.tanks;
-});
-
-const selectTank = (tankId: string) => {
-  selectedTankId.value = tankId;
-  const tank = tanksStore.tanks.find(t => t.id === tankId);
-  if (tank) {
-    toast.info(`Tanque seleccionado: ${tank.name}`, 'Telemetría IoT sincronizada.');
-  }
-};
-
-const toggleValve = () => {
-  valveOpen.value = !valveOpen.value;
-  if (valveOpen.value) {
-    toast.success('Válvula abierta', `Suministro de ${selectedTank.value?.name} habilitado.`);
-  } else {
-    toast.warning('Válvula cerrada', `Suministro de ${selectedTank.value?.name} bloqueado preventivamente.`);
-  }
-};
-
-const simulatePurificationTest = () => {
-  isTestingFlow.value = true;
-  toast.info('Iniciando prueba de ósmosis...', 'Analizando espectrometría y conductividad.');
-
-  setTimeout(() => {
-    isTestingFlow.value = false;
-    toast.success('Test de pureza completado', 'Agua purificada al 99.8% - Grado alimentario verificado.');
-  }, 1800);
-};
-
-const tankTelemetry = computed(() => {
-  const tank = selectedTank.value;
-  if (!tank) return { tds: 12, temp: 18.5, pressure: 42, flowRate: 14.5 };
-
-  return {
-    tds: tank.status === 'critical' ? 8 : tank.status === 'warning' ? 14 : 11,
-    temp: 18.2,
-    pressure: 44.5,
-    flowRate: 16.2,
-  };
-});
-
-// KPIs State
-const kpis = ref({
-  totalSales: 1284,
-  salesChange: 12.5,
-  revenue: 48920,
-  revenueChange: 8.2,
-  activeInvoices: 342,
-  invoicesChange: -2.4,
-  lowStockItems: 3,
-  stockChange: 0,
-});
-
-// Sales Chart
-const salesChartPeriod = ref('7d');
-const chartData = ref([
-  { label: 'Lun', amount: 3400, liters: 750 },
-  { label: 'Mar', amount: 4200, liters: 920 },
-  { label: 'Mié', amount: 3100, liters: 680 },
-  { label: 'Jue', amount: 5600, liters: 1240 },
-  { label: 'Vie', amount: 6800, liters: 1510 },
-  { label: 'Sáb', amount: 7200, liters: 1600 },
-  { label: 'Dom', amount: 4900, liters: 1080 },
-]);
-
-const maxChartAmount = computed(() => {
-  return Math.max(...chartData.value.map(d => d.amount), 1);
-});
-
-const chartTotalAmount = computed(() => {
-  return chartData.value.reduce((acc, d) => acc + d.amount, 0);
-});
-
-const formatVolume = (val: number): string => {
+const formatNumber = (val: number): string => {
   return new Intl.NumberFormat('es-ES').format(Math.round(val || 0));
 };
 
-const refreshData = async () => {
-  loading.value = true;
-  await new Promise(r => setTimeout(r, 600));
-  loading.value = false;
-  toast.success('Datos actualizados', 'Telemetría y reservas sincronizadas.');
+const formatDateTime = (isoString: string): string => {
+  try {
+    return new Date(isoString).toLocaleDateString('es-VE', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return 'Reciente';
+  }
 };
 
-const openQuickRefillModal = () => {
-  refillError.value = '';
-  refillForm.value = {
-    tankId: selectedTank.value?.id || tanksStore.tanks[0]?.id || 'tank-1',
-    mode: 'full',
-    amountLiters: 1000,
-  };
+const openRefillModal = () => {
+  refillError.value = null;
+  refillForm.liters = 10000;
+  refillForm.supplier = 'Cisternas HidroOriente C.A.';
+  refillForm.cost = 120.00;
   showRefillModal.value = true;
 };
 
-const handleQuickRefill = (tankId: string) => {
-  refillError.value = '';
-  refillForm.value.tankId = tankId;
-  refillForm.value.mode = 'full';
-  showRefillModal.value = true;
+const openWashModal = () => {
+  tempWastePercentage.value = tanksStore.washWastePercentage;
+  manualWasteLiters.value = null;
+  showWashModal.value = true;
 };
 
-const confirmRefill = () => {
-  refillError.value = '';
-  const cleaned = sanitizeFormData(refillForm.value);
-
-  const tankError = validateRequired(cleaned.tankId, 'El tanque');
-  if (tankError) {
-    refillError.value = tankError;
-    return;
-  }
-
-  if (cleaned.mode === 'full') {
-    tanksStore.refillTank(cleaned.tankId);
-    toast.updateSuccess('Tanque', 'Tanque recargado exitosamente al 100% de su capacidad.');
-  } else {
-    const amountError = validatePositiveNumber(cleaned.amountLiters, 'Los litros a agregar', 1);
-    if (amountError) {
-      refillError.value = amountError;
-      return;
-    }
-    tanksStore.addLitersToTank(cleaned.tankId, cleaned.amountLiters);
-    toast.updateSuccess('Tanque', `Se agregaron ${formatVolume(cleaned.amountLiters)}L al tanque.`);
-  }
-
-  showRefillModal.value = false;
+const openCapacityModal = () => {
+  tempCapacity.value = tanksStore.masterTank.capacity;
+  showCapacityModal.value = true;
 };
 
-const openCalibrateModal = (tank: Tank) => {
-  calibrateError.value = '';
-  editingTank.value = tank;
-  calibrateForm.value = {
-    name: tank.name,
-    type: tank.type,
-    capacity: tank.capacity,
-    currentLiters: tank.currentLiters,
-  };
-  showCalibrateModal.value = true;
-};
+const submitRefill = () => {
+  refillError.value = null;
+  const cleaned = sanitizeFormData(refillForm);
 
-const saveCalibration = () => {
-  if (!editingTank.value) return;
-  calibrateError.value = '';
-  const cleaned = sanitizeFormData(calibrateForm.value);
-
-  const nameError = validateRequired(cleaned.name, 'El nombre del tanque');
-  if (nameError) {
-    calibrateError.value = nameError;
+  const litErr = validatePositiveNumber(cleaned.liters, 'El volumen de la cisterna');
+  if (litErr) {
+    refillError.value = litErr;
     return;
   }
 
-  const typeError = validateRequired(cleaned.type, 'El tipo de tanque');
-  if (typeError) {
-    calibrateError.value = typeError;
+  const supErr = validateRequired(cleaned.supplier, 'El proveedor de la cisterna');
+  if (supErr) {
+    refillError.value = supErr;
     return;
   }
 
-  const capacityError = validatePositiveNumber(cleaned.capacity, 'La capacidad total', 100);
-  if (capacityError) {
-    calibrateError.value = capacityError;
-    return;
-  }
-
-  const levelError = validateNonNegativeNumber(cleaned.currentLiters, 'El nivel actual');
-  if (levelError) {
-    calibrateError.value = levelError;
-    return;
-  }
-
-  if (cleaned.currentLiters > cleaned.capacity) {
-    calibrateError.value = 'El nivel actual no puede superar la capacidad máxima del tanque.';
-    return;
-  }
-
-  tanksStore.calibrateTank(editingTank.value.id, {
-    name: cleaned.name,
-    type: cleaned.type,
-    capacity: cleaned.capacity,
-    currentLiters: cleaned.currentLiters,
+  const result = tanksStore.recordCisternRefill({
+    liters: Number(cleaned.liters),
+    supplier: cleaned.supplier,
+    cost: Number(cleaned.cost || 0),
+    costCurrency: 'USD',
   });
 
-  toast.updateSuccess('Tanque', `Tanque ${cleaned.name} calibrado correctamente.`);
-  showCalibrateModal.value = false;
+  showRefillModal.value = false;
+  toast.createSuccess(
+    'Recarga de Cisterna',
+    `Se ingresaron +${formatNumber(result.refilled)}L al Tanque Maestro. Nivel actual: ${result.level}%.`
+  );
+};
+
+const saveWastePercentage = () => {
+  tanksStore.setWashWastePercentage(tempWastePercentage.value);
+  showWashModal.value = false;
+  toast.updateSuccess(
+    'Merma Operativa',
+    `Porcentaje de lavado actualizado a ${tempWastePercentage.value}%.`
+  );
+};
+
+const submitManualWaste = () => {
+  if (manualWasteLiters.value && manualWasteLiters.value > 0) {
+    const res = tanksStore.recordWashWaste({
+      liters: manualWasteLiters.value,
+      reason: 'Limpieza y desinfección extraordinaria de planta',
+    });
+    manualWasteLiters.value = null;
+    toast.info(
+      'Merma Registrada',
+      `Se dedujeron ${formatNumber(res.wasted)}L por lavado. Saldo restante: ${formatNumber(res.remaining)}L.`
+    );
+  }
+};
+
+const saveCapacity = () => {
+  if (tempCapacity.value > 0) {
+    tanksStore.setMasterCapacity(tempCapacity.value);
+    showCapacityModal.value = false;
+    toast.updateSuccess(
+      'Capacidad del Tanque',
+      `Capacidad total ajustada a ${formatNumber(tempCapacity.value)} Litros.`
+    );
+  }
 };
 </script>

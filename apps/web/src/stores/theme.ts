@@ -16,13 +16,17 @@ export const useThemeStore = defineStore('theme', () => {
     if (theme === 'dark') {
       root.classList.add('dark');
       root.classList.remove('light');
-      body?.classList.add('dark');
-      body?.classList.remove('light');
+      if (body) {
+        body.classList.add('dark');
+        body.classList.remove('light');
+      }
     } else {
       root.classList.remove('dark');
       root.classList.add('light');
-      body?.classList.remove('dark');
-      body?.classList.add('light');
+      if (body) {
+        body.classList.remove('dark');
+        body.classList.add('light');
+      }
     }
 
     root.setAttribute('data-theme', theme);
@@ -39,7 +43,7 @@ export const useThemeStore = defineStore('theme', () => {
     isInitialized = true;
 
     if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-      const stored = localStorage.getItem('aquapure_theme') as ThemeMode | null;
+      const stored = (localStorage.getItem('aquapure_theme') || localStorage.getItem('theme')) as ThemeMode | null;
       if (stored === 'light' || stored === 'dark') {
         currentTheme.value = stored;
       } else {
@@ -49,7 +53,7 @@ export const useThemeStore = defineStore('theme', () => {
       applyDomTheme(currentTheme.value);
 
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-        if (!localStorage.getItem('aquapure_theme')) {
+        if (!localStorage.getItem('aquapure_theme') && !localStorage.getItem('theme')) {
           currentTheme.value = e.matches ? 'dark' : 'light';
           applyDomTheme(currentTheme.value);
         }
@@ -62,6 +66,7 @@ export const useThemeStore = defineStore('theme', () => {
     currentTheme.value = next;
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('aquapure_theme', next);
+      localStorage.setItem('theme', next);
     }
     applyDomTheme(next);
   };
@@ -70,6 +75,7 @@ export const useThemeStore = defineStore('theme', () => {
     currentTheme.value = theme;
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('aquapure_theme', theme);
+      localStorage.setItem('theme', theme);
     }
     applyDomTheme(theme);
   };

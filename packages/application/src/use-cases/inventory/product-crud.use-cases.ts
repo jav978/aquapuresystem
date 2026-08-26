@@ -13,9 +13,7 @@ import { ProductUpdatedEvent, ProductActivatedEvent, ProductDeactivatedEvent } f
 
 @injectable()
 export class GetProductUseCase implements UseCase<string, ProductDto> {
-  constructor(
-    @inject(TYPES.ProductRepositoryPort) private readonly productRepo: ProductRepositoryPort
-  ) {}
+  @inject(TYPES.ProductRepositoryPort) private readonly productRepo!: ProductRepositoryPort;
 
   async execute(id: string): Promise<Result<ProductDto>> {
     const productId = ProductId.create(id);
@@ -50,9 +48,7 @@ export class GetProductUseCase implements UseCase<string, ProductDto> {
 
 @injectable()
 export class ListProductsUseCase implements UseCase<ProductQuery, PaginatedResult<ProductDto>> {
-  constructor(
-    @inject(TYPES.ProductRepositoryPort) private readonly productRepo: ProductRepositoryPort
-  ) {}
+  @inject(TYPES.ProductRepositoryPort) private readonly productRepo!: ProductRepositoryPort;
 
   async execute(query: ProductQuery): Promise<Result<PaginatedResult<ProductDto>>> {
     const result = await this.productRepo.findAll(query, {
@@ -91,10 +87,8 @@ export class ListProductsUseCase implements UseCase<ProductQuery, PaginatedResul
 
 @injectable()
 export class UpdateProductUseCase implements UseCase<UpdateProductCommand, ProductDto> {
-  constructor(
-    @inject(TYPES.ProductRepositoryPort) private readonly productRepo: ProductRepositoryPort,
-    @inject(TYPES.EventBusPort) private readonly eventBus: EventBusPort
-  ) {}
+  @inject(TYPES.ProductRepositoryPort) private readonly productRepo!: ProductRepositoryPort;
+  @inject(TYPES.EventBusPort) private readonly eventBus!: EventBusPort;
 
   async execute(command: UpdateProductCommand): Promise<Result<ProductDto>> {
     const productId = ProductId.create(command.id);
@@ -151,10 +145,8 @@ export class UpdateProductUseCase implements UseCase<UpdateProductCommand, Produ
 
 @injectable()
 export class DeleteProductUseCase implements UseCase<string, void> {
-  constructor(
-    @inject(TYPES.ProductRepositoryPort) private readonly productRepo: ProductRepositoryPort,
-    @inject(TYPES.EventBusPort) private readonly eventBus: EventBusPort
-  ) {}
+  @inject(TYPES.ProductRepositoryPort) private readonly productRepo!: ProductRepositoryPort;
+  @inject(TYPES.EventBusPort) private readonly eventBus!: EventBusPort;
 
   async execute(id: string): Promise<Result<void>> {
     const productId = ProductId.create(id);

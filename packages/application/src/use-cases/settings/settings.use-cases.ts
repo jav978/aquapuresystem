@@ -8,9 +8,7 @@ import { EventBusPort } from '../../ports/outbound';
 
 @injectable()
 export class GetSettingsUseCase implements UseCase<GetSettingsQuery, SettingDto[]> {
-  constructor(
-    @inject(TYPES.SettingRepositoryPort) private readonly settingRepo: SettingRepositoryPort
-  ) {}
+  @inject(TYPES.SettingRepositoryPort) private readonly settingRepo!: SettingRepositoryPort;
 
   async execute(query: GetSettingsQuery): Promise<Result<SettingDto[]>> {
     const settings = query.isPublic !== undefined
@@ -36,10 +34,8 @@ export class GetSettingsUseCase implements UseCase<GetSettingsQuery, SettingDto[
 
 @injectable()
 export class UpdateSettingUseCase implements UseCase<UpdateSettingCommand, SettingDto> {
-  constructor(
-    @inject(TYPES.SettingRepositoryPort) private readonly settingRepo: SettingRepositoryPort,
-    @inject(TYPES.EventBusPort) private readonly eventBus: EventBusPort
-  ) {}
+  @inject(TYPES.SettingRepositoryPort) private readonly settingRepo!: SettingRepositoryPort;
+  @inject(TYPES.EventBusPort) private readonly eventBus!: EventBusPort;
 
   async execute(command: UpdateSettingCommand): Promise<Result<SettingDto>> {
     let existing = await this.settingRepo.findByKey(command.key);
@@ -85,9 +81,7 @@ export class UpdateSettingUseCase implements UseCase<UpdateSettingCommand, Setti
 
 @injectable()
 export class GetAuditLogUseCase implements UseCase<AuditLogQuery, PaginatedResult<AuditLogDto>> {
-  constructor(
-    @inject(TYPES.SettingRepositoryPort) private readonly settingRepo: SettingRepositoryPort
-  ) {}
+  @inject(TYPES.SettingRepositoryPort) private readonly settingRepo!: SettingRepositoryPort;
 
   async execute(query: AuditLogQuery): Promise<Result<PaginatedResult<AuditLogDto>>> {
     // In production, this would query a dedicated audit log repository

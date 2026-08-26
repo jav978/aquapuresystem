@@ -7,9 +7,7 @@ import { TokenGeneratorPort } from '../../ports/outbound';
 
 @injectable()
 export class RefreshTokenUseCase implements UseCase<RefreshTokenCommand, RefreshTokenResult> {
-  constructor(
-    @inject(TYPES.TokenGeneratorPort) private readonly tokens: TokenGeneratorPort
-  ) {}
+  @inject(TYPES.TokenGeneratorPort) private readonly tokens!: TokenGeneratorPort;
 
   async execute(command: RefreshTokenCommand): Promise<Result<RefreshTokenResult>> {
     const result = await this.tokens.refreshAccessToken(command.refreshToken);

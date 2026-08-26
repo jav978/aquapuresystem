@@ -10,13 +10,11 @@ import { PasswordHasherPort, TokenGeneratorPort, EventBusPort, EmailPort } from 
 
 @injectable()
 export class RegisterUseCase implements UseCase<RegisterCommand, UserDto> {
-  constructor(
-    @inject(TYPES.UserRepositoryPort) private readonly userRepo: UserRepositoryPort,
-    @inject(TYPES.PasswordHasherPort) private readonly hasher: PasswordHasherPort,
-    @inject(TYPES.TokenGeneratorPort) private readonly tokens: TokenGeneratorPort,
-    @inject(TYPES.EventBusPort) private readonly eventBus: EventBusPort,
-    @inject(TYPES.EmailPort) private readonly email: EmailPort
-  ) {}
+  @inject(TYPES.UserRepositoryPort) private readonly userRepo!: UserRepositoryPort;
+  @inject(TYPES.PasswordHasherPort) private readonly hasher!: PasswordHasherPort;
+  @inject(TYPES.TokenGeneratorPort) private readonly tokens!: TokenGeneratorPort;
+  @inject(TYPES.EventBusPort) private readonly eventBus!: EventBusPort;
+  @inject(TYPES.EmailPort) private readonly email!: EmailPort;
 
   async execute(command: RegisterCommand): Promise<Result<UserDto>> {
     const emailResult = Email.create(command.email);

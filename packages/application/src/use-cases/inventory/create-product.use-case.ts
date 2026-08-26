@@ -14,11 +14,9 @@ import { ProductCreatedEvent, ProductUpdatedEvent } from '@aquasystem/domain';
 
 @injectable()
 export class CreateProductUseCase implements UseCase<CreateProductCommand, ProductDto> {
-  constructor(
-    @inject(TYPES.ProductRepositoryPort) private readonly productRepo: ProductRepositoryPort,
-    @inject(TYPES.WarehouseRepositoryPort) private readonly warehouseRepo: WarehouseRepositoryPort,
-    @inject(TYPES.EventBusPort) private readonly eventBus: EventBusPort
-  ) {}
+  @inject(TYPES.ProductRepositoryPort) private readonly productRepo!: ProductRepositoryPort;
+  @inject(TYPES.WarehouseRepositoryPort) private readonly warehouseRepo!: WarehouseRepositoryPort;
+  @inject(TYPES.EventBusPort) private readonly eventBus!: EventBusPort;
 
   async execute(command: CreateProductCommand): Promise<Result<ProductDto>> {
     const skuResult = SKU.create(command.sku);

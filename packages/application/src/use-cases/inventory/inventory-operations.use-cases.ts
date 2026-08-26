@@ -9,16 +9,13 @@ import { Quantity } from '@aquasystem/domain';
 import { MovementType } from '@aquasystem/shared-kernel';
 import { EventBusPort } from '../../ports/outbound';
 import { StockAdjustedEvent } from '@aquasystem/domain';
-import { Inventory } from '@aquasystem/domain';
 
 @injectable()
 export class AdjustInventoryUseCase implements UseCase<AdjustInventoryCommand, void> {
-  constructor(
-    @inject(TYPES.ProductRepositoryPort) private readonly productRepo: ProductRepositoryPort,
-    @inject(TYPES.WarehouseRepositoryPort) private readonly warehouseRepo: WarehouseRepositoryPort,
-    @inject(TYPES.InventoryMovementRepositoryPort) private readonly movementRepo: InventoryMovementRepositoryPort,
-    @inject(TYPES.EventBusPort) private readonly eventBus: EventBusPort
-  ) {}
+  @inject(TYPES.ProductRepositoryPort) private readonly productRepo!: ProductRepositoryPort;
+  @inject(TYPES.WarehouseRepositoryPort) private readonly warehouseRepo!: WarehouseRepositoryPort;
+  @inject(TYPES.InventoryMovementRepositoryPort) private readonly movementRepo!: InventoryMovementRepositoryPort;
+  @inject(TYPES.EventBusPort) private readonly eventBus!: EventBusPort;
 
   async execute(command: AdjustInventoryCommand): Promise<Result<void>> {
     const productId = ProductId.create(command.productId);
@@ -59,12 +56,10 @@ export class AdjustInventoryUseCase implements UseCase<AdjustInventoryCommand, v
 
 @injectable()
 export class TransferInventoryUseCase implements UseCase<TransferInventoryCommand, void> {
-  constructor(
-    @inject(TYPES.ProductRepositoryPort) private readonly productRepo: ProductRepositoryPort,
-    @inject(TYPES.WarehouseRepositoryPort) private readonly warehouseRepo: WarehouseRepositoryPort,
-    @inject(TYPES.InventoryMovementRepositoryPort) private readonly movementRepo: InventoryMovementRepositoryPort,
-    @inject(TYPES.EventBusPort) private readonly eventBus: EventBusPort
-  ) {}
+  @inject(TYPES.ProductRepositoryPort) private readonly productRepo!: ProductRepositoryPort;
+  @inject(TYPES.WarehouseRepositoryPort) private readonly warehouseRepo!: WarehouseRepositoryPort;
+  @inject(TYPES.InventoryMovementRepositoryPort) private readonly movementRepo!: InventoryMovementRepositoryPort;
+  @inject(TYPES.EventBusPort) private readonly eventBus!: EventBusPort;
 
   async execute(command: TransferInventoryCommand): Promise<Result<void>> {
     const productId = ProductId.create(command.productId);
@@ -127,9 +122,7 @@ export class TransferInventoryUseCase implements UseCase<TransferInventoryComman
 
 @injectable()
 export class GetInventoryMovementsUseCase implements UseCase<InventoryMovementQuery, PaginatedResult<InventoryMovementDto>> {
-  constructor(
-    @inject(TYPES.InventoryMovementRepositoryPort) private readonly movementRepo: InventoryMovementRepositoryPort
-  ) {}
+  @inject(TYPES.InventoryMovementRepositoryPort) private readonly movementRepo!: InventoryMovementRepositoryPort;
 
   async execute(query: InventoryMovementQuery): Promise<Result<PaginatedResult<InventoryMovementDto>>> {
     // In production, implement proper search with joins for product/warehouse names
@@ -155,9 +148,7 @@ export class GetInventoryMovementsUseCase implements UseCase<InventoryMovementQu
 
 @injectable()
 export class GetLowStockAlertsUseCase implements UseCase<void, LowStockAlertDto[]> {
-  constructor(
-    @inject(TYPES.ProductRepositoryPort) private readonly productRepo: ProductRepositoryPort
-  ) {}
+  @inject(TYPES.ProductRepositoryPort) private readonly productRepo!: ProductRepositoryPort;
 
   async execute(): Promise<Result<LowStockAlertDto[]>> {
     const lowStockProducts = await this.productRepo.findLowStock();

@@ -10,11 +10,9 @@ import { PasswordHash } from '@aquasystem/domain';
 
 @injectable()
 export class ResetPasswordUseCase implements UseCase<ResetPasswordCommand, void> {
-  constructor(
-    @inject(TYPES.UserRepositoryPort) private readonly userRepo: UserRepositoryPort,
-    @inject(TYPES.PasswordHasherPort) private readonly hasher: PasswordHasherPort,
-    @inject(TYPES.EventBusPort) private readonly eventBus: EventBusPort
-  ) {}
+  @inject(TYPES.UserRepositoryPort) private readonly userRepo!: UserRepositoryPort;
+  @inject(TYPES.PasswordHasherPort) private readonly hasher!: PasswordHasherPort;
+  @inject(TYPES.EventBusPort) private readonly eventBus!: EventBusPort;
 
   async execute(command: ResetPasswordCommand): Promise<Result<void>> {
     const emailResult = Email.create(command.email);

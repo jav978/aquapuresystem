@@ -10,11 +10,9 @@ import { generateShortId } from '@aquasystem/shared-kernel';
 
 @injectable()
 export class ForgotPasswordUseCase implements UseCase<ForgotPasswordCommand, void> {
-  constructor(
-    @inject(TYPES.UserRepositoryPort) private readonly userRepo: UserRepositoryPort,
-    @inject(TYPES.EventBusPort) private readonly eventBus: EventBusPort,
-    @inject(TYPES.EmailPort) private readonly email: EmailPort
-  ) {}
+  @inject(TYPES.UserRepositoryPort) private readonly userRepo!: UserRepositoryPort;
+  @inject(TYPES.EventBusPort) private readonly eventBus!: EventBusPort;
+  @inject(TYPES.EmailPort) private readonly email!: EmailPort;
 
   async execute(command: ForgotPasswordCommand): Promise<Result<void>> {
     const emailResult = Email.create(command.email);

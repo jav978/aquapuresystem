@@ -22,9 +22,24 @@ export default {
         'on-surface': 'var(--color-text)',
         'on-surface-variant': 'var(--color-text-muted)',
         'on-background': 'var(--color-text)',
-        outline: 'var(--color-outline)',
-        'outline-variant': 'var(--color-border)',
-        outlineVariant: 'var(--color-border)',
+        outline: ({ opacityValue }: any) => {
+          if (opacityValue !== undefined) {
+            return `rgba(var(--color-outline-rgb), ${opacityValue})`;
+          }
+          return 'var(--color-outline)';
+        },
+        'outline-variant': ({ opacityValue }: any) => {
+          if (opacityValue !== undefined) {
+            return `rgba(var(--color-border-rgb), ${opacityValue})`;
+          }
+          return 'var(--color-border)';
+        },
+        outlineVariant: ({ opacityValue }: any) => {
+          if (opacityValue !== undefined) {
+            return `rgba(var(--color-border-rgb), ${opacityValue})`;
+          }
+          return 'var(--color-border)';
+        },
 
         primary: {
           DEFAULT: 'var(--color-primary)',

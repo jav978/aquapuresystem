@@ -13,13 +13,11 @@ import { PasswordHash, PersonName } from '@aquasystem/domain';
 
 @injectable()
 export class InviteUserUseCase implements UseCase<InviteUserCommand, UserDto> {
-  constructor(
-    @inject(TYPES.UserRepositoryPort) private readonly userRepo: UserRepositoryPort,
-    @inject(TYPES.PasswordHasherPort) private readonly hasher: PasswordHasherPort,
-    @inject(TYPES.TokenGeneratorPort) private readonly tokens: TokenGeneratorPort,
-    @inject(TYPES.EventBusPort) private readonly eventBus: EventBusPort,
-    @inject(TYPES.EmailPort) private readonly email: EmailPort
-  ) {}
+  @inject(TYPES.UserRepositoryPort) private readonly userRepo!: UserRepositoryPort;
+  @inject(TYPES.PasswordHasherPort) private readonly hasher!: PasswordHasherPort;
+  @inject(TYPES.TokenGeneratorPort) private readonly tokens!: TokenGeneratorPort;
+  @inject(TYPES.EventBusPort) private readonly eventBus!: EventBusPort;
+  @inject(TYPES.EmailPort) private readonly email!: EmailPort;
 
   async execute(command: InviteUserCommand): Promise<Result<UserDto>> {
     const emailResult = Email.create(command.email);
@@ -85,10 +83,8 @@ export class InviteUserUseCase implements UseCase<InviteUserCommand, UserDto> {
 
 @injectable()
 export class UpdateUserRoleUseCase implements UseCase<UpdateUserRoleCommand, UserDto> {
-  constructor(
-    @inject(TYPES.UserRepositoryPort) private readonly userRepo: UserRepositoryPort,
-    @inject(TYPES.EventBusPort) private readonly eventBus: EventBusPort
-  ) {}
+  @inject(TYPES.UserRepositoryPort) private readonly userRepo!: UserRepositoryPort;
+  @inject(TYPES.EventBusPort) private readonly eventBus!: EventBusPort;
 
   async execute(command: UpdateUserRoleCommand): Promise<Result<UserDto>> {
     const userId = UserId.create(command.userId);
@@ -131,10 +127,8 @@ export class UpdateUserRoleUseCase implements UseCase<UpdateUserRoleCommand, Use
 
 @injectable()
 export class DeactivateUserUseCase implements UseCase<DeactivateUserCommand, void> {
-  constructor(
-    @inject(TYPES.UserRepositoryPort) private readonly userRepo: UserRepositoryPort,
-    @inject(TYPES.EventBusPort) private readonly eventBus: EventBusPort
-  ) {}
+  @inject(TYPES.UserRepositoryPort) private readonly userRepo!: UserRepositoryPort;
+  @inject(TYPES.EventBusPort) private readonly eventBus!: EventBusPort;
 
   async execute(command: DeactivateUserCommand): Promise<Result<void>> {
     const userId = UserId.create(command.userId);
@@ -169,9 +163,7 @@ export class DeactivateUserUseCase implements UseCase<DeactivateUserCommand, voi
 
 @injectable()
 export class ListUsersUseCase implements UseCase<UserQuery, PaginatedResult<UserDto>> {
-  constructor(
-    @inject(TYPES.UserRepositoryPort) private readonly userRepo: UserRepositoryPort
-  ) {}
+  @inject(TYPES.UserRepositoryPort) private readonly userRepo!: UserRepositoryPort;
 
   async execute(query: UserQuery): Promise<Result<PaginatedResult<UserDto>>> {
     const result = await this.userRepo.findAll(query, {

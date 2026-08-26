@@ -55,7 +55,7 @@
             v-if="showNotifications"
             class="absolute right-0 mt-3 w-80 sm:w-96 glass-card z-50 overflow-hidden animate-in"
           >
-            <div class="p-4 border-b border-outline-variant/30 flex items-center justify-between bg-surface-container-highest/40">
+            <div class="p-4 border-b border-black/5 dark:border-white/5 flex items-center justify-between bg-surface-container-highest/40">
               <div class="flex items-center gap-2">
                 <span class="font-bold text-sm text-on-surface">Notificaciones</span>
                 <span v-if="unreadNotificationsCount > 0" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/20 text-primary">
@@ -97,7 +97,7 @@
               </div>
             </div>
 
-            <div class="p-2.5 text-center border-t border-outline-variant/30 bg-surface-container-lowest">
+            <div class="p-2.5 text-center border-t border-black/5 dark:border-white/5 bg-surface-container-lowest">
               <NuxtLink
                 to="/inventory"
                 @click="showNotifications = false"
@@ -140,11 +140,11 @@
         <Transition name="dropdown">
           <div
             v-if="showUserMenu"
-            class="absolute right-0 mt-3 w-64 glass-card py-2 z-50 animate-in shadow-2xl border border-outline-variant/30"
+            class="absolute right-0 mt-3 w-64 glass-card py-2 z-50 animate-in shadow-2xl border-0"
           >
             <!-- User Info Header -->
-            <div class="px-4 py-3 border-b border-outline-variant/20 flex items-center gap-3">
-              <div class="h-10 w-10 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center text-primary font-bold text-sm shadow-sm flex-shrink-0">
+            <div class="px-4 py-3 border-b border-black/5 dark:border-white/5 flex items-center gap-3">
+              <div class="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm shadow-sm flex-shrink-0">
                 {{ userInitial }}
               </div>
               <div class="min-w-0 flex-1">
@@ -191,7 +191,7 @@
               </button>
             </div>
 
-            <div class="pt-1 border-t border-outline-variant/20">
+            <div class="pt-1 border-t border-black/5 dark:border-white/5">
               <button
                 type="button"
                 @click="logout"
@@ -213,7 +213,7 @@
     <div v-if="showSearchModal" class="fixed inset-0 z-50 flex items-start justify-center pt-24 px-4">
       <div class="fixed inset-0 bg-black/70 backdrop-blur-sm" @click="showSearchModal = false"></div>
       <div class="relative glass-card w-full max-w-2xl z-10 overflow-hidden animate-in">
-        <div class="flex items-center px-4 py-3.5 border-b border-outline-variant/30 bg-surface-container-highest/30">
+        <div class="flex items-center px-4 py-3.5 border-b border-black/5 dark:border-white/5 bg-surface-container-highest/30">
           <span class="material-symbols-outlined text-primary text-xl mr-3">search</span>
           <input
             v-model="searchQuery"
@@ -276,7 +276,7 @@
     <div v-if="showHelpModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div class="fixed inset-0 bg-black/70 backdrop-blur-sm" @click="showHelpModal = false"></div>
       <div class="relative glass-card w-full max-w-lg p-6 z-10 animate-in my-auto">
-        <div class="flex items-center justify-between pb-4 border-b border-outline-variant/30 mb-4">
+        <div class="flex items-center justify-between pb-4 border-b border-black/5 dark:border-white/5 mb-4">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
               <span class="material-symbols-outlined">help</span>
@@ -319,7 +319,7 @@
           </div>
         </div>
 
-        <div class="mt-6 pt-4 border-t border-outline-variant/30 text-right">
+        <div class="mt-6 pt-4 border-t border-black/5 dark:border-white/5 text-right">
           <button
             @click="showHelpModal = false"
             class="px-5 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-xs glow-cyan-hover cursor-pointer active:scale-95"

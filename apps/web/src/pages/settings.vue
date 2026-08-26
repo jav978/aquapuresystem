@@ -8,7 +8,7 @@
       </div>
 
       <!-- Theme Switcher Quick Toggle -->
-      <div class="flex items-center gap-2 bg-surface-container-high/70 p-1.5 rounded-xl border border-outline-variant/30 self-start sm:self-auto">
+      <div class="flex items-center gap-2 bg-surface-container-high/70 p-1.5 rounded-xl self-start sm:self-auto shadow-sm">
         <button
           type="button"
           @click="setTheme('light')"
@@ -35,7 +35,7 @@
       <!-- Card 1: Información de la Empresa -->
       <div class="card-elevated p-6 flex flex-col justify-between">
         <div>
-          <div class="flex items-center gap-2 mb-4 pb-3 border-b border-outline-variant/30">
+          <div class="flex items-center gap-2 mb-4 pb-3 border-b border-black/5 dark:border-white/5">
             <span class="material-symbols-outlined text-primary text-xl">domain</span>
             <h3 class="text-base font-bold text-on-surface">Información de la Empresa</h3>
           </div>
@@ -45,7 +45,7 @@
               <!-- Upload Logo Box -->
               <div
                 @click="triggerUploadLogo"
-                class="w-full sm:w-36 h-32 rounded-2xl border-2 border-dashed border-outline-variant/60 hover:border-primary/60 bg-surface-container/40 hover:bg-surface-container-high/40 flex flex-col items-center justify-center p-3 text-center cursor-pointer transition-all flex-shrink-0 group"
+                class="w-full sm:w-36 h-32 rounded-2xl border border-dashed border-black/10 dark:border-white/10 hover:border-primary/60 bg-surface-container/40 hover:bg-surface-container-high/40 flex flex-col items-center justify-center p-3 text-center cursor-pointer transition-all flex-shrink-0 group"
               >
                 <span class="material-symbols-outlined text-3xl text-on-surface-variant group-hover:text-primary transition-colors">add_photo_alternate</span>
                 <span class="text-xs font-bold text-on-surface mt-1.5">Subir Logotipo</span>
@@ -58,7 +58,7 @@
                 <input
                   v-model="companyForm.businessName"
                   type="text"
-                  class="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                  class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
                 />
               </div>
             </div>
@@ -69,7 +69,7 @@
                 <input
                   v-model="companyForm.taxId"
                   type="text"
-                  class="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none font-mono"
+                  class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none font-mono shadow-sm"
                 />
               </div>
               <div>
@@ -77,7 +77,7 @@
                 <input
                   v-model="companyForm.phone"
                   type="text"
-                  class="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none font-mono"
+                  class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none font-mono shadow-sm"
                 />
               </div>
             </div>
@@ -87,7 +87,7 @@
               <input
                 v-model="companyForm.address"
                 type="text"
-                class="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
               />
             </div>
           </div>
@@ -97,7 +97,7 @@
       <!-- Card 2: Métodos de Pago -->
       <div class="card-elevated p-6 flex flex-col justify-between">
         <div>
-          <div class="flex items-center gap-2 mb-4 pb-3 border-b border-outline-variant/30">
+          <div class="flex items-center gap-2 mb-4 pb-3 border-b border-black/5 dark:border-white/5">
             <span class="material-symbols-outlined text-primary text-xl">payments</span>
             <h3 class="text-base font-bold text-on-surface">Métodos de Pago</h3>
           </div>
@@ -177,7 +177,7 @@
       <!-- Card 3: Ajustes Generales -->
       <div class="card-elevated p-6 flex flex-col justify-between">
         <div>
-          <div class="flex items-center gap-2 mb-4 pb-3 border-b border-outline-variant/30">
+          <div class="flex items-center gap-2 mb-4 pb-3 border-b border-black/5 dark:border-white/5">
             <span class="material-symbols-outlined text-primary text-xl">tune</span>
             <h3 class="text-base font-bold text-on-surface">Ajustes Generales</h3>
           </div>
@@ -187,7 +187,7 @@
               <label class="block text-xs font-semibold text-on-surface-variant mb-1">Idioma de Interfaz</label>
               <select
                 v-model="generalSettings.language"
-                class="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
               >
                 <option value="es-LA">Español (América Latina)</option>
                 <option value="es-ES">Español (España)</option>
@@ -199,7 +199,7 @@
               <label class="block text-xs font-semibold text-on-surface-variant mb-1">Moneda Principal</label>
               <select
                 v-model="generalSettings.currency"
-                class="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
               >
                 <option value="USD">Dólares Americanos (USD - $)</option>
                 <option value="PEN">Soles (PEN - S/)</option>
@@ -212,7 +212,7 @@
               <label class="block text-xs font-semibold text-on-surface-variant mb-1">Zona Horaria Operativa</label>
               <select
                 v-model="generalSettings.timezone"
-                class="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
               >
                 <option value="UTC-5">(UTC-05:00) Lima, Quito, Bogotá, Panamá</option>
                 <option value="UTC-4">(UTC-04:00) Caracas, La Paz, Santiago</option>
@@ -226,7 +226,7 @@
       <!-- Card 4: Puntos de Venta (Sucursales) -->
       <div class="card-elevated p-6 flex flex-col justify-between">
         <div>
-          <div class="flex items-center justify-between mb-4 pb-3 border-b border-outline-variant/30">
+          <div class="flex items-center justify-between mb-4 pb-3 border-b border-black/5 dark:border-white/5">
             <div class="flex items-center gap-2">
               <span class="material-symbols-outlined text-primary text-xl">store</span>
               <h3 class="text-base font-bold text-on-surface">Puntos de Venta (Sucursales)</h3>

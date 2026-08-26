@@ -12,13 +12,11 @@ import { SaleCreatedEvent, SaleConfirmedEvent } from '@aquasystem/domain';
 
 @injectable()
 export class CreateSaleUseCase implements UseCase<CreateSaleCommand, SaleDto> {
-  constructor(
-    @inject(TYPES.SaleRepositoryPort) private readonly saleRepo: SaleRepositoryPort,
-    @inject(TYPES.CustomerRepositoryPort) private readonly customerRepo: CustomerRepositoryPort,
-    @inject(TYPES.ProductRepositoryPort) private readonly productRepo: ProductRepositoryPort,
-    @inject(TYPES.UserRepositoryPort) private readonly userRepo: UserRepositoryPort,
-    @inject(TYPES.EventBusPort) private readonly eventBus: EventBusPort
-  ) {}
+  @inject(TYPES.SaleRepositoryPort) private readonly saleRepo!: SaleRepositoryPort;
+  @inject(TYPES.CustomerRepositoryPort) private readonly customerRepo!: CustomerRepositoryPort;
+  @inject(TYPES.ProductRepositoryPort) private readonly productRepo!: ProductRepositoryPort;
+  @inject(TYPES.UserRepositoryPort) private readonly userRepo!: UserRepositoryPort;
+  @inject(TYPES.EventBusPort) private readonly eventBus!: EventBusPort;
 
   async execute(command: CreateSaleCommand): Promise<Result<SaleDto>> {
     const customerId = CustomerId.create(command.customerId);
@@ -111,9 +109,7 @@ export class CreateSaleUseCase implements UseCase<CreateSaleCommand, SaleDto> {
 
 @injectable()
 export class ListSalesUseCase implements UseCase<SaleQuery, PaginatedResult<SaleDto>> {
-  constructor(
-    @inject(TYPES.SaleRepositoryPort) private readonly saleRepo: SaleRepositoryPort
-  ) {}
+  @inject(TYPES.SaleRepositoryPort) private readonly saleRepo!: SaleRepositoryPort;
 
   async execute(query: SaleQuery): Promise<Result<PaginatedResult<SaleDto>>> {
     const result = await this.saleRepo.findAll(query, {
@@ -160,9 +156,7 @@ export class ListSalesUseCase implements UseCase<SaleQuery, PaginatedResult<Sale
 
 @injectable()
 export class GetSaleUseCase implements UseCase<string, SaleDto> {
-  constructor(
-    @inject(TYPES.SaleRepositoryPort) private readonly saleRepo: SaleRepositoryPort
-  ) {}
+  @inject(TYPES.SaleRepositoryPort) private readonly saleRepo!: SaleRepositoryPort;
 
   async execute(id: string): Promise<Result<SaleDto>> {
     const saleId = SaleId.create(id);
@@ -203,11 +197,9 @@ export class GetSaleUseCase implements UseCase<string, SaleDto> {
 
 @injectable()
 export class UpdateSaleUseCase implements UseCase<UpdateSaleCommand, SaleDto> {
-  constructor(
-    @inject(TYPES.SaleRepositoryPort) private readonly saleRepo: SaleRepositoryPort,
-    @inject(TYPES.ProductRepositoryPort) private readonly productRepo: ProductRepositoryPort,
-    @inject(TYPES.EventBusPort) private readonly eventBus: EventBusPort
-  ) {}
+  @inject(TYPES.SaleRepositoryPort) private readonly saleRepo!: SaleRepositoryPort;
+  @inject(TYPES.ProductRepositoryPort) private readonly productRepo!: ProductRepositoryPort;
+  @inject(TYPES.EventBusPort) private readonly eventBus!: EventBusPort;
 
   async execute(command: UpdateSaleCommand): Promise<Result<SaleDto>> {
     const saleId = SaleId.create(command.id);

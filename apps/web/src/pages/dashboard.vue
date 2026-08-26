@@ -4,7 +4,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
         <div class="flex items-center gap-2 mb-1">
-          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-primary/10 text-primary border border-primary/20">
+          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-primary/10 text-primary">
             AquaPure Telemetría
           </span>
           <span class="flex items-center gap-1 text-xs text-billing-green font-semibold">
@@ -28,7 +28,7 @@
         <button
           @click="refreshData"
           :disabled="loading"
-          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface text-sm font-semibold border border-outline-variant/30 transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface text-sm font-semibold transition-all active:scale-95 cursor-pointer disabled:opacity-50 shadow-sm border-0"
         >
           <span class="material-symbols-outlined text-lg text-primary" :class="{ 'animate-spin': loading }">refresh</span>
           <span>Actualizar</span>
@@ -54,7 +54,7 @@
 
         <!-- Global Storage Summary Badge -->
         <div class="flex flex-wrap items-center gap-3">
-          <div class="px-3.5 py-1.5 rounded-xl bg-surface-container-high/60 border border-outline-variant/30 flex items-center gap-3 text-xs">
+          <div class="px-3.5 py-1.5 rounded-xl bg-surface-container-high/60 flex items-center gap-3 text-xs shadow-sm">
             <span class="text-on-surface-variant">Reserva Global:</span>
             <span class="font-black text-on-surface text-sm">{{ formatVolume(tanksStore.totalCurrentLiters) }} / {{ formatVolume(tanksStore.totalCapacity) }} L</span>
             <span class="px-2 py-0.5 rounded-md font-bold text-xs" :class="tanksStore.globalLevel <= 15 ? 'bg-error-red/20 text-error-red' : tanksStore.globalLevel <= 30 ? 'bg-admin-gold/20 text-admin-gold' : 'bg-primary/20 text-primary'">
@@ -62,15 +62,15 @@
             </span>
           </div>
 
-          <span v-if="tanksStore.criticalCount > 0" class="bg-error-red/15 text-error-red border border-error-red/30 text-xs px-3 py-1 rounded-full font-bold animate-pulse flex items-center gap-1">
+          <span v-if="tanksStore.criticalCount > 0" class="bg-error-red/15 text-error-red text-xs px-3 py-1 rounded-full font-bold animate-pulse flex items-center gap-1">
             <span class="material-symbols-outlined text-sm">warning</span>
             {{ tanksStore.criticalCount }} Crítico
           </span>
-          <span v-else-if="tanksStore.warningCount > 0" class="bg-admin-gold/15 text-admin-gold border border-admin-gold/30 text-xs px-3 py-1 rounded-full font-bold flex items-center gap-1">
+          <span v-else-if="tanksStore.warningCount > 0" class="bg-admin-gold/15 text-admin-gold text-xs px-3 py-1 rounded-full font-bold flex items-center gap-1">
             <span class="material-symbols-outlined text-sm">info</span>
             {{ tanksStore.warningCount }} Alerta
           </span>
-          <span v-else class="bg-billing-green/15 text-billing-green border border-billing-green/30 text-xs px-3 py-1 rounded-full font-bold flex items-center gap-1">
+          <span v-else class="bg-billing-green/15 text-billing-green text-xs px-3 py-1 rounded-full font-bold flex items-center gap-1">
             <span class="material-symbols-outlined text-sm">check_circle</span>
             Operación Normal
           </span>
@@ -127,7 +127,7 @@
       <div class="card-elevated p-6">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-base font-bold text-on-surface">Resumen de Ventas</h3>
-          <select v-model="salesChartPeriod" class="bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg px-2.5 py-1 text-xs outline-none cursor-pointer shadow-sm border border-outline-variant/30">
+          <select v-model="salesChartPeriod" class="bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg px-2.5 py-1 text-xs outline-none cursor-pointer shadow-sm border-0">
             <option value="7d">Últimos 7 días</option>
             <option value="30d">Últimos 30 días</option>
             <option value="90d">Últimos 90 días</option>
@@ -176,7 +176,7 @@
     <div v-if="showRefillModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="showRefillModal = false"></div>
       <div class="relative glass-card w-full max-w-md p-6 z-10 animate-in">
-        <div class="flex items-center justify-between pb-4 border-b border-outline-variant/40 mb-4">
+        <div class="flex items-center justify-between pb-4 border-b border-black/5 dark:border-white/5 mb-4">
           <div class="flex items-center gap-2">
             <span class="p-2 rounded-xl bg-primary/15 text-primary material-symbols-outlined">water_drop</span>
             <div>
@@ -195,7 +195,7 @@
             <select
               v-model="refillForm.tankId"
               required
-              class="w-full bg-surface-container border border-outline-variant rounded-xl px-3 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+              class="w-full bg-surface-container border-0 rounded-xl px-3 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
             >
               <option v-for="t in tanksStore.tanks" :key="t.id" :value="t.id">
                 {{ t.name }} (Actual: {{ formatVolume(t.currentLiters) }} / {{ formatVolume(t.capacity) }} L)
@@ -209,16 +209,16 @@
               <button
                 type="button"
                 @click="refillForm.mode = 'full'"
-                class="py-2 px-3 rounded-xl text-xs font-bold border transition-all"
-                :class="refillForm.mode === 'full' ? 'bg-primary text-on-primary border-primary' : 'bg-surface-container text-on-surface border-outline-variant/40'"
+                class="py-2 px-3 rounded-xl text-xs font-bold transition-all border-0 shadow-sm"
+                :class="refillForm.mode === 'full' ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface hover:bg-surface-container-high'"
               >
                 Llenado Total (100%)
               </button>
               <button
                 type="button"
                 @click="refillForm.mode = 'custom'"
-                class="py-2 px-3 rounded-xl text-xs font-bold border transition-all"
-                :class="refillForm.mode === 'custom' ? 'bg-primary text-on-primary border-primary' : 'bg-surface-container text-on-surface border-outline-variant/40'"
+                class="py-2 px-3 rounded-xl text-xs font-bold transition-all border-0 shadow-sm"
+                :class="refillForm.mode === 'custom' ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface hover:bg-surface-container-high'"
               >
                 Cantidad Específica
               </button>
@@ -234,11 +234,11 @@
               step="1"
               required
               placeholder="Ej: 1000"
-              class="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+              class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
             />
           </div>
 
-          <div class="flex justify-end gap-3 pt-4 border-t border-outline-variant/40">
+          <div class="flex justify-end gap-3 pt-4 border-t border-black/5 dark:border-white/5">
             <button
               type="button"
               @click="showRefillModal = false"
@@ -261,7 +261,7 @@
     <div v-if="showCalibrateModal && editingTank" class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="showCalibrateModal = false"></div>
       <div class="relative glass-card w-full max-w-md p-6 z-10 animate-in">
-        <div class="flex items-center justify-between pb-4 border-b border-outline-variant/40 mb-4">
+        <div class="flex items-center justify-between pb-4 border-b border-black/5 dark:border-white/5 mb-4">
           <div class="flex items-center gap-2">
             <span class="p-2 rounded-xl bg-primary/15 text-primary material-symbols-outlined">tune</span>
             <div>
@@ -281,7 +281,7 @@
               v-model="calibrateForm.name"
               type="text"
               required
-              class="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+              class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
             />
           </div>
 
@@ -291,7 +291,7 @@
               v-model="calibrateForm.type"
               type="text"
               required
-              class="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+              class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
             />
           </div>
 
@@ -304,7 +304,7 @@
                 min="100"
                 step="100"
                 required
-                class="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
               />
             </div>
             <div>
@@ -316,12 +316,12 @@
                 :max="calibrateForm.capacity"
                 step="10"
                 required
-                class="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
               />
             </div>
           </div>
 
-          <div class="flex justify-end gap-3 pt-4 border-t border-outline-variant/40">
+          <div class="flex justify-end gap-3 pt-4 border-t border-black/5 dark:border-white/5">
             <button
               type="button"
               @click="showCalibrateModal = false"

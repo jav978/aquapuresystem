@@ -10,12 +10,10 @@ import { UserLoggedInEvent } from '@aquasystem/domain';
 
 @injectable()
 export class LoginUseCase implements UseCase<LoginCommand, LoginResult> {
-  constructor(
-    @inject(TYPES.UserRepositoryPort) private readonly userRepo: UserRepositoryPort,
-    @inject(TYPES.PasswordHasherPort) private readonly hasher: PasswordHasherPort,
-    @inject(TYPES.TokenGeneratorPort) private readonly tokens: TokenGeneratorPort,
-    @inject(TYPES.EventBusPort) private readonly eventBus: EventBusPort
-  ) {}
+  @inject(TYPES.UserRepositoryPort) private readonly userRepo!: UserRepositoryPort;
+  @inject(TYPES.PasswordHasherPort) private readonly hasher!: PasswordHasherPort;
+  @inject(TYPES.TokenGeneratorPort) private readonly tokens!: TokenGeneratorPort;
+  @inject(TYPES.EventBusPort) private readonly eventBus!: EventBusPort;
 
   async execute(command: LoginCommand): Promise<Result<LoginResult>> {
     const emailResult = Email.create(command.email);

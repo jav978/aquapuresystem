@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col h-full py-6 bg-surface-container-lowest border-r border-outline-variant/30 select-none">
+  <div class="flex flex-col h-full py-6 bg-surface-container-lowest border-r border-black/5 dark:border-white/5 select-none">
     <!-- Brand Header -->
     <div class="px-6 mb-6">
       <NuxtLink to="/dashboard" class="flex items-center gap-3 group" @click="$emit('close')">
@@ -94,7 +94,7 @@
     </div>
 
     <!-- Bottom Footer Navigation: Configuración & Cerrar Sesión -->
-    <div class="mt-auto px-3 pt-4 border-t border-outline-variant/30 space-y-1">
+    <div class="mt-auto px-3 pt-4 border-t border-black/5 dark:border-white/5 space-y-1">
       <NuxtLink
         to="/settings"
         class="flex items-center gap-3.5 px-4 py-2.5 rounded-xl transition-all duration-200 active:scale-95 cursor-pointer"

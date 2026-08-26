@@ -25,13 +25,13 @@
           v-model="searchQuery"
           type="text"
           placeholder="Buscar por nombre o correo..."
-          class="w-full bg-surface-container border border-outline-variant/40 rounded-xl pl-10 pr-4 py-2 text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none placeholder:text-on-surface-variant/60"
+          class="w-full bg-surface-container border-0 rounded-xl pl-10 pr-4 py-2 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none placeholder:text-on-surface-variant/60 shadow-sm"
         />
       </div>
 
       <!-- Filter Tabs & Button -->
       <div class="flex items-center gap-2">
-        <div class="bg-surface-container-high/60 p-1 rounded-xl flex items-center gap-1 border border-outline-variant/30">
+        <div class="bg-surface-container-high/60 p-1 rounded-xl flex items-center gap-1">
           <button
             v-for="filter in roleFilters"
             :key="filter.value"
@@ -45,7 +45,7 @@
 
         <button
           @click="toggleSortOrder"
-          class="p-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface border border-outline-variant/30 transition-colors cursor-pointer"
+          class="p-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer border-0 shadow-sm"
           title="Filtros avanzados"
         >
           <span class="material-symbols-outlined text-lg">filter_list</span>
@@ -58,7 +58,7 @@
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="bg-surface-container-highest/40 border-b border-outline-variant/40 text-[11px] font-extrabold text-on-surface-variant uppercase tracking-wider">
+            <tr class="bg-surface-container-highest/40 border-b border-black/5 dark:border-white/5 text-[11px] font-extrabold text-on-surface-variant uppercase tracking-wider">
               <th class="py-4 px-5 w-12 text-center">
                 <input
                   type="checkbox"
@@ -94,7 +94,7 @@
                 <div class="flex items-center gap-3">
                   <div
                     class="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold font-mono tracking-wider flex-shrink-0"
-                    :class="user.role === 'ADMIN' ? 'bg-admin-gold/20 text-admin-gold border border-admin-gold/30' : 'bg-primary/20 text-primary border border-primary/30'"
+                    :class="user.role === 'ADMIN' ? 'bg-admin-gold/20 text-admin-gold' : 'bg-primary/20 text-primary'"
                   >
                     {{ user.initials }}
                   </div>
@@ -188,7 +188,7 @@
       </div>
 
       <!-- Pagination Footer -->
-      <div class="p-4 border-t border-outline-variant/30 flex flex-col sm:flex-row items-center justify-between gap-4 bg-surface-container-highest/20 text-xs">
+      <div class="p-4 border-t border-black/5 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-surface-container-highest/20 text-xs">
         <span class="text-on-surface-variant">
           Mostrando {{ filteredUsers.length }} de {{ totalUsersCount }} usuarios
         </span>
@@ -221,7 +221,7 @@
     <div v-if="showUserModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="showUserModal = false"></div>
       <div class="relative glass-card w-full max-w-lg p-6 z-10 animate-in">
-        <div class="flex items-center justify-between pb-4 border-b border-outline-variant/40 mb-4">
+        <div class="flex items-center justify-between pb-4 border-b border-black/5 dark:border-white/5 mb-4">
           <div class="flex items-center gap-2">
             <span class="p-2 rounded-xl bg-primary/15 text-primary material-symbols-outlined">
               {{ isEditing ? 'manage_accounts' : 'person_add' }}
@@ -312,7 +312,7 @@
             />
           </div>
 
-          <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-outline-variant/40">
+          <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-black/5 dark:border-white/5">
             <button
               type="button"
               @click="showUserModal = false"

@@ -8,9 +8,7 @@ import { TYPES } from '../../types';
 
 @injectable()
 export class VerifyCodeUseCase implements UseCase<VerifyCodeCommand, { valid: boolean; email: string }> {
-  constructor(
-    @inject(TYPES.UserRepositoryPort) private readonly userRepo: UserRepositoryPort
-  ) {}
+  @inject(TYPES.UserRepositoryPort) private readonly userRepo!: UserRepositoryPort;
 
   async execute(command: VerifyCodeCommand): Promise<Result<{ valid: boolean; email: string }>> {
     const emailResult = Email.create(command.email);

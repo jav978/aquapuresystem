@@ -22,14 +22,12 @@ import { InvoiceCreatedEvent, InvoiceSentEvent, PaymentAddedEvent, ReturnCreated
 
 @injectable()
 export class CreateInvoiceUseCase implements UseCase<CreateInvoiceCommand, InvoiceDto> {
-  constructor(
-    @inject(TYPES.InvoiceRepositoryPort) private readonly invoiceRepo: InvoiceRepositoryPort,
-    @inject(TYPES.SaleRepositoryPort) private readonly saleRepo: SaleRepositoryPort,
-    @inject(TYPES.CustomerRepositoryPort) private readonly customerRepo: CustomerRepositoryPort,
-    @inject(TYPES.ProductRepositoryPort) private readonly productRepo: ProductRepositoryPort,
-    @inject(TYPES.UserRepositoryPort) private readonly userRepo: UserRepositoryPort,
-    @inject(TYPES.EventBusPort) private readonly eventBus: EventBusPort
-  ) {}
+  @inject(TYPES.InvoiceRepositoryPort) private readonly invoiceRepo!: InvoiceRepositoryPort;
+  @inject(TYPES.SaleRepositoryPort) private readonly saleRepo!: SaleRepositoryPort;
+  @inject(TYPES.CustomerRepositoryPort) private readonly customerRepo!: CustomerRepositoryPort;
+  @inject(TYPES.ProductRepositoryPort) private readonly productRepo!: ProductRepositoryPort;
+  @inject(TYPES.UserRepositoryPort) private readonly userRepo!: UserRepositoryPort;
+  @inject(TYPES.EventBusPort) private readonly eventBus!: EventBusPort;
 
   async execute(command: CreateInvoiceCommand): Promise<Result<InvoiceDto>> {
     const customerId = CustomerId.create(command.customerId);
@@ -148,9 +146,7 @@ export class CreateInvoiceUseCase implements UseCase<CreateInvoiceCommand, Invoi
 
 @injectable()
 export class GetInvoiceDetailUseCase implements UseCase<string, InvoiceDetailDto> {
-  constructor(
-    @inject(TYPES.InvoiceRepositoryPort) private readonly invoiceRepo: InvoiceRepositoryPort
-  ) {}
+  @inject(TYPES.InvoiceRepositoryPort) private readonly invoiceRepo!: InvoiceRepositoryPort;
 
   async execute(id: string): Promise<Result<InvoiceDetailDto>> {
     const invoiceId = InvoiceId.create(id);
@@ -223,9 +219,7 @@ export class GetInvoiceDetailUseCase implements UseCase<string, InvoiceDetailDto
 
 @injectable()
 export class ListInvoicesUseCase implements UseCase<InvoiceQuery, PaginatedResult<InvoiceDto>> {
-  constructor(
-    @inject(TYPES.InvoiceRepositoryPort) private readonly invoiceRepo: InvoiceRepositoryPort
-  ) {}
+  @inject(TYPES.InvoiceRepositoryPort) private readonly invoiceRepo!: InvoiceRepositoryPort;
 
   async execute(query: InvoiceQuery): Promise<Result<PaginatedResult<InvoiceDto>>> {
     const result = await this.invoiceRepo.findAll(query, {
@@ -289,10 +283,8 @@ export class ListInvoicesUseCase implements UseCase<InvoiceQuery, PaginatedResul
 
 @injectable()
 export class AddPaymentUseCase implements UseCase<AddPaymentCommand, void> {
-  constructor(
-    @inject(TYPES.InvoiceRepositoryPort) private readonly invoiceRepo: InvoiceRepositoryPort,
-    @inject(TYPES.EventBusPort) private readonly eventBus: EventBusPort
-  ) {}
+  @inject(TYPES.InvoiceRepositoryPort) private readonly invoiceRepo!: InvoiceRepositoryPort;
+  @inject(TYPES.EventBusPort) private readonly eventBus!: EventBusPort;
 
   async execute(command: AddPaymentCommand): Promise<Result<void>> {
     const invoiceId = InvoiceId.create(command.invoiceId);
@@ -327,13 +319,11 @@ export class AddPaymentUseCase implements UseCase<AddPaymentCommand, void> {
 
 @injectable()
 export class CreateReturnUseCase implements UseCase<CreateReturnCommand, ReturnDto> {
-  constructor(
-    @inject(TYPES.ReturnRepositoryPort) private readonly returnRepo: ReturnRepositoryPort,
-    @inject(TYPES.InvoiceRepositoryPort) private readonly invoiceRepo: InvoiceRepositoryPort,
-    @inject(TYPES.CustomerRepositoryPort) private readonly customerRepo: CustomerRepositoryPort,
-    @inject(TYPES.UserRepositoryPort) private readonly userRepo: UserRepositoryPort,
-    @inject(TYPES.EventBusPort) private readonly eventBus: EventBusPort
-  ) {}
+  @inject(TYPES.ReturnRepositoryPort) private readonly returnRepo!: ReturnRepositoryPort;
+  @inject(TYPES.InvoiceRepositoryPort) private readonly invoiceRepo!: InvoiceRepositoryPort;
+  @inject(TYPES.CustomerRepositoryPort) private readonly customerRepo!: CustomerRepositoryPort;
+  @inject(TYPES.UserRepositoryPort) private readonly userRepo!: UserRepositoryPort;
+  @inject(TYPES.EventBusPort) private readonly eventBus!: EventBusPort;
 
   async execute(command: CreateReturnCommand): Promise<Result<ReturnDto>> {
     const invoiceId = InvoiceId.create(command.invoiceId);
@@ -422,10 +412,8 @@ export class CreateReturnUseCase implements UseCase<CreateReturnCommand, ReturnD
 
 @injectable()
 export class ProcessReturnUseCase implements UseCase<ProcessReturnCommand, void> {
-  constructor(
-    @inject(TYPES.ReturnRepositoryPort) private readonly returnRepo: ReturnRepositoryPort,
-    @inject(TYPES.EventBusPort) private readonly eventBus: EventBusPort
-  ) {}
+  @inject(TYPES.ReturnRepositoryPort) private readonly returnRepo!: ReturnRepositoryPort;
+  @inject(TYPES.EventBusPort) private readonly eventBus!: EventBusPort;
 
   async execute(command: ProcessReturnCommand): Promise<Result<void>> {
     const returnId = ReturnId.create(command.returnId);
@@ -461,9 +449,7 @@ export class ProcessReturnUseCase implements UseCase<ProcessReturnCommand, void>
 
 @injectable()
 export class ListReturnsUseCase implements UseCase<ReturnQuery, PaginatedResult<ReturnDto>> {
-  constructor(
-    @inject(TYPES.ReturnRepositoryPort) private readonly returnRepo: ReturnRepositoryPort
-  ) {}
+  @inject(TYPES.ReturnRepositoryPort) private readonly returnRepo!: ReturnRepositoryPort;
 
   async execute(query: ReturnQuery): Promise<Result<PaginatedResult<ReturnDto>>> {
     const result = await this.returnRepo.findAll(query, {

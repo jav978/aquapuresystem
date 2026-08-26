@@ -3,9 +3,9 @@ import { Result } from '@aquasystem/shared-kernel';
 import { UserRepositoryPort } from '@aquasystem/domain';
 import { Email } from '@aquasystem/domain';
 import { ForgotPasswordCommand } from '../../dto/auth.dto';
-import { UseCase } from '../ports/inbound/use-case.port';
+import { UseCase } from '../../ports/inbound/use-case.port';
 import { TYPES } from '../../types';
-import { EventBusPort, EmailPort } from '../ports/outbound';
+import { EventBusPort, EmailPort } from '../../ports/outbound';
 import { generateShortId } from '@aquasystem/shared-kernel';
 
 @injectable()

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-background text-on-background transition-colors duration-200">
+  <div class="min-h-screen bg-background text-on-surface transition-colors duration-200">
     <!-- Desktop SideNavBar -->
     <aside class="fixed left-0 top-0 h-full w-[280px] z-40 hidden md:block bg-surface-container-lowest shadow-xl shadow-black/5 dark:shadow-black/30 transition-all duration-200">
       <SidebarNav />

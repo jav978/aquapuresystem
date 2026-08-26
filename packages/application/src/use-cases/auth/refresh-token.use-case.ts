@@ -1,9 +1,9 @@
 import { inject, injectable } from 'inversify';
 import { Result } from '@aquasystem/shared-kernel';
 import { RefreshTokenCommand, RefreshTokenResult } from '../../dto/auth.dto';
-import { UseCase } from '../ports/inbound/use-case.port';
+import { UseCase } from '../../ports/inbound/use-case.port';
 import { TYPES } from '../../types';
-import { TokenGeneratorPort } from '../ports/outbound';
+import { TokenGeneratorPort } from '../../ports/outbound';
 
 @injectable()
 export class RefreshTokenUseCase implements UseCase<RefreshTokenCommand, RefreshTokenResult> {

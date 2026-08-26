@@ -2,12 +2,12 @@ import { inject, injectable } from 'inversify';
 import { Result, PaginatedResult } from '@aquasystem/shared-kernel';
 import { SaleRepositoryPort, CustomerRepositoryPort, ProductRepositoryPort, UserRepositoryPort } from '@aquasystem/domain';
 import { CreateSaleCommand, SaleDto, SaleQuery, UpdateSaleCommand } from '../../dto/sales.dto';
-import { UseCase } from '../ports/inbound/use-case.port';
+import { UseCase } from '../../ports/inbound/use-case.port';
 import { TYPES } from '../../types';
 import { Sale, SaleId, CustomerId, UserId, ProductId } from '@aquasystem/domain';
 import { Quantity, Money } from '@aquasystem/domain';
 import { SaleStatus } from '@aquasystem/shared-kernel';
-import { EventBusPort } from '../ports/outbound';
+import { EventBusPort } from '../../ports/outbound';
 import { SaleCreatedEvent, SaleConfirmedEvent } from '@aquasystem/domain';
 
 @injectable()

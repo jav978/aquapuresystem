@@ -140,28 +140,62 @@
         <Transition name="dropdown">
           <div
             v-if="showUserMenu"
-            class="absolute right-0 mt-3 w-60 glass-card py-2 z-50 animate-in"
+            class="absolute right-0 mt-3 w-64 glass-card py-2 z-50 animate-in shadow-2xl border border-outline-variant/30"
           >
-            <div class="px-4 py-3 border-b border-outline-variant/30">
-              <p class="text-sm font-bold text-on-surface truncate">{{ authStore.user?.fullName || 'Administrador' }}</p>
-              <p class="text-xs text-on-surface-variant truncate font-mono mt-0.5">{{ authStore.user?.email || 'admin@aquasystem.com' }}</p>
-              <span class="inline-block mt-2 text-[10px] px-2.5 py-0.5 rounded-md bg-primary/15 text-primary font-bold ">
-                Rol: {{ authStore.user?.role || 'ADMIN' }}
-              </span>
+            <!-- User Info Header -->
+            <div class="px-4 py-3 border-b border-outline-variant/20 flex items-center gap-3">
+              <div class="h-10 w-10 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center text-primary font-bold text-sm shadow-sm flex-shrink-0">
+                {{ userInitial }}
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-bold text-on-surface truncate">{{ authStore.user?.fullName || 'Admin Principal' }}</p>
+                <p class="text-[11px] text-on-surface-variant truncate font-mono mt-0.5">{{ authStore.user?.email || 'admin@aquasystem.com' }}</p>
+                <span class="inline-block mt-1 text-[10px] px-2 py-0.5 rounded bg-primary/15 text-primary font-bold">
+                  {{ authStore.user?.role === 'ADMIN' ? 'Super Administrador' : (authStore.user?.role || 'Operaciones') }}
+                </span>
+              </div>
             </div>
 
-            <div class="py-1">
+            <!-- Navigation Links -->
+            <div class="py-1.5 space-y-0.5">
+              <NuxtLink
+                to="/users"
+                class="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-surface-container-high/80 transition-colors"
+                @click="showUserMenu = false"
+              >
+                <span class="material-symbols-outlined text-lg text-primary">group</span>
+                Gestión de Usuarios
+              </NuxtLink>
+
               <NuxtLink
                 to="/settings"
-                class="flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors"
+                class="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-surface-container-high/80 transition-colors"
                 @click="showUserMenu = false"
               >
                 <span class="material-symbols-outlined text-lg text-primary">settings</span>
                 Configuración del Sistema
               </NuxtLink>
+
               <button
+                type="button"
+                @click="toggleTheme"
+                class="flex items-center justify-between w-full px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-surface-container-high/80 transition-colors cursor-pointer"
+              >
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-lg text-primary">{{ themeStore.isDark ? 'light_mode' : 'dark_mode' }}</span>
+                  <span>{{ themeStore.isDark ? 'Cambiar a Modo Claro' : 'Cambiar a Modo Oscuro' }}</span>
+                </div>
+                <span class="text-[10px] font-mono uppercase text-on-surface-variant px-1.5 py-0.5 rounded bg-surface-container">
+                  {{ themeStore.isDark ? 'DARK' : 'LIGHT' }}
+                </span>
+              </button>
+            </div>
+
+            <div class="pt-1 border-t border-outline-variant/20">
+              <button
+                type="button"
                 @click="logout"
-                class="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm text-error-red hover:bg-error-red/10 transition-colors cursor-pointer"
+                class="flex items-center gap-3 w-full text-left px-4 py-2.5 text-xs font-bold text-error-red hover:bg-error-red/10 transition-colors cursor-pointer"
               >
                 <span class="material-symbols-outlined text-lg">logout</span>
                 Cerrar Sesión

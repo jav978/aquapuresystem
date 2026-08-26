@@ -300,6 +300,9 @@ importers:
       vite:
         specifier: ^5.2.0
         version: 5.4.21(@types/node@20.19.43)(lightningcss@1.33.0)(terser@5.50.0)
+      vite-plugin-dts:
+        specifier: ^5.0.3
+        version: 5.0.3(@vue/language-core@2.2.12(typescript@5.9.3))(esbuild@0.21.5)(rolldown@1.2.5)(rollup@4.62.5)(typescript@5.9.3)(vite@5.4.21(@types/node@20.19.43)(lightningcss@1.33.0)(terser@5.50.0))
       vitest:
         specifier: ^1.4.0
         version: 1.6.1(@types/node@20.19.43)(lightningcss@1.33.0)(terser@5.50.0)
@@ -2061,11 +2064,20 @@ packages:
   '@volar/language-core@2.4.15':
     resolution: {integrity: sha512-3VHw+QZU0ZG9IuQmzT68IyN4hZNd9GchGPhbD9+pa8CVv7rnoOZwo7T8weIbrRmihqy3ATpdfXFnqRrfPVK6CA==}
 
+  '@volar/language-core@2.4.28':
+    resolution: {integrity: sha512-w4qhIJ8ZSitgLAkVay6AbcnC7gP3glYM3fYwKV3srj8m494E3xtrCv6E+bWviiK/8hs6e6t1ij1s2Endql7vzQ==}
+
   '@volar/source-map@2.4.15':
     resolution: {integrity: sha512-CPbMWlUN6hVZJYGcU/GSoHu4EnCHiLaXI9n8c9la6RaI9W5JHX+NqG+GSQcB0JdC2FIBLdZJwGsfKyBB71VlTg==}
 
+  '@volar/source-map@2.4.28':
+    resolution: {integrity: sha512-yX2BDBqJkRXfKw8my8VarTyjv48QwxdJtvRgUpNE5erCsgEUdI2DsLbpa+rOQVAJYshY99szEcRDmyHbF10ggQ==}
+
   '@volar/typescript@2.4.15':
     resolution: {integrity: sha512-2aZ8i0cqPGjXb4BhkMsPYDkkuc2ZQ6yOpqwAuNwUoncELqoy5fRgOQtLR9gB0g902iS0NAkvpIzs27geVyVdPg==}
+
+  '@volar/typescript@2.4.28':
+    resolution: {integrity: sha512-Ja6yvWrbis2QtN4ClAKreeUZPVYMARDYZl9LMEv1iQ1QdepB6wn0jTRxA9MftYmYa4DQ4k/DaSZpFPUfxl8giw==}
 
   '@vue-macros/common@3.1.4':
     resolution: {integrity: sha512-/5Fv+6DgIcM9ajY05ZmKBv+LMX1M9A0X+IUwDRVdt67ciw8OV9bvG2r34p3RiEadlsQybjhKPRKNXDC8Bp23cw==}
@@ -2693,6 +2705,9 @@ packages:
 
   commondir@1.0.1:
     resolution: {integrity: sha512-W9pAhw0ja1Edb5GVdIF1mjZw/ASI0AlShXM83UUGe2DVr5TdAPEA1OA8m/g8zWp9x6On7gqufY+FatDbC3MDQg==}
+
+  compare-versions@6.1.1:
+    resolution: {integrity: sha512-4hm4VPpIecmlg59CHXnRDnqGplJFrbLG4aFEl5vl6cK1u76ws3LLvX7ikFnTDl5vo39sjWD6AaDPYodJp/NNHg==}
 
   compatx@0.2.0:
     resolution: {integrity: sha512-6gLRNt4ygsi5NyMVhceOCFv14CIdDFN7fQjX1U4+47qVE/+kjPoXMK65KWK+dWxmFzMTuKazoQ9sch6pM0p5oA==}
@@ -6134,6 +6149,36 @@ packages:
     resolution: {integrity: sha512-pjy2bYhSsufwWlKwPc+l3cN7+wuJlK6uz0YdJEOlQDbl6jo/YlPi4mb8agUkVC8BF7V8NuzeyPNqRksA3hztKQ==}
     engines: {node: '>= 0.8'}
 
+  unplugin-dts@1.0.3:
+    resolution: {integrity: sha512-/GR887wfG4r1cWyt1UZsLRuMIjsmEbGkS9yJrz+0dsToHAYUD5CTyP3JMGVLv25j9K0mJcwAVvZno/aTuSUvNg==}
+    peerDependencies:
+      '@microsoft/api-extractor': '>=7'
+      '@rspack/core': ^1
+      '@vue/language-core': ^3.1.5
+      esbuild: 0.21.5
+      rolldown: '*'
+      rollup: '>=3'
+      typescript: '>=4'
+      vite: '>=3'
+      webpack: ^4 || ^5
+    peerDependenciesMeta:
+      '@microsoft/api-extractor':
+        optional: true
+      '@rspack/core':
+        optional: true
+      '@vue/language-core':
+        optional: true
+      esbuild:
+        optional: true
+      rolldown:
+        optional: true
+      rollup:
+        optional: true
+      vite:
+        optional: true
+      webpack:
+        optional: true
+
   unplugin-utils@0.3.2:
     resolution: {integrity: sha512-xVToRh2CTmLk2HnEG7ac4rl1MJTT3RFkpS8B++/SnB0kXvuaavD+n3m/vrzyWQOdJNSZQACnbz01pnppbwV5BA==}
     engines: {node: '>=20.19.0'}
@@ -6351,6 +6396,20 @@ packages:
       typescript:
         optional: true
       vue-tsc:
+        optional: true
+
+  vite-plugin-dts@5.0.3:
+    resolution: {integrity: sha512-gIth6NdCEHWPiiRMCK3N6C8WjvdsrtEQrmsiG8h6Ov+lFP+b07Y+wcs9H0H7n146l0PDTYK4cQN1vgeG1pMdRQ==}
+    peerDependencies:
+      '@microsoft/api-extractor': '>=7'
+      rollup: '>=3'
+      vite: '>=3'
+    peerDependenciesMeta:
+      '@microsoft/api-extractor':
+        optional: true
+      rollup:
+        optional: true
+      vite:
         optional: true
 
   vite-plugin-inspect@0.8.9:
@@ -9071,11 +9130,23 @@ snapshots:
     dependencies:
       '@volar/source-map': 2.4.15
 
+  '@volar/language-core@2.4.28':
+    dependencies:
+      '@volar/source-map': 2.4.28
+
   '@volar/source-map@2.4.15': {}
+
+  '@volar/source-map@2.4.28': {}
 
   '@volar/typescript@2.4.15':
     dependencies:
       '@volar/language-core': 2.4.15
+      path-browserify: 1.0.1
+      vscode-uri: 3.1.0
+
+  '@volar/typescript@2.4.28':
+    dependencies:
+      '@volar/language-core': 2.4.28
       path-browserify: 1.0.1
       vscode-uri: 3.1.0
 
@@ -9802,6 +9873,8 @@ snapshots:
   comment-parser@1.4.8: {}
 
   commondir@1.0.1: {}
+
+  compare-versions@6.1.1: {}
 
   compatx@0.2.0: {}
 
@@ -13838,6 +13911,26 @@ snapshots:
 
   unpipe@1.0.0: {}
 
+  unplugin-dts@1.0.3(@vue/language-core@2.2.12(typescript@5.9.3))(esbuild@0.21.5)(rolldown@1.2.5)(rollup@4.62.5)(typescript@5.9.3)(vite@5.4.21(@types/node@20.19.43)(lightningcss@1.33.0)(terser@5.50.0)):
+    dependencies:
+      '@rollup/pluginutils': 5.4.0(rollup@4.62.5)
+      '@volar/typescript': 2.4.28
+      compare-versions: 6.1.1
+      debug: 4.4.3
+      kolorist: 1.8.0
+      local-pkg: 1.2.1
+      magic-string: 0.30.21
+      typescript: 5.9.3
+      unplugin: 2.3.11
+    optionalDependencies:
+      '@vue/language-core': 2.2.12(typescript@5.9.3)
+      esbuild: 0.21.5
+      rolldown: 1.2.5
+      rollup: 4.62.5
+      vite: 5.4.21(@types/node@20.19.43)(lightningcss@1.33.0)(terser@5.50.0)
+    transitivePeerDependencies:
+      - supports-color
+
   unplugin-utils@0.3.2:
     dependencies:
       pathe: 2.0.3
@@ -14009,6 +14102,21 @@ snapshots:
       optionator: 0.9.4
       typescript: 5.9.3
       vue-tsc: 2.2.12(typescript@5.9.3)
+
+  vite-plugin-dts@5.0.3(@vue/language-core@2.2.12(typescript@5.9.3))(esbuild@0.21.5)(rolldown@1.2.5)(rollup@4.62.5)(typescript@5.9.3)(vite@5.4.21(@types/node@20.19.43)(lightningcss@1.33.0)(terser@5.50.0)):
+    dependencies:
+      unplugin-dts: 1.0.3(@vue/language-core@2.2.12(typescript@5.9.3))(esbuild@0.21.5)(rolldown@1.2.5)(rollup@4.62.5)(typescript@5.9.3)(vite@5.4.21(@types/node@20.19.43)(lightningcss@1.33.0)(terser@5.50.0))
+    optionalDependencies:
+      rollup: 4.62.5
+      vite: 5.4.21(@types/node@20.19.43)(lightningcss@1.33.0)(terser@5.50.0)
+    transitivePeerDependencies:
+      - '@rspack/core'
+      - '@vue/language-core'
+      - esbuild
+      - rolldown
+      - supports-color
+      - typescript
+      - webpack
 
   vite-plugin-inspect@0.8.9(@nuxt/kit@3.21.11(magicast@0.3.5))(rollup@4.62.5)(vite@8.2.2(@types/node@20.19.43)(esbuild@0.21.5)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.12)(yaml@2.9.0)):
     dependencies:

@@ -4,9 +4,9 @@ import { UserRepositoryPort } from '@aquasystem/domain';
 import { Email } from '@aquasystem/domain';
 import { User, UserRegisteredEvent } from '@aquasystem/domain';
 import { RegisterCommand, UserDto } from '../../dto/auth.dto';
-import { UseCase } from '../ports/inbound/use-case.port';
+import { UseCase } from '../../ports/inbound/use-case.port';
 import { TYPES } from '../../types';
-import { PasswordHasherPort, TokenGeneratorPort, EventBusPort, EmailPort } from '../ports/outbound';
+import { PasswordHasherPort, TokenGeneratorPort, EventBusPort, EmailPort } from '../../ports/outbound';
 
 @injectable()
 export class RegisterUseCase implements UseCase<RegisterCommand, UserDto> {

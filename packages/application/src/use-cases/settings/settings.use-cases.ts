@@ -2,9 +2,9 @@ import { inject, injectable } from 'inversify';
 import { Result, PaginatedResult } from '@aquasystem/shared-kernel';
 import { SettingRepositoryPort, SystemSetting, SettingType } from '@aquasystem/domain';
 import { GetSettingsQuery, UpdateSettingCommand, SettingDto, AuditLogQuery, AuditLogDto } from '../../dto/settings.dto';
-import { UseCase } from '../ports/inbound/use-case.port';
+import { UseCase } from '../../ports/inbound/use-case.port';
 import { TYPES } from '../../types';
-import { EventBusPort } from '../ports/outbound';
+import { EventBusPort } from '../../ports/outbound';
 
 @injectable()
 export class GetSettingsUseCase implements UseCase<GetSettingsQuery, SettingDto[]> {

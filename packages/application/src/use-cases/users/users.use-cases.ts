@@ -2,12 +2,12 @@ import { inject, injectable } from 'inversify';
 import { Result, PaginatedResult } from '@aquasystem/shared-kernel';
 import { UserRepositoryPort } from '@aquasystem/domain';
 import { InviteUserCommand, UpdateUserRoleCommand, DeactivateUserCommand, UserQuery, UserDto } from '../../dto/users.dto';
-import { UseCase } from '../ports/inbound/use-case.port';
+import { UseCase } from '../../ports/inbound/use-case.port';
 import { TYPES } from '../../types';
 import { User, UserId } from '@aquasystem/domain';
 import { UserRole } from '@aquasystem/shared-kernel';
 import { Email } from '@aquasystem/domain';
-import { PasswordHasherPort, TokenGeneratorPort, EventBusPort, EmailPort } from '../ports/outbound';
+import { PasswordHasherPort, TokenGeneratorPort, EventBusPort, EmailPort } from '../../ports/outbound';
 import { UserRegisteredEvent, UserRoleChangedEvent } from '@aquasystem/domain';
 import { PasswordHash, PersonName } from '@aquasystem/domain';
 

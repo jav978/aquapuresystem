@@ -3,9 +3,9 @@ import { Result } from '@aquasystem/shared-kernel';
 import { UserRepositoryPort } from '@aquasystem/domain';
 import { Email } from '@aquasystem/domain';
 import { LoginCommand, LoginResult, UserDto } from '../../dto/auth.dto';
-import { UseCase } from '../ports/inbound/use-case.port';
+import { UseCase } from '../../ports/inbound/use-case.port';
 import { TYPES } from '../../types';
-import { PasswordHasherPort, TokenGeneratorPort, EventBusPort } from '../ports/outbound';
+import { PasswordHasherPort, TokenGeneratorPort, EventBusPort } from '../../ports/outbound';
 import { UserLoggedInEvent } from '@aquasystem/domain';
 
 @injectable()

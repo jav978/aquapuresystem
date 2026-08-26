@@ -1,84 +1,87 @@
 import { defineStore } from 'pinia';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 
-type Theme = 'light' | 'dark';
+export type ThemeMode = 'light' | 'dark';
 
 export const useThemeStore = defineStore('theme', () => {
-  const theme = ref<Theme>('dark');
-  const resolvedTheme = ref<Theme>('dark');
-  let initialized = false;
+  const currentTheme = ref<ThemeMode>('dark');
+  let isInitialized = false;
+
+  const applyDomTheme = (theme: ThemeMode) => {
+    if (typeof document === 'undefined') return;
+
+    const root = document.documentElement;
+    const body = document.body;
+
+    if (theme === 'dark') {
+      root.classList.add('dark');
+      root.classList.remove('light');
+      body?.classList.add('dark');
+      body?.classList.remove('light');
+    } else {
+      root.classList.remove('dark');
+      root.classList.add('light');
+      body?.classList.remove('dark');
+      body?.classList.add('light');
+    }
+
+    root.setAttribute('data-theme', theme);
+    root.style.colorScheme = theme;
+
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', theme === 'dark' ? '#070d1a' : '#f8fafc');
+    }
+  };
 
   const init = () => {
-    if (initialized) return;
-    initialized = true;
+    if (isInitialized) return;
+    isInitialized = true;
 
-    if (import.meta.client) {
-      const stored = localStorage.getItem('theme') as Theme | null;
-      theme.value = stored || 'dark';
-      applyTheme(theme.value);
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      const stored = localStorage.getItem('aquapure_theme') as ThemeMode | null;
+      if (stored === 'light' || stored === 'dark') {
+        currentTheme.value = stored;
+      } else {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        currentTheme.value = prefersDark ? 'dark' : 'dark'; // Default dark per Google Stitch
+      }
+      applyDomTheme(currentTheme.value);
 
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-        if (!localStorage.getItem('theme')) {
-          theme.value = e.matches ? 'dark' : 'light';
-          applyTheme(theme.value);
+        if (!localStorage.getItem('aquapure_theme')) {
+          currentTheme.value = e.matches ? 'dark' : 'light';
+          applyDomTheme(currentTheme.value);
         }
       });
     }
   };
 
-  const applyTheme = (t: Theme) => {
-    resolvedTheme.value = t;
-    theme.value = t;
-    if (typeof document !== 'undefined') {
-      if (t === 'dark') {
-        document.documentElement.classList.add('dark');
-        document.documentElement.classList.remove('light');
-        document.body?.classList.add('dark');
-        document.body?.classList.remove('light');
-      } else {
-        document.documentElement.classList.remove('dark');
-        document.documentElement.classList.add('light');
-        document.body?.classList.remove('dark');
-        document.body?.classList.add('light');
-      }
-      document.documentElement.setAttribute('data-theme', t);
-      document.documentElement.style.colorScheme = t;
-
-      const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-      if (metaThemeColor) {
-        metaThemeColor.setAttribute('content', t === 'dark' ? '#0b1326' : '#f8fafc');
-      }
-    }
-  };
-
   const toggleTheme = () => {
-    const nextTheme: Theme = resolvedTheme.value === 'dark' ? 'light' : 'dark';
+    const next: ThemeMode = currentTheme.value === 'dark' ? 'light' : 'dark';
+    currentTheme.value = next;
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('theme', nextTheme);
+      localStorage.setItem('aquapure_theme', next);
     }
-    applyTheme(nextTheme);
+    applyDomTheme(next);
   };
 
-  const setTheme = (t: Theme) => {
+  const setTheme = (theme: ThemeMode) => {
+    currentTheme.value = theme;
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('theme', t);
+      localStorage.setItem('aquapure_theme', theme);
     }
-    applyTheme(t);
+    applyDomTheme(theme);
   };
 
-  const isDark = computed(() => resolvedTheme.value === 'dark');
-
-  onMounted(() => {
-    init();
-  });
+  const isDark = computed(() => currentTheme.value === 'dark');
 
   return {
-    theme: computed(() => theme.value),
-    resolvedTheme: computed(() => resolvedTheme.value),
+    theme: currentTheme,
     isDark,
+    init,
     toggleTheme,
     setTheme,
-    init,
-    applyTheme,
+    applyDomTheme,
   };
 });

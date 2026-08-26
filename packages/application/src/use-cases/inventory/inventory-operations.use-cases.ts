@@ -2,12 +2,12 @@ import { inject, injectable } from 'inversify';
 import { Result, PaginatedResult } from '@aquasystem/shared-kernel';
 import { ProductRepositoryPort, WarehouseRepositoryPort, InventoryMovementRepositoryPort } from '@aquasystem/domain';
 import { AdjustInventoryCommand, TransferInventoryCommand, InventoryMovementQuery, InventoryMovementDto, LowStockAlertDto } from '../../dto/inventory.dto';
-import { UseCase } from '../ports/inbound/use-case.port';
+import { UseCase } from '../../ports/inbound/use-case.port';
 import { TYPES } from '../../types';
 import { ProductId, WarehouseId } from '@aquasystem/domain';
 import { Quantity } from '@aquasystem/domain';
 import { MovementType } from '@aquasystem/shared-kernel';
-import { EventBusPort } from '../ports/outbound';
+import { EventBusPort } from '../../ports/outbound';
 import { StockAdjustedEvent } from '@aquasystem/domain';
 import { Inventory } from '@aquasystem/domain';
 

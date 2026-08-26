@@ -12,12 +12,12 @@ import {
   ReturnQuery,
   ReturnDto,
 } from '../../dto/invoicing.dto';
-import { UseCase } from '../ports/inbound/use-case.port';
+import { UseCase } from '../../ports/inbound/use-case.port';
 import { TYPES } from '../../types';
 import { Invoice, InvoiceId, SaleId, CustomerId, UserId, ProductId, Return, ReturnId } from '@aquasystem/domain';
 import { Quantity, Money } from '@aquasystem/domain';
 import { InvoiceStatus, PaymentMethod, PaymentStatus, ReturnStatus, ReturnCondition } from '@aquasystem/shared-kernel';
-import { EventBusPort } from '../ports/outbound';
+import { EventBusPort } from '../../ports/outbound';
 import { InvoiceCreatedEvent, InvoiceSentEvent, PaymentAddedEvent, ReturnCreatedEvent } from '@aquasystem/domain';
 
 @injectable()

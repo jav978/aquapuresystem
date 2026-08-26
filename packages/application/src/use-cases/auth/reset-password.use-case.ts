@@ -3,9 +3,9 @@ import { Result } from '@aquasystem/shared-kernel';
 import { UserRepositoryPort } from '@aquasystem/domain';
 import { Email } from '@aquasystem/domain';
 import { ResetPasswordCommand } from '../../dto/auth.dto';
-import { UseCase } from '../ports/inbound/use-case.port';
+import { UseCase } from '../../ports/inbound/use-case.port';
 import { TYPES } from '../../types';
-import { PasswordHasherPort, EventBusPort } from '../ports/outbound';
+import { PasswordHasherPort, EventBusPort } from '../../ports/outbound';
 import { PasswordHash } from '@aquasystem/domain';
 
 @injectable()

@@ -2,13 +2,13 @@ import { inject, injectable } from 'inversify';
 import { Result, PaginatedResult } from '@aquasystem/shared-kernel';
 import { ProductRepositoryPort } from '@aquasystem/domain';
 import { ProductQuery, ProductDto, UpdateProductCommand } from '../../dto/inventory.dto';
-import { UseCase } from '../ports/inbound/use-case.port';
+import { UseCase } from '../../ports/inbound/use-case.port';
 import { TYPES } from '../../types';
 import { ProductId, SKU } from '@aquasystem/domain';
 import { PersonName } from '@aquasystem/domain';
 import { Money, Quantity } from '@aquasystem/domain';
 import { ProductCategory, UnitOfMeasure } from '@aquasystem/shared-kernel';
-import { EventBusPort } from '../ports/outbound';
+import { EventBusPort } from '../../ports/outbound';
 import { ProductUpdatedEvent, ProductActivatedEvent, ProductDeactivatedEvent } from '@aquasystem/domain';
 
 @injectable()

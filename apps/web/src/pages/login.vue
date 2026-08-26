@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-background text-on-background px-4 relative overflow-hidden">
+  <div class="min-h-screen flex items-center justify-center bg-background text-on-surface px-4 relative overflow-hidden">
     <!-- Animated Ambient Blobs -->
     <div class="absolute top-1/4 left-1/8 w-[480px] h-[480px] bg-primary/8 rounded-full blur-3xl pointer-events-none animate-blob"></div>
     <div class="absolute bottom-1/4 right-1/8 w-[400px] h-[400px] bg-primary-container/10 rounded-full blur-3xl pointer-events-none animate-blob-delay-2"></div>

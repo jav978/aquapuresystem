@@ -27,6 +27,9 @@
 
     <!-- Trailing Actions & Profile -->
     <div class="flex items-center gap-2 sm:gap-3 ml-4">
+      <!-- BCV Live Exchange Rate Modal -->
+      <BcvCurrencyModal />
+
       <!-- 30-Day Subscription Pill -->
       <LicenseModal />
 
@@ -341,7 +344,9 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '~/stores/auth';
 import { useThemeStore } from '~/stores/theme';
 import { useLicenseStore } from '~/stores/license';
+import { useCurrencyStore } from '~/stores/currency';
 import LicenseModal from '~/components/layout/LicenseModal.vue';
+import BcvCurrencyModal from '~/components/layout/BcvCurrencyModal.vue';
 
 const props = defineProps<{
   menuOpen: boolean;
@@ -355,9 +360,11 @@ const router = useRouter();
 const authStore = useAuthStore();
 const themeStore = useThemeStore();
 const licenseStore = useLicenseStore();
+const currencyStore = useCurrencyStore();
 
 if (import.meta.client) {
   licenseStore.init();
+  currencyStore.init();
 }
 
 const showUserMenu = ref(false);

@@ -8,8 +8,8 @@
             Módulo Comercial & Despacho
           </span>
           <span class="text-xs text-on-surface-variant flex items-center gap-1">
-            <span class="material-symbols-outlined text-sm text-primary">water_drop</span>
-            Telemetría Activa
+            <span class="material-symbols-outlined text-sm text-billing-green">account_balance</span>
+            Tasa BCV: <strong class="text-billing-green font-mono">Bs. {{ currencyStore.formattedRate }}</strong>
           </span>
         </div>
         <h2 class="text-2xl md:text-3xl font-extrabold text-on-surface tracking-tight">Gestión de Ventas</h2>
@@ -48,7 +48,7 @@
       </NuxtLink>
     </div>
 
-    <!-- KPIs Bento Grid -->
+    <!-- KPIs Bento Grid with Dual Currency -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
       <div class="card-elevated p-6 flex flex-col justify-between relative overflow-hidden">
         <div class="flex justify-between items-start mb-4">
@@ -59,8 +59,11 @@
         </div>
         <div>
           <h3 class="text-3xl md:text-4xl font-extrabold text-on-surface tracking-tight">${{ formatMoney(totalSalesAmount) }}</h3>
-          <p class="text-xs text-billing-green mt-2 flex items-center gap-1 font-semibold">
-            <span class="material-symbols-outlined text-sm">trending_up</span>
+          <p class="text-xs text-billing-green mt-1 font-mono font-bold">
+            ≈ {{ currencyStore.formatVes(currencyStore.toVes(totalSalesAmount)) }}
+          </p>
+          <p class="text-xs text-on-surface-variant mt-2 flex items-center gap-1 font-medium">
+            <span class="material-symbols-outlined text-sm text-billing-green">trending_up</span>
             {{ sales.length }} transacciones registradas
           </p>
         </div>
@@ -88,6 +91,9 @@
         </div>
         <div>
           <h3 class="text-3xl md:text-4xl font-extrabold text-billing-green tracking-tight">${{ formatMoney(paidSalesAmount) }}</h3>
+          <p class="text-xs text-billing-green mt-1 font-mono font-bold">
+            ≈ {{ currencyStore.formatVes(currencyStore.toVes(paidSalesAmount)) }}
+          </p>
           <p class="text-xs text-on-surface-variant mt-2 flex items-center gap-1">
             <span class="material-symbols-outlined text-sm text-billing-green">check_circle</span>
             {{ paidSalesCount }} pagadas / {{ sales.length - paidSalesCount }} pendientes
@@ -124,7 +130,7 @@
       </div>
     </div>
 
-    <!-- Ventas Recientes Table -->
+    <!-- Ventas Recientes Table with Dual Currency -->
     <div class="card-elevated overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
@@ -134,7 +140,8 @@
               <th class="py-4 px-6">Cliente</th>
               <th class="py-4 px-6">Productos</th>
               <th class="py-4 px-6 text-center">Volumen Agua</th>
-              <th class="py-4 px-6 text-right">Total</th>
+              <th class="py-4 px-6 text-right">Total ($ USD)</th>
+              <th class="py-4 px-6 text-right">Equivalente (Bs. BCV)</th>
               <th class="py-4 px-6 text-center">Estado</th>
               <th class="py-4 px-6 text-right">Acciones</th>
             </tr>
@@ -151,6 +158,9 @@
                 </span>
               </td>
               <td class="py-4 px-6 text-sm text-on-surface text-right font-extrabold font-mono text-billing-green">${{ formatMoney(sale.total) }}</td>
+              <td class="py-4 px-6 text-sm text-right font-mono font-bold text-on-surface">
+                {{ currencyStore.formatVes(currencyStore.toVes(sale.total)) }}
+              </td>
               <td class="py-4 px-6 text-center">
                 <span
                   v-if="sale.status === 'PAID'"
@@ -196,7 +206,7 @@
       </div>
     </div>
 
-    <!-- Sale Details Modal -->
+    <!-- Sale Details Modal with Dual Currency -->
     <div v-if="selectedSale" class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="selectedSale = null"></div>
       <div class="relative glass-card w-full max-w-lg p-6 z-10 animate-in">
@@ -224,14 +234,26 @@
             <span class="text-cyan-400 font-mono font-bold">{{ selectedSale.waterLiters || tanksStore.parseLitersFromItemText(selectedSale.items) }} L</span>
           </div>
           <div class="flex justify-between py-1 border-b border-black/5 dark:border-white/5">
+            <span class="text-on-surface-variant">Tasa Oficial BCV:</span>
+            <span class="text-billing-green font-mono font-bold">Bs. {{ currencyStore.formattedRate }} / USD</span>
+          </div>
+          <div class="flex justify-between py-1 border-b border-black/5 dark:border-white/5">
             <span class="text-on-surface-variant">Estado de Pago:</span>
             <span :class="selectedSale.status === 'PAID' ? 'text-billing-green' : 'text-admin-gold'" class="font-bold">
               {{ selectedSale.status === 'PAID' ? 'Pagado' : 'Pendiente' }}
             </span>
           </div>
-          <div class="flex justify-between py-2 text-base font-bold">
-            <span class="text-on-surface">Monto Total:</span>
-            <span class="text-primary font-mono">${{ formatMoney(selectedSale.total) }}</span>
+
+          <!-- Dual Currency Total -->
+          <div class="p-3.5 rounded-2xl bg-surface-container/60 space-y-1">
+            <div class="flex justify-between text-base font-bold">
+              <span class="text-on-surface">Total en Dólares:</span>
+              <span class="text-primary font-mono">${{ formatMoney(selectedSale.total) }} USD</span>
+            </div>
+            <div class="flex justify-between text-sm font-bold">
+              <span class="text-on-surface-variant">Total en Bolívares:</span>
+              <span class="text-billing-green font-mono">{{ currencyStore.formatVes(currencyStore.toVes(selectedSale.total)) }}</span>
+            </div>
           </div>
         </div>
 
@@ -253,7 +275,7 @@
       </div>
     </div>
 
-    <!-- New Sale Modal with Strict Validation & Tank Selection -->
+    <!-- New Sale Modal with Strict Validation & BCV Dual Currency Conversion -->
     <div v-if="showSaleModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="showSaleModal = false"></div>
       <div class="relative glass-card w-full max-w-lg p-6 z-10 animate-in">
@@ -337,7 +359,7 @@
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Monto Total ($) *</label>
+              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Monto Total ($ USD) *</label>
               <input
                 v-model.number="newSaleForm.total"
                 type="number"
@@ -354,6 +376,20 @@
                 <span>{{ tanksStore.parseLitersFromItemText(newSaleForm.items) }} L</span>
                 <span class="material-symbols-outlined text-sm">water_drop</span>
               </div>
+            </div>
+          </div>
+
+          <!-- Live Conversion to Bolívares -->
+          <div class="p-3.5 rounded-2xl bg-surface-container-high/40 flex items-center justify-between text-xs font-mono">
+            <div>
+              <span class="text-on-surface-variant">Equivalente en Bolívares (BCV):</span>
+              <p class="text-base font-extrabold text-billing-green mt-0.5">
+                {{ currencyStore.formatVes(currencyStore.toVes(newSaleForm.total || 0)) }}
+              </p>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] text-on-surface-variant">Tasa Oficial</span>
+              <p class="text-xs font-bold text-on-surface">Bs. {{ currencyStore.formattedRate }}</p>
             </div>
           </div>
 
@@ -382,6 +418,7 @@
 import { ref, computed, reactive } from 'vue';
 import { useRoute } from 'vue-router';
 import { useTanksStore } from '~/stores/tanks';
+import { useCurrencyStore } from '~/stores/currency';
 import { useToast } from '~/composables/useToast';
 import {
   validateRequired,
@@ -395,6 +432,7 @@ definePageMeta({
 
 const route = useRoute();
 const tanksStore = useTanksStore();
+const currencyStore = useCurrencyStore();
 const toast = useToast();
 
 const searchQuery = ref('');
@@ -505,7 +543,11 @@ const openDetails = (sale: any) => {
 };
 
 const printInvoice = () => {
-  toast.success(`Comprobante para ${selectedSale.value?.invoiceNo} listo para imprimir.`);
+  const vesAmount = currencyStore.formatVes(currencyStore.toVes(selectedSale.value?.total || 0));
+  toast.success(
+    'Comprobante Listo',
+    `Comprobante para ${selectedSale.value?.invoiceNo} listo para imprimir ($${formatMoney(selectedSale.value?.total)} / ${vesAmount}).`
+  );
   selectedSale.value = null;
 };
 
@@ -543,19 +585,22 @@ const createSale = () => {
   // Deduct water liters from Tank Store
   const deductionResult = tanksStore.deductLiters(litersToDeduct, cleaned.tankId, `Venta ${invoiceNo} (${cleaned.customer})`);
 
+  const numTotal = Number(cleaned.total);
+  const vesTotal = currencyStore.formatVes(currencyStore.toVes(numTotal));
+
   sales.value.unshift({
     invoiceNo,
     customer: cleaned.customer,
     items: cleaned.items,
     waterLiters: litersToDeduct,
-    total: Number(cleaned.total),
+    total: numTotal,
     status: cleaned.status,
   });
 
   showSaleModal.value = false;
   toast.createSuccess(
     'Venta',
-    `Venta ${invoiceNo} registrada ($${formatMoney(Number(cleaned.total))}). Se descontaron ${deductionResult.dispensed}L de ${deductionResult.tankName}.`
+    `Venta ${invoiceNo} registrada por $${formatMoney(numTotal)} (${vesTotal}). Se descontaron ${deductionResult.dispensed}L de ${deductionResult.tankName}.`
   );
 };
 </script>

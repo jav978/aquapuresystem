@@ -13,7 +13,7 @@
           </span>
         </div>
         <h2 class="text-2xl md:text-3xl font-extrabold text-on-surface tracking-tight">Facturación & Comprobantes</h2>
-        <p class="text-sm text-on-surface-variant mt-0.5">Control de facturas comerciales, cobros en divisas ($ USD) y bolívares (Bs. VES) según tasa oficial BCV.</p>
+        <p class="text-sm text-on-surface-variant mt-0.5">Control de facturas comerciales, clientes (Naturales y Jurídicos) y cobros en divisas ($ USD y Bs. VES).</p>
       </div>
 
       <!-- Action Buttons -->
@@ -112,7 +112,7 @@
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Buscar por Nº de Factura o Cliente..."
+          placeholder="Buscar por Nº Factura, Cédula/RIF o Cliente..."
           class="w-full bg-surface-container border-0 rounded-xl pl-10 pr-4 py-2 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none placeholder:text-on-surface-variant/60 shadow-sm"
         />
       </div>
@@ -141,7 +141,7 @@
             <tr class="bg-surface-container-highest/40 border-b border-black/5 dark:border-white/5 text-[11px] font-extrabold text-on-surface-variant uppercase tracking-wider">
               <th class="py-4 px-6">Nº Factura</th>
               <th class="py-4 px-6">Fecha</th>
-              <th class="py-4 px-6">Cliente</th>
+              <th class="py-4 px-6">Cliente / Cédula-RIF</th>
               <th class="py-4 px-6">Detalle</th>
               <th class="py-4 px-6 text-right">Monto ($ USD)</th>
               <th class="py-4 px-6 text-right">Equivalente (Bs. BCV)</th>
@@ -153,7 +153,12 @@
             <tr v-for="inv in filteredInvoices" :key="inv.id" class="hover:bg-surface-container-high/40 transition-colors">
               <td class="py-4 px-6 text-sm font-bold text-primary font-mono">{{ inv.id }}</td>
               <td class="py-4 px-6 text-sm text-on-surface-variant font-medium">{{ inv.date }}</td>
-              <td class="py-4 px-6 text-sm text-on-surface font-semibold">{{ inv.customer }}</td>
+              <td class="py-4 px-6 text-sm text-on-surface font-semibold">
+                {{ inv.customer }}
+                <span v-if="inv.customerDoc" class="block text-xs font-mono font-normal text-on-surface-variant">
+                  {{ inv.customerDoc }}
+                </span>
+              </td>
               <td class="py-4 px-6 text-sm text-on-surface-variant">{{ inv.items || 'Recarga de Agua Purificada' }}</td>
               <td class="py-4 px-6 text-sm text-on-surface text-right font-extrabold font-mono text-billing-green">
                 ${{ formatMoney(inv.amount) }}
@@ -244,9 +249,17 @@
             <span class="text-on-surface-variant">Cliente / Empresa:</span>
             <span class="text-on-surface font-semibold">{{ selectedInvoice.customer }}</span>
           </div>
+          <div v-if="selectedInvoice.customerDoc" class="flex justify-between py-1 border-b border-black/5 dark:border-white/5">
+            <span class="text-on-surface-variant">Cédula / RIF:</span>
+            <span class="text-on-surface font-mono font-bold">{{ selectedInvoice.customerDoc }}</span>
+          </div>
+          <div v-if="selectedInvoice.customerAddress" class="flex justify-between py-1 border-b border-black/5 dark:border-white/5">
+            <span class="text-on-surface-variant">Dirección:</span>
+            <span class="text-on-surface text-right text-xs max-w-[240px]">{{ selectedInvoice.customerAddress }}</span>
+          </div>
           <div class="flex justify-between py-1 border-b border-black/5 dark:border-white/5">
             <span class="text-on-surface-variant">Detalle:</span>
-            <span class="text-on-surface font-semibold">{{ selectedInvoice.items || 'Recarga de Agua Purificada' }}</span>
+            <span class="text-on-surface font-semibold text-right max-w-[240px]">{{ selectedInvoice.items || 'Recarga de Agua Purificada' }}</span>
           </div>
           <div class="flex justify-between py-1 border-b border-black/5 dark:border-white/5">
             <span class="text-on-surface-variant">Tasa Oficial BCV Aplicada:</span>
@@ -290,7 +303,7 @@
       </div>
     </div>
 
-    <!-- Emit Invoice Modal with Dual Currency Calculation -->
+    <!-- Emit Invoice Modal with Complete Customer & Dual Currency Calculation -->
     <div v-if="showEmitModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="showEmitModal = false"></div>
       <div class="relative glass-card w-full max-w-lg p-6 z-10 animate-in">
@@ -299,7 +312,7 @@
             <span class="p-2 rounded-xl bg-primary/15 text-primary material-symbols-outlined">receipt_long</span>
             <div>
               <h4 class="text-base font-bold text-on-surface">Emitir Nueva Factura Fiscal</h4>
-              <p class="text-xs text-on-surface-variant">Conversión automática en $ USD y Bs. según BCV</p>
+              <p class="text-xs text-on-surface-variant">Registro formal con Cédula/RIF y tasa oficial BCV</p>
             </div>
           </div>
           <button @click="showEmitModal = false" class="p-1 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer">
@@ -314,13 +327,48 @@
         </div>
 
         <form @submit.prevent="emitInvoice" class="space-y-4">
+          <!-- Cédula / RIF con Autocompletado -->
           <div>
-            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Cliente / Razón Social *</label>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Cédula o RIF del Cliente *</label>
+            <div class="flex gap-2">
+              <select
+                v-model="emitCustomerForm.docType"
+                class="bg-surface-container border-0 rounded-xl px-2.5 py-2 text-on-surface text-xs font-bold focus:ring-2 focus:ring-primary outline-none shadow-sm"
+              >
+                <option value="V">V-</option>
+                <option value="E">E-</option>
+                <option value="J">J-</option>
+                <option value="G">G-</option>
+              </select>
+              <input
+                v-model="emitCustomerForm.docNumber"
+                @input="onInvoiceDocInput"
+                type="text"
+                required
+                placeholder="Número de Cédula o RIF"
+                class="flex-1 bg-surface-container border-0 rounded-xl px-3 py-2 text-on-surface text-xs font-bold font-mono focus:ring-2 focus:ring-primary outline-none shadow-sm"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Nombre / Razón Social *</label>
             <input
-              v-model="emitForm.customer"
+              v-model="emitCustomerForm.name"
               type="text"
               required
               placeholder="Ej: Distribuidora Los Andes C.A."
+              class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Dirección Fiscal / Entrega *</label>
+            <input
+              v-model="emitCustomerForm.address"
+              type="text"
+              required
+              placeholder="Ej: Av. Las Industrias, Galpón 4"
               class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
             />
           </div>
@@ -331,36 +379,9 @@
               v-model="emitForm.items"
               type="text"
               required
-              placeholder="Ej: 20x Botellón 20L + 5x Botella 5L"
+              placeholder="Ej: 20x Botellón 20L + 5x Tapa 55mm"
               class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
             />
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Tanque Suministrador *</label>
-              <select
-                v-model="emitForm.tankId"
-                required
-                class="w-full bg-surface-container border-0 rounded-xl px-3 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
-              >
-                <option v-for="t in tanksStore.tanks" :key="t.id" :value="t.id">
-                  {{ t.name }} ({{ t.level }}%)
-                </option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Estado de Pago *</label>
-              <select
-                v-model="emitForm.status"
-                required
-                class="w-full bg-surface-container border-0 rounded-xl px-3 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
-              >
-                <option value="PAGADA">Pagada</option>
-                <option value="PENDIENTE">Pendiente</option>
-              </select>
-            </div>
           </div>
 
           <!-- Currency & Amount inputs -->
@@ -379,13 +400,14 @@
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Moneda de Pago</label>
+              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Estado de Pago *</label>
               <select
-                v-model="emitForm.paymentCurrency"
+                v-model="emitForm.status"
+                required
                 class="w-full bg-surface-container border-0 rounded-xl px-3 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
               >
-                <option value="USD">Dólares ($ USD)</option>
-                <option value="VES">Bolívares (Pago Móvil / Transf.)</option>
+                <option value="PAGADA">Pagada</option>
+                <option value="PENDIENTE">Pendiente</option>
               </select>
             </div>
           </div>
@@ -426,10 +448,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue';
+import { ref, computed, reactive, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useTanksStore } from '~/stores/tanks';
 import { useCurrencyStore } from '~/stores/currency';
+import { useCustomersStore } from '~/stores/customers';
 import { useToast } from '~/composables/useToast';
 import {
   validateRequired,
@@ -444,6 +467,7 @@ definePageMeta({
 const route = useRoute();
 const tanksStore = useTanksStore();
 const currencyStore = useCurrencyStore();
+const customersStore = useCustomersStore();
 const toast = useToast();
 
 const searchQuery = ref('');
@@ -452,12 +476,20 @@ const showEmitModal = ref(false);
 const selectedInvoice = ref<any>(null);
 const emitError = ref<string | null>(null);
 
+const emitCustomerForm = reactive({
+  type: 'JURIDICO' as 'NATURAL' | 'JURIDICO',
+  docType: 'J' as 'V' | 'E' | 'J' | 'G',
+  docNumber: '',
+  name: '',
+  address: '',
+  phone: '',
+  email: '',
+});
+
 const emitForm = reactive({
-  customer: '',
   items: '20x Botellón 20L',
   amount: 90.00,
   paymentCurrency: 'USD',
-  tankId: 'tank-1',
   status: 'PAGADA' as 'PAGADA' | 'PENDIENTE',
 });
 
@@ -465,7 +497,9 @@ const invoices = ref([
   {
     id: 'FAC-2026-001',
     date: '2026-02-25',
-    customer: 'AquaExpress Delivery',
+    customer: 'AquaExpress Delivery C.A.',
+    customerDoc: 'J-31245678-0',
+    customerAddress: 'Av. Las Industrias, Galpón 4, Zona Industrial',
     items: '50x Botellón 20L',
     amount: 225.00,
     status: 'PAGADA',
@@ -474,6 +508,8 @@ const invoices = ref([
     id: 'FAC-2026-002',
     date: '2026-02-24',
     customer: 'Minimarket Los Andes',
+    customerDoc: 'J-40123987-1',
+    customerAddress: 'Calle Real de San Antonio, Local 12',
     items: '20x Botellón 20L + 10x Botella 5L',
     amount: 110.00,
     status: 'PAGADA',
@@ -481,7 +517,9 @@ const invoices = ref([
   {
     id: 'FAC-2026-003',
     date: '2026-02-24',
-    customer: 'Gimnasio PowerFit',
+    customer: 'Gimnasio PowerFit C.A.',
+    customerDoc: 'J-29874512-3',
+    customerAddress: 'Av. Francisco de Miranda, CC Oasis',
     items: '15x Botellón 20L',
     amount: 67.50,
     status: 'PENDIENTE',
@@ -490,11 +528,18 @@ const invoices = ref([
     id: 'FAC-2026-004',
     date: '2026-02-23',
     customer: 'Hotel Bella Vista',
+    customerDoc: 'J-20549382-9',
+    customerAddress: 'Av. Principal de Bella Vista',
     items: '100x Botellón 20L',
     amount: 450.00,
     status: 'PAGADA',
   },
 ]);
+
+onMounted(() => {
+  customersStore.init();
+  tanksStore.init();
+});
 
 const totalAmount = computed(() => {
   return invoices.value.reduce((acc, inv) => acc + inv.amount, 0);
@@ -522,11 +567,15 @@ const pendingAmount = computed(() => {
 
 const filteredInvoices = computed(() => {
   return invoices.value.filter((inv) => {
+    const q = searchQuery.value.toLowerCase().trim();
+    if (!q) {
+      return !statusFilter.value || inv.status === statusFilter.value;
+    }
     const matchSearch =
-      !searchQuery.value.trim() ||
-      inv.id.toLowerCase().includes(searchQuery.value.toLowerCase().trim()) ||
-      inv.customer.toLowerCase().includes(searchQuery.value.toLowerCase().trim()) ||
-      (inv.items && inv.items.toLowerCase().includes(searchQuery.value.toLowerCase().trim()));
+      inv.id.toLowerCase().includes(q) ||
+      inv.customer.toLowerCase().includes(q) ||
+      (inv.customerDoc && inv.customerDoc.toLowerCase().includes(q)) ||
+      (inv.items && inv.items.toLowerCase().includes(q));
 
     const matchStatus = !statusFilter.value || inv.status === statusFilter.value;
     return matchSearch && matchStatus;
@@ -539,13 +588,27 @@ const formatMoney = (val: number): string => {
 
 const openEmitModal = () => {
   emitError.value = null;
-  emitForm.customer = '';
+  emitCustomerForm.docNumber = '';
+  emitCustomerForm.name = '';
+  emitCustomerForm.address = '';
   emitForm.items = '20x Botellón 20L';
   emitForm.amount = 90.00;
-  emitForm.paymentCurrency = 'USD';
-  emitForm.tankId = tanksStore.tanks[0]?.id || 'tank-1';
   emitForm.status = 'PAGADA';
   showEmitModal.value = true;
+};
+
+const onInvoiceDocInput = () => {
+  if (emitCustomerForm.docNumber.trim().length >= 4) {
+    const query = `${emitCustomerForm.docType}-${emitCustomerForm.docNumber.trim()}`;
+    const found = customersStore.findCustomer(query);
+    if (found) {
+      emitCustomerForm.name = found.name;
+      emitCustomerForm.address = found.address;
+      emitCustomerForm.phone = found.phone || '';
+      emitCustomerForm.email = found.email || '';
+      emitCustomerForm.type = found.type;
+    }
+  }
 };
 
 const viewInvoice = (inv: any) => {
@@ -572,53 +635,79 @@ const deleteInvoice = (inv: any) => {
 
 const emitInvoice = () => {
   emitError.value = null;
-  const cleaned = sanitizeFormData(emitForm);
+  const cleanedCustomer = sanitizeFormData(emitCustomerForm);
+  const cleanedForm = sanitizeFormData(emitForm);
 
-  const customerErr = validateRequired(cleaned.customer, 'El cliente / razón social');
-  if (customerErr) {
-    emitError.value = customerErr;
+  const docErr = validateRequired(cleanedCustomer.docNumber, 'La Cédula o RIF');
+  if (docErr) {
+    emitError.value = docErr;
     return;
   }
 
-  const itemsErr = validateRequired(cleaned.items, 'El concepto / productos');
+  const nameErr = validateRequired(cleanedCustomer.name, 'El Cliente / Razón Social');
+  if (nameErr) {
+    emitError.value = nameErr;
+    return;
+  }
+
+  const addrErr = validateRequired(cleanedCustomer.address, 'La Dirección fiscal');
+  if (addrErr) {
+    emitError.value = addrErr;
+    return;
+  }
+
+  const itemsErr = validateRequired(cleanedForm.items, 'El concepto / productos');
   if (itemsErr) {
     emitError.value = itemsErr;
     return;
   }
 
-  const amountErr = validatePositiveNumber(cleaned.amount, 'El monto total');
+  const amountErr = validatePositiveNumber(cleanedForm.amount, 'El monto total');
   if (amountErr) {
     emitError.value = amountErr;
     return;
   }
 
+  // Register or update customer
+  const customerRecord = customersStore.registerOrUpdateCustomer({
+    type: cleanedCustomer.type,
+    docType: cleanedCustomer.docType,
+    docNumber: cleanedCustomer.docNumber,
+    name: cleanedCustomer.name,
+    address: cleanedCustomer.address,
+    phone: cleanedCustomer.phone,
+    email: cleanedCustomer.email,
+  });
+
   const nextNum = invoices.value.length + 1;
   const newId = `FAC-2026-00${nextNum}`;
-  const litersToDeduct = tanksStore.parseLitersFromItemText(cleaned.items);
+  const litersToDeduct = tanksStore.parseLitersFromItemText(cleanedForm.items);
 
-  // Deduct water liters from supply tank
+  // Deduct water liters from Master Consolidated Tank (+ calculate wash waste)
   const deductionResult = tanksStore.deductLiters(
     litersToDeduct,
-    cleaned.tankId,
-    `Factura ${newId} (${cleaned.customer})`
+    undefined,
+    `Factura ${newId} (${customerRecord.name})`
   );
 
-  const numAmount = Number(cleaned.amount);
+  const numAmount = Number(cleanedForm.amount);
   const vesAmount = currencyStore.formatVes(currencyStore.toVes(numAmount));
 
   invoices.value.unshift({
     id: newId,
     date: new Date().toISOString().split('T')[0],
-    customer: cleaned.customer,
-    items: cleaned.items,
+    customer: customerRecord.name,
+    customerDoc: customerRecord.fullDoc,
+    customerAddress: customerRecord.address,
+    items: cleanedForm.items,
     amount: numAmount,
-    status: cleaned.status,
+    status: cleanedForm.status,
   });
 
   showEmitModal.value = false;
   toast.createSuccess(
-    'Factura',
-    `Factura ${newId} emitida por $${formatMoney(numAmount)} (${vesAmount}). Descontados ${deductionResult.dispensed}L de ${deductionResult.tankName}.`
+    'Factura Fiscal',
+    `Factura ${newId} emitida por $${formatMoney(numAmount)} (${vesAmount}). Descontados ${deductionResult.dispensed}L de agua (+${deductionResult.washWaste}L merma).`
   );
 };
 </script>

@@ -12,8 +12,8 @@
             Tasa BCV: <strong class="text-billing-green font-mono">Bs. {{ currencyStore.formattedRate }}</strong>
           </span>
         </div>
-        <h2 class="text-2xl md:text-3xl font-extrabold text-on-surface tracking-tight">Facturación & Comprobantes</h2>
-        <p class="text-sm text-on-surface-variant mt-0.5">Control de facturas comerciales, clientes (Naturales y Jurídicos) y cobros en divisas ($ USD y Bs. VES).</p>
+        <h2 class="text-2xl md:text-3xl font-extrabold text-on-surface tracking-tight">Facturación & Comprobantes Fiscales</h2>
+        <p class="text-sm text-on-surface-variant mt-0.5">Control de facturas comerciales, clientes (Naturales y Jurídicos), conciliación bancaria y códigos QR fiscales.</p>
       </div>
 
       <!-- Action Buttons -->
@@ -44,7 +44,7 @@
         :class="route.path === '/sales/invoices' ? 'bg-primary/15 text-primary font-bold' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'"
       >
         <span class="material-symbols-outlined text-base">receipt_long</span>
-        Facturación
+        Facturación ({{ salesStore.invoices.length }})
       </NuxtLink>
     </div>
 
@@ -58,12 +58,12 @@
           </span>
         </div>
         <div>
-          <h3 class="text-3xl md:text-4xl font-extrabold text-on-surface tracking-tight">${{ formatMoney(totalAmount) }}</h3>
+          <h3 class="text-3xl md:text-4xl font-extrabold text-on-surface tracking-tight">${{ formatMoney(salesStore.totalSalesAmount) }}</h3>
           <p class="text-xs text-billing-green mt-1 font-mono font-bold">
-            ≈ {{ currencyStore.formatVes(currencyStore.toVes(totalAmount)) }}
+            ≈ {{ currencyStore.formatVes(currencyStore.toVes(salesStore.totalSalesAmount)) }}
           </p>
           <p class="text-xs text-on-surface-variant mt-2">
-            {{ invoices.length }} facturas emitidas
+            {{ salesStore.invoices.length }} facturas emitidas
           </p>
         </div>
       </div>
@@ -76,12 +76,12 @@
           </span>
         </div>
         <div>
-          <h3 class="text-3xl md:text-4xl font-extrabold text-billing-green tracking-tight">${{ formatMoney(paidAmount) }}</h3>
+          <h3 class="text-3xl md:text-4xl font-extrabold text-billing-green tracking-tight">${{ formatMoney(salesStore.paidSalesAmount) }}</h3>
           <p class="text-xs text-billing-green mt-1 font-mono font-bold">
-            ≈ {{ currencyStore.formatVes(currencyStore.toVes(paidAmount)) }}
+            ≈ {{ currencyStore.formatVes(currencyStore.toVes(salesStore.paidSalesAmount)) }}
           </p>
           <p class="text-xs text-on-surface-variant mt-2">
-            {{ paidCount }} comprobantes liquidados
+            {{ salesStore.paidSales.length }} comprobantes liquidados
           </p>
         </div>
       </div>
@@ -94,12 +94,12 @@
           </span>
         </div>
         <div>
-          <h3 class="text-3xl md:text-4xl font-extrabold text-admin-gold tracking-tight">${{ formatMoney(pendingAmount) }}</h3>
+          <h3 class="text-3xl md:text-4xl font-extrabold text-admin-gold tracking-tight">${{ formatMoney(salesStore.pendingSalesAmount) }}</h3>
           <p class="text-xs text-admin-gold mt-1 font-mono font-bold">
-            ≈ {{ currencyStore.formatVes(currencyStore.toVes(pendingAmount)) }}
+            ≈ {{ currencyStore.formatVes(currencyStore.toVes(salesStore.pendingSalesAmount)) }}
           </p>
           <p class="text-xs text-on-surface-variant mt-2">
-            {{ pendingCount }} facturas por cobrar
+            {{ salesStore.pendingSales.length }} facturas por cobrar
           </p>
         </div>
       </div>
@@ -112,7 +112,7 @@
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Buscar por Nº Factura, Cédula/RIF o Cliente..."
+          placeholder="Buscar por Nº Factura, Cédula/RIF, Cliente o Ref. Bancaria..."
           class="w-full bg-surface-container border-0 rounded-xl pl-10 pr-4 py-2 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none placeholder:text-on-surface-variant/60 shadow-sm"
         />
       </div>
@@ -123,8 +123,8 @@
           class="bg-surface-container border-0 text-on-surface text-xs font-semibold rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary outline-none cursor-pointer shadow-sm"
         >
           <option value="">Todos los Estados</option>
-          <option value="PAGADA">Solo Pagadas</option>
-          <option value="PENDIENTE">Solo Pendientes</option>
+          <option value="PAID">Solo Pagadas</option>
+          <option value="PENDING">Solo Pendientes</option>
         </select>
 
         <span class="text-xs px-3 py-1.5 bg-surface-container rounded-xl text-on-surface-variant font-bold shadow-sm">
@@ -142,7 +142,8 @@
               <th class="py-4 px-6">Nº Factura</th>
               <th class="py-4 px-6">Fecha</th>
               <th class="py-4 px-6">Cliente / Cédula-RIF</th>
-              <th class="py-4 px-6">Detalle</th>
+              <th class="py-4 px-6">Detalle de Productos</th>
+              <th class="py-4 px-6">Pago & Ref. Bancaria</th>
               <th class="py-4 px-6 text-right">Monto ($ USD)</th>
               <th class="py-4 px-6 text-right">Equivalente (Bs. BCV)</th>
               <th class="py-4 px-6 text-center">Estado</th>
@@ -151,7 +152,7 @@
           </thead>
           <tbody class="divide-y divide-black/5 dark:divide-white/5">
             <tr v-for="inv in filteredInvoices" :key="inv.id" class="hover:bg-surface-container-high/40 transition-colors">
-              <td class="py-4 px-6 text-sm font-bold text-primary font-mono">{{ inv.id }}</td>
+              <td class="py-4 px-6 text-sm font-bold text-primary font-mono">{{ inv.invoiceNo }}</td>
               <td class="py-4 px-6 text-sm text-on-surface-variant font-medium">{{ inv.date }}</td>
               <td class="py-4 px-6 text-sm text-on-surface font-semibold">
                 {{ inv.customer }}
@@ -159,16 +160,25 @@
                   {{ inv.customerDoc }}
                 </span>
               </td>
-              <td class="py-4 px-6 text-sm text-on-surface-variant">{{ inv.items || 'Recarga de Agua Purificada' }}</td>
+              <td class="py-4 px-6 text-sm text-on-surface-variant">{{ inv.itemsSummary || 'Recarga de Agua' }}</td>
+              <td class="py-4 px-6 text-xs text-on-surface-variant">
+                <span class="font-bold text-on-surface block">{{ inv.payment?.methodLabel || 'Efectivo' }}</span>
+                <span v-if="inv.payment?.referenceNumber" class="font-mono text-primary font-semibold">
+                  Ref: {{ inv.payment.referenceNumber }} ({{ inv.payment?.bankName || 'Banco' }})
+                </span>
+                <span v-else-if="inv.payment?.changeUsd !== undefined && inv.payment.changeUsd > 0" class="text-billing-green font-mono">
+                  Vuelto: ${{ inv.payment.changeUsd.toFixed(2) }}
+                </span>
+              </td>
               <td class="py-4 px-6 text-sm text-on-surface text-right font-extrabold font-mono text-billing-green">
-                ${{ formatMoney(inv.amount) }}
+                ${{ formatMoney(inv.total) }}
               </td>
               <td class="py-4 px-6 text-sm text-right font-mono font-bold text-on-surface">
-                {{ currencyStore.formatVes(currencyStore.toVes(inv.amount)) }}
+                {{ currencyStore.formatVes(inv.totalVes || currencyStore.toVes(inv.total)) }}
               </td>
               <td class="py-4 px-6 text-center">
                 <span
-                  v-if="inv.status === 'PAGADA'"
+                  v-if="inv.status === 'PAID'"
                   class="inline-flex items-center gap-1.5 bg-billing-green/15 text-billing-green px-3 py-1 rounded-full text-xs font-bold"
                 >
                   <span class="w-1.5 h-1.5 rounded-full bg-billing-green"></span> Pagada
@@ -183,7 +193,7 @@
               <td class="py-4 px-6 text-right">
                 <div class="flex items-center justify-end gap-1">
                   <button
-                    v-if="inv.status === 'PENDIENTE'"
+                    v-if="inv.status === 'PENDING'"
                     @click="markAsPaid(inv)"
                     class="p-2 text-billing-green hover:bg-surface-container transition-colors rounded-xl cursor-pointer active:scale-95"
                     title="Registrar Cobro / Marcar como Pagada"
@@ -191,18 +201,11 @@
                     <span class="material-symbols-outlined text-lg">check_circle</span>
                   </button>
                   <button
-                    @click="viewInvoice(inv)"
+                    @click="viewPrintReceipt(inv)"
                     class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-xl hover:bg-surface-container cursor-pointer active:scale-95"
-                    title="Ver Detalle"
+                    title="Ver / Imprimir Comprobante con QR"
                   >
-                    <span class="material-symbols-outlined text-lg">visibility</span>
-                  </button>
-                  <button
-                    @click="downloadInvoice(inv)"
-                    class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-xl hover:bg-surface-container cursor-pointer active:scale-95"
-                    title="Descargar PDF"
-                  >
-                    <span class="material-symbols-outlined text-lg">download</span>
+                    <span class="material-symbols-outlined text-lg">receipt_long</span>
                   </button>
                   <button
                     @click="deleteInvoice(inv)"
@@ -221,98 +224,21 @@
       <!-- Pagination Footer -->
       <div class="p-4 border-t border-black/5 dark:border-white/5 flex items-center justify-between bg-surface-container-highest/20 text-xs">
         <span class="text-on-surface-variant font-medium">
-          Mostrando {{ filteredInvoices.length }} de {{ invoices.length }} comprobantes
+          Mostrando {{ filteredInvoices.length }} de {{ salesStore.invoices.length }} comprobantes
         </span>
-      </div>
-    </div>
-
-    <!-- Invoice Details Modal with Dual Currency Fiscal Breakdown -->
-    <div v-if="selectedInvoice" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="selectedInvoice = null"></div>
-      <div class="relative glass-card w-full max-w-lg p-6 z-10 animate-in">
-        <div class="flex items-center justify-between pb-4 border-b border-black/5 dark:border-white/5 mb-4">
-          <div>
-            <h4 class="text-lg font-bold text-on-surface">Comprobante Fiscal Digital</h4>
-            <p class="text-xs text-primary font-mono">{{ selectedInvoice.id }}</p>
-          </div>
-          <button @click="selectedInvoice = null" class="p-1 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer">
-            <span class="material-symbols-outlined">close</span>
-          </button>
-        </div>
-
-        <div class="space-y-3 text-sm">
-          <div class="flex justify-between py-1 border-b border-black/5 dark:border-white/5">
-            <span class="text-on-surface-variant">Fecha de Emisión:</span>
-            <span class="text-on-surface font-semibold">{{ selectedInvoice.date }}</span>
-          </div>
-          <div class="flex justify-between py-1 border-b border-black/5 dark:border-white/5">
-            <span class="text-on-surface-variant">Cliente / Empresa:</span>
-            <span class="text-on-surface font-semibold">{{ selectedInvoice.customer }}</span>
-          </div>
-          <div v-if="selectedInvoice.customerDoc" class="flex justify-between py-1 border-b border-black/5 dark:border-white/5">
-            <span class="text-on-surface-variant">Cédula / RIF:</span>
-            <span class="text-on-surface font-mono font-bold">{{ selectedInvoice.customerDoc }}</span>
-          </div>
-          <div v-if="selectedInvoice.customerAddress" class="flex justify-between py-1 border-b border-black/5 dark:border-white/5">
-            <span class="text-on-surface-variant">Dirección:</span>
-            <span class="text-on-surface text-right text-xs max-w-[240px]">{{ selectedInvoice.customerAddress }}</span>
-          </div>
-          <div class="flex justify-between py-1 border-b border-black/5 dark:border-white/5">
-            <span class="text-on-surface-variant">Detalle:</span>
-            <span class="text-on-surface font-semibold text-right max-w-[240px]">{{ selectedInvoice.items || 'Recarga de Agua Purificada' }}</span>
-          </div>
-          <div class="flex justify-between py-1 border-b border-black/5 dark:border-white/5">
-            <span class="text-on-surface-variant">Tasa Oficial BCV Aplicada:</span>
-            <span class="text-billing-green font-mono font-bold">Bs. {{ currencyStore.formattedRate }} / USD</span>
-          </div>
-          <div class="flex justify-between py-1 border-b border-black/5 dark:border-white/5">
-            <span class="text-on-surface-variant">Estado de Pago:</span>
-            <span :class="selectedInvoice.status === 'PAGADA' ? 'text-billing-green' : 'text-admin-gold'" class="font-bold">
-              {{ selectedInvoice.status === 'PAGADA' ? 'Pagada' : 'Pendiente' }}
-            </span>
-          </div>
-
-          <!-- Dual Currency Total -->
-          <div class="p-3.5 rounded-2xl bg-surface-container/60 space-y-1">
-            <div class="flex justify-between text-base font-bold">
-              <span class="text-on-surface">Total en Dólares:</span>
-              <span class="text-primary font-mono">${{ formatMoney(selectedInvoice.amount) }} USD</span>
-            </div>
-            <div class="flex justify-between text-sm font-bold">
-              <span class="text-on-surface-variant">Total en Bolívares:</span>
-              <span class="text-billing-green font-mono">{{ currencyStore.formatVes(currencyStore.toVes(selectedInvoice.amount)) }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-black/5 dark:border-white/5">
-          <button
-            @click="selectedInvoice = null"
-            class="px-4 py-2.5 rounded-xl text-xs font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer"
-          >
-            Cerrar
-          </button>
-          <button
-            @click="downloadInvoice(selectedInvoice)"
-            class="px-5 py-2.5 rounded-xl text-xs font-bold bg-primary text-on-primary flex items-center gap-2 glow-cyan-hover cursor-pointer active:scale-95"
-          >
-            <span class="material-symbols-outlined text-base">download</span>
-            Descargar PDF
-          </button>
-        </div>
       </div>
     </div>
 
     <!-- Emit Invoice Modal with Complete Customer & Dual Currency Calculation -->
     <div v-if="showEmitModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="showEmitModal = false"></div>
-      <div class="relative glass-card w-full max-w-lg p-6 z-10 animate-in">
+      <div class="relative glass-card w-full max-w-xl p-6 z-10 animate-in rounded-3xl max-h-[95vh] overflow-y-auto">
         <div class="flex items-center justify-between pb-4 border-b border-black/5 dark:border-white/5 mb-4">
           <div class="flex items-center gap-2">
             <span class="p-2 rounded-xl bg-primary/15 text-primary material-symbols-outlined">receipt_long</span>
             <div>
               <h4 class="text-base font-bold text-on-surface">Emitir Nueva Factura Fiscal</h4>
-              <p class="text-xs text-on-surface-variant">Registro formal con Cédula/RIF y tasa oficial BCV</p>
+              <p class="text-xs text-on-surface-variant">Registro formal con Cédula/RIF, tasa oficial BCV y QR</p>
             </div>
           </div>
           <button @click="showEmitModal = false" class="p-1 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer">
@@ -379,7 +305,7 @@
               v-model="emitForm.items"
               type="text"
               required
-              placeholder="Ej: 20x Botellón 20L + 5x Tapa 55mm"
+              placeholder="Ej: 20x Recarga Botellón 20L + 5x Tapa 55mm"
               class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
             />
           </div>
@@ -404,11 +330,36 @@
               <select
                 v-model="emitForm.status"
                 required
-                class="w-full bg-surface-container border-0 rounded-xl px-3 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
+                class="w-full bg-surface-container border-0 rounded-xl px-3 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm cursor-pointer"
               >
-                <option value="PAGADA">Pagada</option>
-                <option value="PENDIENTE">Pendiente</option>
+                <option value="PAID">Pagada</option>
+                <option value="PENDING">Pendiente</option>
               </select>
+            </div>
+          </div>
+
+          <!-- Forma de Pago & Conciliación -->
+          <div class="p-3 rounded-2xl bg-surface-container/60 space-y-3">
+            <label class="block text-xs font-bold text-on-surface">Forma de Pago & Banco Receptor:</label>
+            <div class="grid grid-cols-2 gap-3">
+              <select
+                v-model="emitForm.paymentMethod"
+                class="w-full bg-surface-container border-0 rounded-xl px-3 py-2 text-on-surface text-xs font-bold focus:ring-2 focus:ring-primary outline-none shadow-sm cursor-pointer"
+              >
+                <option value="TRANSFER">Transferencia Bancaria</option>
+                <option value="PAGO_MOVIL">Pago Móvil</option>
+                <option value="CASH_USD">Efectivo Dólares ($)</option>
+                <option value="CASH_VES">Efectivo Bolívares (Bs.)</option>
+                <option value="POS_CARD">Punto de Venta / Tarjeta</option>
+              </select>
+
+              <input
+                v-if="emitForm.paymentMethod === 'TRANSFER' || emitForm.paymentMethod === 'PAGO_MOVIL'"
+                v-model="emitForm.bankReference"
+                type="text"
+                placeholder="Nº Referencia Bancaria"
+                class="w-full bg-surface-container border-0 rounded-xl px-3 py-2 text-on-surface text-xs font-bold font-mono focus:ring-2 focus:ring-primary outline-none shadow-sm"
+              />
             </div>
           </div>
 
@@ -436,24 +387,33 @@
             </button>
             <button
               type="submit"
-              class="px-5 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-xs glow-cyan-hover transition-all cursor-pointer active:scale-95"
+              class="px-5 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-xs glow-cyan-hover transition-all cursor-pointer active:scale-95 flex items-center gap-1.5"
             >
-              Emitir Comprobante
+              <span class="material-symbols-outlined text-base">receipt_long</span>
+              <span>Emitir & Generar QR</span>
             </button>
           </div>
         </form>
       </div>
     </div>
+
+    <!-- Printable Receipt & Fiscal QR Modal -->
+    <InvoicePrintModal
+      v-if="selectedPrintInvoice"
+      v-model="showPrintModal"
+      :invoice="selectedPrintInvoice"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { useTanksStore } from '~/stores/tanks';
 import { useCurrencyStore } from '~/stores/currency';
 import { useCustomersStore } from '~/stores/customers';
+import { useSalesStore, type SaleInvoice, type PaymentMethodType } from '~/stores/sales';
 import { useToast } from '~/composables/useToast';
+import InvoicePrintModal from '~/components/ui/InvoicePrintModal.vue';
 import {
   validateRequired,
   validatePositiveNumber,
@@ -465,15 +425,16 @@ definePageMeta({
 });
 
 const route = useRoute();
-const tanksStore = useTanksStore();
 const currencyStore = useCurrencyStore();
 const customersStore = useCustomersStore();
+const salesStore = useSalesStore();
 const toast = useToast();
 
 const searchQuery = ref('');
 const statusFilter = ref('');
 const showEmitModal = ref(false);
-const selectedInvoice = ref<any>(null);
+const showPrintModal = ref(false);
+const selectedPrintInvoice = ref<SaleInvoice | null>(null);
 const emitError = ref<string | null>(null);
 
 const emitCustomerForm = reactive({
@@ -487,95 +448,30 @@ const emitCustomerForm = reactive({
 });
 
 const emitForm = reactive({
-  items: '20x Botellón 20L',
-  amount: 90.00,
-  paymentCurrency: 'USD',
-  status: 'PAGADA' as 'PAGADA' | 'PENDIENTE',
+  items: '20x Recarga Botellón 20L',
+  amount: 70.00,
+  paymentMethod: 'TRANSFER' as PaymentMethodType,
+  bankReference: '',
+  status: 'PAID' as 'PAID' | 'PENDING',
 });
-
-const invoices = ref([
-  {
-    id: 'FAC-2026-001',
-    date: '2026-02-25',
-    customer: 'AquaExpress Delivery C.A.',
-    customerDoc: 'J-31245678-0',
-    customerAddress: 'Av. Las Industrias, Galpón 4, Zona Industrial',
-    items: '50x Botellón 20L',
-    amount: 225.00,
-    status: 'PAGADA',
-  },
-  {
-    id: 'FAC-2026-002',
-    date: '2026-02-24',
-    customer: 'Minimarket Los Andes',
-    customerDoc: 'J-40123987-1',
-    customerAddress: 'Calle Real de San Antonio, Local 12',
-    items: '20x Botellón 20L + 10x Botella 5L',
-    amount: 110.00,
-    status: 'PAGADA',
-  },
-  {
-    id: 'FAC-2026-003',
-    date: '2026-02-24',
-    customer: 'Gimnasio PowerFit C.A.',
-    customerDoc: 'J-29874512-3',
-    customerAddress: 'Av. Francisco de Miranda, CC Oasis',
-    items: '15x Botellón 20L',
-    amount: 67.50,
-    status: 'PENDIENTE',
-  },
-  {
-    id: 'FAC-2026-004',
-    date: '2026-02-23',
-    customer: 'Hotel Bella Vista',
-    customerDoc: 'J-20549382-9',
-    customerAddress: 'Av. Principal de Bella Vista',
-    items: '100x Botellón 20L',
-    amount: 450.00,
-    status: 'PAGADA',
-  },
-]);
 
 onMounted(() => {
   customersStore.init();
-  tanksStore.init();
-});
-
-const totalAmount = computed(() => {
-  return invoices.value.reduce((acc, inv) => acc + inv.amount, 0);
-});
-
-const paidCount = computed(() => {
-  return invoices.value.filter((inv) => inv.status === 'PAGADA').length;
-});
-
-const paidAmount = computed(() => {
-  return invoices.value
-    .filter((inv) => inv.status === 'PAGADA')
-    .reduce((acc, inv) => acc + inv.amount, 0);
-});
-
-const pendingCount = computed(() => {
-  return invoices.value.filter((inv) => inv.status === 'PENDIENTE').length;
-});
-
-const pendingAmount = computed(() => {
-  return invoices.value
-    .filter((inv) => inv.status === 'PENDIENTE')
-    .reduce((acc, inv) => acc + inv.amount, 0);
+  salesStore.init();
 });
 
 const filteredInvoices = computed(() => {
-  return invoices.value.filter((inv) => {
+  return salesStore.invoices.filter((inv) => {
     const q = searchQuery.value.toLowerCase().trim();
     if (!q) {
       return !statusFilter.value || inv.status === statusFilter.value;
     }
     const matchSearch =
-      inv.id.toLowerCase().includes(q) ||
+      inv.invoiceNo.toLowerCase().includes(q) ||
       inv.customer.toLowerCase().includes(q) ||
       (inv.customerDoc && inv.customerDoc.toLowerCase().includes(q)) ||
-      (inv.items && inv.items.toLowerCase().includes(q));
+      (inv.payment?.referenceNumber && inv.payment.referenceNumber.toLowerCase().includes(q)) ||
+      (inv.itemsSummary && inv.itemsSummary.toLowerCase().includes(q));
 
     const matchStatus = !statusFilter.value || inv.status === statusFilter.value;
     return matchSearch && matchStatus;
@@ -591,9 +487,11 @@ const openEmitModal = () => {
   emitCustomerForm.docNumber = '';
   emitCustomerForm.name = '';
   emitCustomerForm.address = '';
-  emitForm.items = '20x Botellón 20L';
-  emitForm.amount = 90.00;
-  emitForm.status = 'PAGADA';
+  emitForm.items = '20x Recarga Botellón 20L';
+  emitForm.amount = 70.00;
+  emitForm.paymentMethod = 'TRANSFER';
+  emitForm.bankReference = '';
+  emitForm.status = 'PAID';
   showEmitModal.value = true;
 };
 
@@ -611,26 +509,19 @@ const onInvoiceDocInput = () => {
   }
 };
 
-const viewInvoice = (inv: any) => {
-  selectedInvoice.value = inv;
+const viewPrintReceipt = (inv: SaleInvoice) => {
+  selectedPrintInvoice.value = inv;
+  showPrintModal.value = true;
 };
 
-const downloadInvoice = (inv: any) => {
-  const vesEquivalent = currencyStore.formatVes(currencyStore.toVes(inv.amount));
-  toast.success(
-    'Comprobante Generado',
-    `Factura ${inv.id} lista para descarga ($${formatMoney(inv.amount)} / ${vesEquivalent}).`
-  );
+const markAsPaid = (inv: SaleInvoice) => {
+  salesStore.markInvoiceAsPaid(inv.id);
+  toast.updateSuccess('Factura', `Factura ${inv.invoiceNo} marcada como Pagada.`);
 };
 
-const markAsPaid = (inv: any) => {
-  inv.status = 'PAGADA';
-  toast.updateSuccess('Factura', `Factura ${inv.id} marcada como Pagada.`);
-};
-
-const deleteInvoice = (inv: any) => {
-  invoices.value = invoices.value.filter((i) => i.id !== inv.id);
-  toast.deleteSuccess('Factura', `Factura ${inv.id} anulada y eliminada.`);
+const deleteInvoice = (inv: SaleInvoice) => {
+  salesStore.deleteInvoice(inv.id);
+  toast.deleteSuccess('Factura', `Factura ${inv.invoiceNo} anulada y eliminada.`);
 };
 
 const emitInvoice = () => {
@@ -668,46 +559,48 @@ const emitInvoice = () => {
     return;
   }
 
-  // Register or update customer
-  const customerRecord = customersStore.registerOrUpdateCustomer({
-    type: cleanedCustomer.type,
-    docType: cleanedCustomer.docType,
-    docNumber: cleanedCustomer.docNumber,
-    name: cleanedCustomer.name,
-    address: cleanedCustomer.address,
-    phone: cleanedCustomer.phone,
-    email: cleanedCustomer.email,
-  });
-
-  const nextNum = invoices.value.length + 1;
-  const newId = `FAC-2026-00${nextNum}`;
-  const litersToDeduct = tanksStore.parseLitersFromItemText(cleanedForm.items);
-
-  // Deduct water liters from Master Consolidated Tank (+ calculate wash waste)
-  const deductionResult = tanksStore.deductLiters(
-    litersToDeduct,
-    undefined,
-    `Factura ${newId} (${customerRecord.name})`
-  );
-
   const numAmount = Number(cleanedForm.amount);
-  const vesAmount = currencyStore.formatVes(currencyStore.toVes(numAmount));
 
-  invoices.value.unshift({
-    id: newId,
-    date: new Date().toISOString().split('T')[0],
-    customer: customerRecord.name,
-    customerDoc: customerRecord.fullDoc,
-    customerAddress: customerRecord.address,
-    items: cleanedForm.items,
-    amount: numAmount,
+  const newInvoice = salesStore.processSale({
+    customer: {
+      type: cleanedCustomer.type,
+      docType: cleanedCustomer.docType,
+      docNumber: cleanedCustomer.docNumber,
+      name: cleanedCustomer.name,
+      address: cleanedCustomer.address,
+      phone: cleanedCustomer.phone,
+      email: cleanedCustomer.email,
+    },
+    items: [
+      {
+        productId: 'custom-prod',
+        name: cleanedForm.items,
+        price: numAmount,
+        quantity: 1,
+        waterLiters: 20,
+      },
+    ],
+    payment: {
+      method: cleanedForm.paymentMethod,
+      methodLabel:
+        cleanedForm.paymentMethod === 'TRANSFER'
+          ? 'Transferencia Bancaria'
+          : cleanedForm.paymentMethod === 'PAGO_MOVIL'
+          ? 'Pago Móvil'
+          : 'Efectivo',
+      bankName: 'Banco de Venezuela',
+      referenceNumber: cleanedForm.bankReference.trim(),
+    },
     status: cleanedForm.status,
   });
 
   showEmitModal.value = false;
+  const vesAmount = currencyStore.formatVes(newInvoice.totalVes);
   toast.createSuccess(
     'Factura Fiscal',
-    `Factura ${newId} emitida por $${formatMoney(numAmount)} (${vesAmount}). Descontados ${deductionResult.dispensed}L de agua (+${deductionResult.washWaste}L merma).`
+    `Factura ${newInvoice.invoiceNo} emitida por $${formatMoney(numAmount)} (${vesAmount}).`
   );
+
+  viewPrintReceipt(newInvoice);
 };
 </script>

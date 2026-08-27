@@ -133,8 +133,8 @@
     <div class="grid grid-cols-1 xl:grid-cols-12 gap-5 sm:gap-6">
       <!-- Columna Izquierda: Tanque Consolidado 3D (Xl: 5 Cols) -->
       <div class="xl:col-span-5 flex flex-col gap-4">
-        <div class="card-elevated p-5 sm:p-6 flex flex-col items-center justify-between relative overflow-hidden">
-          <div class="w-full flex items-center justify-between mb-2">
+        <div class="card-elevated p-5 sm:p-6 flex flex-col items-center justify-between relative overflow-hidden h-full">
+          <div class="w-full flex items-center justify-between mb-1">
             <div>
               <span class="text-xs font-bold text-primary uppercase tracking-wider">Tanque Único Maestro</span>
               <h3 class="text-base sm:text-lg font-extrabold text-on-surface">{{ tanksStore.masterTank.name }}</h3>
@@ -148,28 +148,48 @@
             </span>
           </div>
 
-          <!-- Componente 3D Liquid Tank -->
-          <div class="w-full py-2 sm:py-4 flex justify-center">
+          <!-- Componente 3D Liquid Tank (Embedded Mode) -->
+          <div class="w-full py-1 flex justify-center">
             <LiquidTank3D
               :tank="tanksStore.masterTank"
-              @refill="openRefillModal"
-              @calibrate="openCapacityModal"
+              :embedded="true"
             />
           </div>
 
-          <!-- Indicadores de Nivel en Litros -->
-          <div class="w-full grid grid-cols-2 gap-2.5 sm:gap-3 pt-3 border-t border-black/5 dark:border-white/5 text-xs">
-            <div class="p-2.5 rounded-xl bg-surface-container/60">
-              <span class="text-on-surface-variant">Agua Disponible:</span>
-              <p class="text-sm font-extrabold text-primary font-mono mt-0.5">
-                {{ formatNumber(tanksStore.masterTank.currentLiters) }} L
-              </p>
+          <!-- Indicadores de Nivel en Litros & Acciones Rápidas -->
+          <div class="w-full space-y-3 pt-3 border-t border-black/5 dark:border-white/5 text-xs">
+            <div class="grid grid-cols-2 gap-2.5 sm:gap-3">
+              <div class="p-2.5 rounded-xl bg-surface-container/60">
+                <span class="text-on-surface-variant">Agua Disponible:</span>
+                <p class="text-sm font-extrabold text-primary font-mono mt-0.5">
+                  {{ formatNumber(tanksStore.masterTank.currentLiters) }} L
+                </p>
+              </div>
+              <div class="p-2.5 rounded-xl bg-surface-container/60">
+                <span class="text-on-surface-variant">Agua Despachada:</span>
+                <p class="text-sm font-extrabold text-billing-green font-mono mt-0.5">
+                  {{ formatNumber(tanksStore.masterTank.totalDispensedLiters) }} L
+                </p>
+              </div>
             </div>
-            <div class="p-2.5 rounded-xl bg-surface-container/60">
-              <span class="text-on-surface-variant">Agua Despachada:</span>
-              <p class="text-sm font-extrabold text-billing-green font-mono mt-0.5">
-                {{ formatNumber(tanksStore.masterTank.totalDispensedLiters) }} L
-              </p>
+
+            <div class="flex items-center gap-2">
+              <button
+                @click="openRefillModal"
+                type="button"
+                class="flex-1 py-2 px-3 rounded-xl text-xs font-bold bg-primary/10 hover:bg-primary text-primary hover:text-on-primary transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer shadow-sm border-0"
+              >
+                <span class="material-symbols-outlined text-sm">water_drop</span>
+                <span>Recargar Cisterna</span>
+              </button>
+              <button
+                @click="openCapacityModal"
+                type="button"
+                title="Ajustar / Calibrar Capacidad"
+                class="p-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all cursor-pointer border-0 bg-surface-container/50 shadow-sm"
+              >
+                <span class="material-symbols-outlined text-sm">tune</span>
+              </button>
             </div>
           </div>
         </div>

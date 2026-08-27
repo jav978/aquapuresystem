@@ -173,7 +173,7 @@ const loginFailed = ref(false);
 const form = reactive({
   email: 'admin@aquasystem.com',
   password: 'admin123',
-  rememberMe: true,
+  rememberMe: false,
 });
 const errors = reactive({
   email: '',

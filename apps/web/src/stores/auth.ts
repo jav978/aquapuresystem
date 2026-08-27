@@ -76,6 +76,16 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null;
 
     try {
+      if (typeof window !== 'undefined') {
+        if (rememberMe) {
+          window.localStorage.setItem('rememberMe', 'true');
+        } else {
+          window.localStorage.removeItem('rememberMe');
+          window.localStorage.removeItem('feathers-jwt');
+          window.sessionStorage.removeItem('feathers-jwt');
+        }
+      }
+
       const authResult = await client.authenticate({
         strategy: 'local',
         email,
@@ -85,10 +95,6 @@ export const useAuthStore = defineStore('auth', () => {
       accessToken.value = authResult.accessToken;
       refreshToken.value = authResult.refreshToken;
       user.value = authResult.user || null;
-
-      if (rememberMe && typeof localStorage !== 'undefined') {
-        localStorage.setItem('rememberMe', 'true');
-      }
 
       toast.success('¡Bienvenido!');
       router.push('/dashboard');
@@ -110,8 +116,10 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = null;
       accessToken.value = null;
       refreshToken.value = null;
-      if (typeof localStorage !== 'undefined') {
-        localStorage.removeItem('rememberMe');
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem('rememberMe');
+        window.localStorage.removeItem('feathers-jwt');
+        window.sessionStorage.removeItem('feathers-jwt');
       }
       router.push('/login');
       toast.info('Has cerrado sesión correctamente');

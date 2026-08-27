@@ -26,10 +26,51 @@ export const useFeathers = () => {
     feathersClientInstance = feathers();
     feathersClientInstance.configure(socketio(socketInstance));
 
-    const storage = typeof window !== 'undefined' ? window.localStorage : undefined;
+    // Session-Scoped Security Storage Adapter:
+    // Uses sessionStorage by default so closing the browser/tab immediately destroys the session.
+    // Only persists to localStorage if 'rememberMe' is explicitly set.
+    const storageAdapter = {
+      getItem(key: string): string | null {
+        if (typeof window === 'undefined') return null;
+        try {
+          const isRemembered = window.localStorage.getItem('rememberMe') === 'true';
+          if (isRemembered) {
+            return window.localStorage.getItem(key) || window.sessionStorage.getItem(key);
+          }
+          return window.sessionStorage.getItem(key);
+        } catch {
+          return null;
+        }
+      },
+      setItem(key: string, value: string): void {
+        if (typeof window === 'undefined') return;
+        try {
+          const isRemembered = window.localStorage.getItem('rememberMe') === 'true';
+          if (isRemembered) {
+            window.localStorage.setItem(key, value);
+          } else {
+            // Remove persistent token to prevent cross-session leaks
+            window.localStorage.removeItem(key);
+            window.sessionStorage.setItem(key, value);
+          }
+        } catch {
+          // ignore
+        }
+      },
+      removeItem(key: string): void {
+        if (typeof window === 'undefined') return;
+        try {
+          window.localStorage.removeItem(key);
+          window.sessionStorage.removeItem(key);
+        } catch {
+          // ignore
+        }
+      },
+    };
+
     feathersClientInstance.configure(
       authentication({
-        storage,
+        storage: storageAdapter,
         path: '/authentication',
         jwtStrategy: 'jwt',
       })

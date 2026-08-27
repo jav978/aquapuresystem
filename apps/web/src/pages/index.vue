@@ -9,8 +9,12 @@ import { useAuthStore } from '~/stores/auth';
 
 definePageMeta({
   middleware: [
-    function () {
+    async function () {
+      if (import.meta.server) return;
       const auth = useAuthStore();
+      if (!auth.loading && !auth.isAuthenticated) {
+        await auth.initialize();
+      }
       if (auth.isAuthenticated) {
         return navigateTo('/dashboard');
       }

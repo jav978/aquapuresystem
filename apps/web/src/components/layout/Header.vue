@@ -1,5 +1,5 @@
 <template>
-  <header class="bg-surface-container/80 dark:bg-surface-container/80 backdrop-blur-xl fixed top-0 right-0 h-14 left-0 lg:left-[230px] z-30 flex justify-between items-center px-3 sm:px-5 lg:px-6 shadow-md shadow-black/5 dark:shadow-black/25 transition-all duration-200 box-border">
+  <header class="bg-surface-container/80 dark:bg-surface-container/80 backdrop-blur-xl fixed top-0 right-0 h-14 left-0 lg:left-[230px] z-30 flex justify-between items-center px-3 sm:px-5 lg:px-6 shadow-md shadow-black/5 dark:shadow-black/25 box-border">
     <!-- Mobile & Tablet Menu Toggle Button (Visible on < 1024px) -->
     <button
       @click="$emit('menu-toggle')"

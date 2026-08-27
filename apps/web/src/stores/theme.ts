@@ -13,47 +13,43 @@ export const useThemeStore = defineStore('theme', () => {
     const root = document.documentElement;
     const body = document.body;
 
-    const updateDOM = () => {
-      if (theme === 'dark') {
-        root.classList.add('dark');
-        root.classList.remove('light');
-        if (body) {
-          body.classList.add('dark');
-          body.classList.remove('light');
-        }
-      } else {
-        root.classList.remove('dark');
-        root.classList.add('light');
-        if (body) {
-          body.classList.remove('dark');
-          body.classList.add('light');
-        }
+    // 1. Instantly freeze all CSS transitions across the entire page
+    root.classList.add('theme-switching', 'disable-theme-transitions');
+
+    // 2. Apply theme classes and attributes atomically
+    if (theme === 'dark') {
+      root.classList.add('dark');
+      root.classList.remove('light');
+      if (body) {
+        body.classList.add('dark');
+        body.classList.remove('light');
       }
-
-      root.setAttribute('data-theme', theme);
-      root.style.colorScheme = theme;
-
-      const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-      if (metaThemeColor) {
-        metaThemeColor.setAttribute('content', theme === 'dark' ? '#060b14' : '#f6f9fc');
-      }
-    };
-
-    // Use native View Transition API if supported for a buttery-smooth cross-fade
-    if (typeof document !== 'undefined' && 'startViewTransition' in document) {
-      (document as any).startViewTransition(() => {
-        updateDOM();
-      });
     } else {
-      // Fallback: apply with transition suppression to avoid staggered flash
-      root.classList.add('disable-theme-transitions');
-      updateDOM();
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          root.classList.remove('disable-theme-transitions');
-        });
-      });
+      root.classList.remove('dark');
+      root.classList.add('light');
+      if (body) {
+        body.classList.remove('dark');
+        body.classList.add('light');
+      }
     }
+
+    root.setAttribute('data-theme', theme);
+    root.style.colorScheme = theme;
+
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', theme === 'dark' ? '#060b14' : '#f6f9fc');
+    }
+
+    // 3. Force browser to compute and render the full DOM styles in this single frame
+    void root.offsetHeight;
+
+    // 4. Safely remove the freeze lock after render pass
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        root.classList.remove('theme-switching', 'disable-theme-transitions');
+      });
+    });
   };
 
   const init = () => {

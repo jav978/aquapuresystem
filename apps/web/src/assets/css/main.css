@@ -95,23 +95,21 @@ body.dark,
 }
 
 /* ============================================================
-   BASE TYPOGRAPHY & SMOOTH THEME SWITCHING (ZERO FLICKER)
+   BASE TYPOGRAPHY & ATOMIC ZERO-FLICKER THEME SYSTEM
    ============================================================ */
 
-/* Instant unified theme switch — eliminates staggered repainting / destellos */
+/* Freeze all transitions across the entire DOM during theme flip to ensure 100% unison */
+html.theme-switching,
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after,
 .disable-theme-transitions,
 .disable-theme-transitions *,
 .disable-theme-transitions *::before,
 .disable-theme-transitions *::after {
   transition: none !important;
-  animation-duration: 0.001ms !important;
-}
-
-/* Smooth View Transition API cross-fade */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: 0.22s;
-  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
 }
 
 @layer base {

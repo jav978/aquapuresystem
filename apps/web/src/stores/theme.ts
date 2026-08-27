@@ -13,39 +13,47 @@ export const useThemeStore = defineStore('theme', () => {
     const root = document.documentElement;
     const body = document.body;
 
-    // Prevent any CSS transition lag/flickering during theme flip
-    root.classList.add('disable-theme-transitions');
-
-    if (theme === 'dark') {
-      root.classList.add('dark');
-      root.classList.remove('light');
-      if (body) {
-        body.classList.add('dark');
-        body.classList.remove('light');
+    const updateDOM = () => {
+      if (theme === 'dark') {
+        root.classList.add('dark');
+        root.classList.remove('light');
+        if (body) {
+          body.classList.add('dark');
+          body.classList.remove('light');
+        }
+      } else {
+        root.classList.remove('dark');
+        root.classList.add('light');
+        if (body) {
+          body.classList.remove('dark');
+          body.classList.add('light');
+        }
       }
-    } else {
-      root.classList.remove('dark');
-      root.classList.add('light');
-      if (body) {
-        body.classList.remove('dark');
-        body.classList.add('light');
+
+      root.setAttribute('data-theme', theme);
+      root.style.colorScheme = theme;
+
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', theme === 'dark' ? '#060b14' : '#f6f9fc');
       }
-    }
+    };
 
-    root.setAttribute('data-theme', theme);
-    root.style.colorScheme = theme;
-
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', theme === 'dark' ? '#070d1a' : '#f8fafc');
-    }
-
-    // Restore transitions cleanly in next frame
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        root.classList.remove('disable-theme-transitions');
+    // Use native View Transition API if supported for a buttery-smooth cross-fade
+    if (typeof document !== 'undefined' && 'startViewTransition' in document) {
+      (document as any).startViewTransition(() => {
+        updateDOM();
       });
-    });
+    } else {
+      // Fallback: apply with transition suppression to avoid staggered flash
+      root.classList.add('disable-theme-transitions');
+      updateDOM();
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          root.classList.remove('disable-theme-transitions');
+        });
+      });
+    }
   };
 
   const init = () => {

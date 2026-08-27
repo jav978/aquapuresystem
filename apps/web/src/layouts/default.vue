@@ -1,11 +1,11 @@
 <template>
-  <div class="min-h-screen bg-background text-on-surface transition-colors duration-300 relative overflow-x-hidden selection:bg-primary/20 selection:text-primary">
+  <div class="min-h-screen bg-background text-on-surface relative overflow-x-hidden selection:bg-primary/20 selection:text-primary">
     <!-- Ambient Background Hydro Glow Orbs -->
     <div class="fixed top-0 left-1/4 w-96 h-96 bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl pointer-events-none animate-blob -z-10"></div>
     <div class="fixed bottom-10 right-1/4 w-[28rem] h-[28rem] bg-cyan-500/5 dark:bg-cyan-500/10 rounded-full blur-3xl pointer-events-none animate-blob-delay-2 -z-10"></div>
 
     <!-- Desktop SideNavBar (230px) -->
-    <aside class="fixed left-0 top-0 h-full w-[230px] z-40 hidden lg:block bg-surface-container-lowest shadow-xl shadow-black/5 dark:shadow-black/40 transition-all duration-200">
+    <aside class="fixed left-0 top-0 h-full w-[230px] z-40 hidden lg:block bg-surface-container-lowest shadow-xl shadow-black/5 dark:shadow-black/40">
       <SidebarNav />
     </aside>
 

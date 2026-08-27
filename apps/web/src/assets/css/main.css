@@ -95,8 +95,24 @@ body.dark,
 }
 
 /* ============================================================
-   BASE TYPOGRAPHY & SMOOTH SCROLLING
+   BASE TYPOGRAPHY & SMOOTH THEME SWITCHING (ZERO FLICKER)
    ============================================================ */
+
+/* Instant unified theme switch — eliminates staggered repainting / destellos */
+.disable-theme-transitions,
+.disable-theme-transitions *,
+.disable-theme-transitions *::before,
+.disable-theme-transitions *::after {
+  transition: none !important;
+  animation-duration: 0.001ms !important;
+}
+
+/* Smooth View Transition API cross-fade */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.22s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
 
 @layer base {
   *, ::before, ::after {
@@ -107,7 +123,6 @@ body.dark,
     background-color: var(--color-bg);
     color: var(--color-text);
     font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
-    transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     letter-spacing: -0.01em;

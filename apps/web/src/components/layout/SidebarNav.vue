@@ -112,6 +112,25 @@
 
       <!-- Action Buttons -->
       <div class="space-y-1">
+        <!-- Theme Toggle -->
+        <button
+          type="button"
+          @click="toggleTheme"
+          class="w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold text-on-surface-variant hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/15 hover:translate-x-1 transition-all duration-200 cursor-pointer group select-none"
+        >
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-lg text-on-surface-variant/70 group-hover:text-primary group-hover:scale-110 transition-all duration-200">
+              {{ themeStore.isDark ? 'light_mode' : 'dark_mode' }}
+            </span>
+            <span class="transition-colors">
+              {{ themeStore.isDark ? 'Modo Claro' : 'Modo Oscuro' }}
+            </span>
+          </div>
+          <span class="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant">
+            {{ themeStore.isDark ? 'DARK' : 'LIGHT' }}
+          </span>
+        </button>
+
         <!-- Settings (Admin only) -->
         <NuxtLink
           v-if="authStore.canManageSettings"
@@ -162,6 +181,7 @@
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '~/stores/auth';
+import { useThemeStore } from '~/stores/theme';
 
 defineEmits<{
   'close': [];
@@ -170,6 +190,11 @@ defineEmits<{
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
+const themeStore = useThemeStore();
+
+const toggleTheme = () => {
+  themeStore.toggleTheme();
+};
 
 const userInitial = computed(() => {
   if (authStore.user?.firstName) {

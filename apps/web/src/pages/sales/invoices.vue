@@ -19,6 +19,16 @@
       <!-- Action Buttons -->
       <div class="flex items-center gap-2.5 w-full sm:w-auto flex-shrink-0">
         <button
+          type="button"
+          @click="openGlobalAuditModal"
+          class="px-3.5 sm:px-4 py-2.5 rounded-xl border border-outline/30 bg-surface-container hover:bg-surface-container-high text-on-surface text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-sm"
+          title="Ver registro completo de modificaciones y autorizaciones de supervisor"
+        >
+          <span class="material-symbols-outlined text-base text-indigo-500">history</span>
+          <span class="hidden sm:inline">Auditoría</span>
+        </button>
+
+        <button
           @click="openEmitModal"
           class="flex-1 sm:flex-none bg-primary text-on-primary font-bold text-xs sm:text-sm px-4 sm:px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 glow-cyan-hover transition-all shadow-lg shadow-primary/25 cursor-pointer active:scale-95 whitespace-nowrap"
         >
@@ -125,6 +135,7 @@
           <option value="">Todos los Estados</option>
           <option value="PAID">Solo Pagadas</option>
           <option value="PENDING">Solo Pendientes</option>
+          <option value="CANCELLED">Solo Anuladas</option>
         </select>
 
         <span class="text-xs px-3 py-2 bg-surface-container rounded-xl text-on-surface-variant font-bold shadow-sm flex-shrink-0">
@@ -136,7 +147,7 @@
     <!-- Invoices Table with Dual Currency -->
     <div class="card-elevated overflow-hidden w-full flex-1">
       <div class="overflow-x-auto custom-scrollbar w-full">
-        <table class="w-full text-left border-collapse min-w-[700px]">
+        <table class="w-full text-left border-collapse min-w-[750px]">
           <thead>
             <tr class="bg-surface-container-highest/40 border-b border-black/5 dark:border-white/5 text-[11px] font-extrabold text-on-surface-variant uppercase tracking-wider">
               <th class="py-4 px-6">Nº Factura</th>
@@ -151,8 +162,24 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-black/5 dark:divide-white/5">
-            <tr v-for="inv in filteredInvoices" :key="inv.id" class="hover:bg-surface-container-high/40 transition-colors">
-              <td class="py-4 px-6 text-sm font-bold text-primary font-mono">{{ inv.invoiceNo }}</td>
+            <tr
+              v-for="inv in filteredInvoices"
+              :key="inv.id"
+              class="hover:bg-surface-container-high/40 transition-colors"
+              :class="{ 'opacity-60 bg-error/5': inv.status === 'CANCELLED' }"
+            >
+              <td class="py-4 px-6 text-sm font-bold font-mono">
+                <div class="flex items-center gap-1.5">
+                  <span :class="inv.status === 'CANCELLED' ? 'text-error line-through' : 'text-primary'">
+                    {{ inv.invoiceNo }}
+                  </span>
+                  <span
+                    v-if="inv.hasAuditLogs || hasAuditTrail(inv.id)"
+                    class="w-2 h-2 rounded-full bg-indigo-500 ring-2 ring-indigo-500/30"
+                    title="Esta factura posee modificaciones registradas en auditoría"
+                  ></span>
+                </div>
+              </td>
               <td class="py-4 px-6 text-sm text-on-surface-variant font-medium">{{ inv.date }}</td>
               <td class="py-4 px-6 text-sm text-on-surface font-semibold">
                 {{ inv.customer }}
@@ -170,10 +197,10 @@
                   Vuelto: ${{ inv.payment.changeUsd.toFixed(2) }}
                 </span>
               </td>
-              <td class="py-4 px-6 text-sm text-on-surface text-right font-extrabold font-mono text-billing-green">
+              <td class="py-4 px-6 text-sm text-right font-extrabold font-mono" :class="inv.status === 'CANCELLED' ? 'text-error/70 line-through' : 'text-billing-green'">
                 ${{ formatMoney(inv.total) }}
               </td>
-              <td class="py-4 px-6 text-sm text-right font-mono font-bold text-on-surface">
+              <td class="py-4 px-6 text-sm text-right font-mono font-bold" :class="inv.status === 'CANCELLED' ? 'text-error/70 line-through' : 'text-on-surface'">
                 {{ currencyStore.formatVes(inv.totalVes || currencyStore.toVes(inv.total)) }}
               </td>
               <td class="py-4 px-6 text-center">
@@ -184,6 +211,12 @@
                   <span class="w-1.5 h-1.5 rounded-full bg-billing-green"></span> Pagada
                 </span>
                 <span
+                  v-else-if="inv.status === 'CANCELLED'"
+                  class="inline-flex items-center gap-1.5 bg-error/15 text-error px-3 py-1 rounded-full text-xs font-bold"
+                >
+                  <span class="w-1.5 h-1.5 rounded-full bg-error"></span> Anulada
+                </span>
+                <span
                   v-else
                   class="inline-flex items-center gap-1.5 bg-admin-gold/15 text-admin-gold px-3 py-1 rounded-full text-xs font-bold"
                 >
@@ -192,6 +225,7 @@
               </td>
               <td class="py-4 px-6 text-right">
                 <div class="flex items-center justify-end gap-1">
+                  <!-- Marcar como pagada -->
                   <button
                     v-if="inv.status === 'PENDING'"
                     @click="markAsPaid(inv)"
@@ -200,6 +234,8 @@
                   >
                     <span class="material-symbols-outlined text-lg">check_circle</span>
                   </button>
+
+                  <!-- Ver Comprobante QR -->
                   <button
                     @click="viewPrintReceipt(inv)"
                     class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-xl hover:bg-surface-container cursor-pointer active:scale-95"
@@ -207,12 +243,34 @@
                   >
                     <span class="material-symbols-outlined text-lg">receipt_long</span>
                   </button>
+
+                  <!-- Corregir Transacción (Supervisor) -->
                   <button
-                    @click="deleteInvoice(inv)"
-                    class="p-2 text-on-surface-variant hover:text-error-red transition-colors rounded-xl hover:bg-surface-container cursor-pointer active:scale-95"
-                    title="Eliminar / Anular Factura"
+                    v-if="inv.status !== 'CANCELLED'"
+                    @click="openEditModal(inv)"
+                    class="p-2 text-on-surface-variant hover:text-amber-500 transition-colors rounded-xl hover:bg-amber-500/10 cursor-pointer active:scale-95"
+                    title="Corregir Transacción (Requiere Clave de Supervisor)"
                   >
-                    <span class="material-symbols-outlined text-lg">delete</span>
+                    <span class="material-symbols-outlined text-lg">edit_note</span>
+                  </button>
+
+                  <!-- Anular / Devolución -->
+                  <button
+                    v-if="inv.status !== 'CANCELLED'"
+                    @click="openCancelModal(inv)"
+                    class="p-2 text-on-surface-variant hover:text-error transition-colors rounded-xl hover:bg-error/10 cursor-pointer active:scale-95"
+                    title="Anular / Devolución de Factura (Requiere Supervisor)"
+                  >
+                    <span class="material-symbols-outlined text-lg">assignment_return</span>
+                  </button>
+
+                  <!-- Ver Historial de Auditoría -->
+                  <button
+                    @click="openAuditModal(inv)"
+                    class="p-2 text-on-surface-variant hover:text-indigo-500 transition-colors rounded-xl hover:bg-indigo-500/10 cursor-pointer active:scale-95"
+                    title="Ver Historial de Auditoría y Modificaciones"
+                  >
+                    <span class="material-symbols-outlined text-lg">history</span>
                   </button>
                 </div>
               </td>
@@ -413,6 +471,28 @@
       v-model="showPrintModal"
       :invoice="selectedPrintInvoice"
     />
+
+    <!-- Edit Transaction Modal (Supervisor Authorized) -->
+    <EditTransactionModal
+      v-if="selectedEditInvoice"
+      v-model="showEditModal"
+      :invoice="selectedEditInvoice"
+      @updated="onInvoiceUpdated"
+    />
+
+    <!-- Cancel / Refund Transaction Modal -->
+    <CancelTransactionModal
+      v-if="selectedCancelInvoice"
+      v-model="showCancelModal"
+      :invoice="selectedCancelInvoice"
+      @cancelled="onInvoiceCancelled"
+    />
+
+    <!-- Transaction Audit Trail Modal -->
+    <AuditLogModal
+      v-model="showAuditModal"
+      :invoice="selectedAuditInvoice"
+    />
   </div>
 </template>
 
@@ -424,6 +504,9 @@ import { useCustomersStore } from '~/stores/customers';
 import { useSalesStore, type SaleInvoice, type PaymentMethodType } from '~/stores/sales';
 import { useToast } from '~/composables/useToast';
 import InvoicePrintModal from '~/components/ui/InvoicePrintModal.vue';
+import EditTransactionModal from '~/components/ui/EditTransactionModal.vue';
+import CancelTransactionModal from '~/components/ui/CancelTransactionModal.vue';
+import AuditLogModal from '~/components/ui/AuditLogModal.vue';
 import {
   validateRequired,
   validatePositiveNumber,
@@ -445,6 +528,16 @@ const statusFilter = ref('');
 const showEmitModal = ref(false);
 const showPrintModal = ref(false);
 const selectedPrintInvoice = ref<SaleInvoice | null>(null);
+
+const showEditModal = ref(false);
+const selectedEditInvoice = ref<SaleInvoice | null>(null);
+
+const showCancelModal = ref(false);
+const selectedCancelInvoice = ref<SaleInvoice | null>(null);
+
+const showAuditModal = ref(false);
+const selectedAuditInvoice = ref<SaleInvoice | null>(null);
+
 const emitError = ref<string | null>(null);
 
 const emitCustomerForm = reactive({
@@ -488,8 +581,41 @@ const filteredInvoices = computed(() => {
   });
 });
 
+const hasAuditTrail = (invoiceId: string): boolean => {
+  return salesStore.getInvoiceAuditLogs(invoiceId).length > 0;
+};
+
 const formatMoney = (val: number): string => {
   return (val || 0).toFixed(2);
+};
+
+const openEditModal = (inv: SaleInvoice) => {
+  selectedEditInvoice.value = inv;
+  showEditModal.value = true;
+};
+
+const openCancelModal = (inv: SaleInvoice) => {
+  selectedCancelInvoice.value = inv;
+  showCancelModal.value = true;
+};
+
+const openAuditModal = (inv: SaleInvoice) => {
+  selectedAuditInvoice.value = inv;
+  showAuditModal.value = true;
+};
+
+const openGlobalAuditModal = () => {
+  selectedAuditInvoice.value = null; // null shows all logs
+  showAuditModal.value = true;
+};
+
+const onInvoiceUpdated = (updatedInv: SaleInvoice) => {
+  // Re-sync selection if needed
+  selectedPrintInvoice.value = updatedInv;
+};
+
+const onInvoiceCancelled = (cancelledInv: SaleInvoice) => {
+  // invoice cancelled callback
 };
 
 const openEmitModal = () => {

@@ -214,6 +214,16 @@ export const useInventoryStore = defineStore('inventory', () => {
     saveToStorage();
   };
 
+  const restockItems = (items: { productId: string; quantity: number }[]) => {
+    items.forEach((item) => {
+      const prod = products.value.find((p) => p.id === item.productId);
+      if (prod && prod.category !== 'Agua' && prod.sku !== 'AQ-20L-REC') {
+        prod.currentStock = prod.currentStock + Math.max(0, item.quantity);
+      }
+    });
+    saveToStorage();
+  };
+
   const init = () => {
     loadFromStorage();
   };
@@ -223,6 +233,7 @@ export const useInventoryStore = defineStore('inventory', () => {
     getProductById,
     getProductsByCategory,
     deductStock,
+    restockItems,
     init,
   };
 });

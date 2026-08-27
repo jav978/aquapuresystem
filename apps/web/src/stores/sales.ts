@@ -12,6 +12,8 @@ export type PaymentMethodType =
   | 'TRANSFER'
   | 'POS_CARD';
 
+export type InvoiceStatus = 'PAID' | 'PENDING' | 'CANCELLED' | 'REFUNDED';
+
 export interface PaymentDetails {
   method: PaymentMethodType;
   methodLabel: string;
@@ -33,6 +35,39 @@ export interface SaleItem {
   subtotal: number;
 }
 
+export interface AuditLogEntry {
+  id: string;
+  invoiceId: string;
+  invoiceNo: string;
+  action: 'TRANSACTION_EDIT' | 'TRANSACTION_CANCEL' | 'ITEM_RETURN';
+  actionLabel: string;
+  authorizedBy: string;
+  operator: string;
+  timestamp: string;
+  reason: string;
+  previousState: {
+    total: number;
+    totalVes: number;
+    paymentMethod: string;
+    receivedAmount?: number;
+    referenceNumber?: string;
+    itemsSummary?: string;
+    status?: InvoiceStatus;
+    waterLiters?: number;
+  };
+  newState: {
+    total: number;
+    totalVes: number;
+    paymentMethod: string;
+    receivedAmount?: number;
+    referenceNumber?: string;
+    itemsSummary?: string;
+    status?: InvoiceStatus;
+    waterLiters?: number;
+  };
+  details?: string;
+}
+
 export interface SaleInvoice {
   id: string; // ej: FAC-2026-001
   invoiceNo: string;
@@ -51,9 +86,10 @@ export interface SaleInvoice {
   total: number; // in USD
   totalVes: number; // in Bs.
   bcvRate: number;
-  status: 'PAID' | 'PENDING';
+  status: InvoiceStatus;
   payment: PaymentDetails;
   qrPayload: string;
+  hasAuditLogs?: boolean;
 }
 
 const DEFAULT_SALES: SaleInvoice[] = [
@@ -193,9 +229,13 @@ const DEFAULT_SALES: SaleInvoice[] = [
 ];
 
 const STORAGE_KEY = 'aquapure_sales_invoices_v3';
+const AUDIT_STORAGE_KEY = 'aquapure_sales_audit_logs_v1';
+const SUPERVISOR_PIN_KEY = 'aquapure_supervisor_pin_v1';
 
 export const useSalesStore = defineStore('sales', () => {
   const invoices = ref<SaleInvoice[]>([...DEFAULT_SALES]);
+  const auditLogs = ref<AuditLogEntry[]>([]);
+  const supervisorPin = ref<string>('1234'); // Default supervisor PIN
 
   const loadFromStorage = () => {
     if (typeof localStorage === 'undefined') return;
@@ -205,6 +245,16 @@ export const useSalesStore = defineStore('sales', () => {
         invoices.value = JSON.parse(stored);
       } else {
         saveToStorage();
+      }
+
+      const storedAudit = localStorage.getItem(AUDIT_STORAGE_KEY);
+      if (storedAudit) {
+        auditLogs.value = JSON.parse(storedAudit);
+      }
+
+      const storedPin = localStorage.getItem(SUPERVISOR_PIN_KEY);
+      if (storedPin) {
+        supervisorPin.value = storedPin;
       }
     } catch {
       // ignore
@@ -220,12 +270,47 @@ export const useSalesStore = defineStore('sales', () => {
     }
   };
 
+  const saveAuditToStorage = () => {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      localStorage.setItem(AUDIT_STORAGE_KEY, JSON.stringify(auditLogs.value));
+    } catch {
+      // ignore
+    }
+  };
+
+  const savePinToStorage = () => {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      localStorage.setItem(SUPERVISOR_PIN_KEY, supervisorPin.value);
+    } catch {
+      // ignore
+    }
+  };
+
+  const verifySupervisorPin = (pin: string): boolean => {
+    return pin.trim() === supervisorPin.value.trim();
+  };
+
+  const setSupervisorPin = (newPin: string): boolean => {
+    if (newPin && newPin.trim().length >= 4) {
+      supervisorPin.value = newPin.trim();
+      savePinToStorage();
+      return true;
+    }
+    return false;
+  };
+
   const totalSalesAmount = computed(() => {
-    return invoices.value.reduce((acc, inv) => acc + inv.total, 0);
+    return invoices.value
+      .filter((inv) => inv.status !== 'CANCELLED' && inv.status !== 'REFUNDED')
+      .reduce((acc, inv) => acc + inv.total, 0);
   });
 
   const totalWaterDispensed = computed(() => {
-    return invoices.value.reduce((acc, inv) => acc + (inv.waterLiters || 0), 0);
+    return invoices.value
+      .filter((inv) => inv.status !== 'CANCELLED')
+      .reduce((acc, inv) => acc + (inv.waterLiters || 0), 0);
   });
 
   const paidSales = computed(() => {
@@ -242,6 +327,14 @@ export const useSalesStore = defineStore('sales', () => {
 
   const pendingSalesAmount = computed(() => {
     return pendingSales.value.reduce((acc, i) => acc + i.total, 0);
+  });
+
+  const cancelledSales = computed(() => {
+    return invoices.value.filter((i) => i.status === 'CANCELLED' || i.status === 'REFUNDED');
+  });
+
+  const cancelledSalesAmount = computed(() => {
+    return cancelledSales.value.reduce((acc, i) => acc + i.total, 0);
   });
 
   /**
@@ -265,7 +358,7 @@ export const useSalesStore = defineStore('sales', () => {
       waterLiters: number;
     }[];
     payment: PaymentDetails;
-    status: 'PAID' | 'PENDING';
+    status: InvoiceStatus;
   }): SaleInvoice => {
     const tanksStore = useTanksStore();
     const inventoryStore = useInventoryStore();
@@ -347,12 +440,280 @@ export const useSalesStore = defineStore('sales', () => {
       status: params.status,
       payment: params.payment,
       qrPayload,
+      hasAuditLogs: false,
     };
 
     invoices.value.unshift(newInvoice);
     saveToStorage();
 
     return newInvoice;
+  };
+
+  /**
+   * Edit/Correct an existing invoice (requires supervisor PIN)
+   */
+  const editInvoice = (params: {
+    invoiceId: string;
+    supervisorPin: string;
+    reason: string;
+    operator?: string;
+    updatedCustomer?: {
+      name?: string;
+      docNumber?: string;
+      address?: string;
+      phone?: string;
+      email?: string;
+    };
+    updatedPayment?: {
+      method?: PaymentMethodType;
+      methodLabel?: string;
+      receivedAmount?: number;
+      bankName?: string;
+      referenceNumber?: string;
+      authCode?: string;
+    };
+    updatedItems?: {
+      productId: string;
+      name: string;
+      price: number;
+      quantity: number;
+      waterLiters: number;
+    }[];
+    newStatus?: InvoiceStatus;
+  }): { success: boolean; error?: string; invoice?: SaleInvoice; audit?: AuditLogEntry } => {
+    if (!verifySupervisorPin(params.supervisorPin)) {
+      return { success: false, error: 'Clave / PIN de Supervisor inválido' };
+    }
+
+    const inv = invoices.value.find((i) => i.id === params.invoiceId || i.invoiceNo === params.invoiceId);
+    if (!inv) {
+      return { success: false, error: 'Factura no encontrada' };
+    }
+
+    const currencyStore = useCurrencyStore();
+    const tanksStore = useTanksStore();
+    const inventoryStore = useInventoryStore();
+
+    const previousState = {
+      total: inv.total,
+      totalVes: inv.totalVes,
+      paymentMethod: inv.payment.methodLabel || inv.payment.method,
+      receivedAmount: inv.payment.receivedAmount,
+      referenceNumber: inv.payment.referenceNumber,
+      itemsSummary: inv.itemsSummary,
+      status: inv.status,
+      waterLiters: inv.waterLiters,
+    };
+
+    // 1. Update customer if provided
+    if (params.updatedCustomer) {
+      if (params.updatedCustomer.name) inv.customer = params.updatedCustomer.name;
+      if (params.updatedCustomer.docNumber) inv.customerDoc = params.updatedCustomer.docNumber;
+      if (params.updatedCustomer.address) inv.customerAddress = params.updatedCustomer.address;
+      if (params.updatedCustomer.phone !== undefined) inv.customerPhone = params.updatedCustomer.phone;
+      if (params.updatedCustomer.email !== undefined) inv.customerEmail = params.updatedCustomer.email;
+    }
+
+    // 2. Update items and inventory/tanks if items provided
+    if (params.updatedItems && params.updatedItems.length > 0) {
+      // Revert previous items stock/water
+      if (inv.items && inv.items.length > 0) {
+        inventoryStore.restockItems(inv.items.map((i) => ({ productId: i.productId, quantity: i.quantity })));
+      }
+      const previousWater = inv.waterLiters || 0;
+
+      // Apply new items
+      const formattedItems: SaleItem[] = params.updatedItems.map((i) => ({
+        productId: i.productId,
+        name: i.name,
+        price: i.price,
+        quantity: i.quantity,
+        waterLiters: i.waterLiters || 0,
+        subtotal: Math.round(i.price * i.quantity * 100) / 100,
+      }));
+
+      const newSubtotal = formattedItems.reduce((acc, item) => acc + item.subtotal, 0);
+      const newTotalWater = formattedItems.reduce((acc, item) => acc + item.waterLiters * item.quantity, 0);
+      const newTotalVes = currencyStore.toVes(newSubtotal);
+
+      // Apply new stock deductions
+      inventoryStore.deductStock(formattedItems.map((i) => ({ productId: i.productId, quantity: i.quantity })));
+
+      // Water difference
+      const waterDiff = newTotalWater - previousWater;
+      if (waterDiff > 0) {
+        tanksStore.deductLiters(waterDiff, undefined, `Ajuste en Factura ${inv.invoiceNo}`);
+      } else if (waterDiff < 0) {
+        tanksStore.revertLiters(Math.abs(waterDiff), true, `Ajuste en Factura ${inv.invoiceNo}`);
+      }
+
+      inv.items = formattedItems;
+      inv.itemsSummary = formattedItems.map((i) => `${i.quantity}x ${i.name}`).join(' + ');
+      inv.subtotal = newSubtotal;
+      inv.total = newSubtotal;
+      inv.totalVes = newTotalVes;
+      inv.waterLiters = newTotalWater;
+    }
+
+    // 3. Update payment if provided
+    if (params.updatedPayment) {
+      if (params.updatedPayment.method) inv.payment.method = params.updatedPayment.method;
+      if (params.updatedPayment.methodLabel) inv.payment.methodLabel = params.updatedPayment.methodLabel;
+      if (params.updatedPayment.receivedAmount !== undefined) inv.payment.receivedAmount = params.updatedPayment.receivedAmount;
+      if (params.updatedPayment.bankName !== undefined) inv.payment.bankName = params.updatedPayment.bankName;
+      if (params.updatedPayment.referenceNumber !== undefined) inv.payment.referenceNumber = params.updatedPayment.referenceNumber;
+      if (params.updatedPayment.authCode !== undefined) inv.payment.authCode = params.updatedPayment.authCode;
+
+      // Recalculate change if cash
+      if (inv.payment.method === 'CASH_USD' && inv.payment.receivedAmount !== undefined) {
+        inv.payment.changeUsd = Math.max(0, inv.payment.receivedAmount - inv.total);
+        inv.payment.changeVes = currencyStore.toVes(inv.payment.changeUsd);
+      } else if (inv.payment.method === 'CASH_VES' && inv.payment.receivedAmount !== undefined) {
+        const diffVes = Math.max(0, inv.payment.receivedAmount - inv.totalVes);
+        inv.payment.changeVes = diffVes;
+        inv.payment.changeUsd = currencyStore.toUsd(diffVes);
+      }
+    }
+
+    // 4. Update status if provided
+    if (params.newStatus) {
+      inv.status = params.newStatus;
+    }
+
+    inv.hasAuditLogs = true;
+
+    const newState = {
+      total: inv.total,
+      totalVes: inv.totalVes,
+      paymentMethod: inv.payment.methodLabel || inv.payment.method,
+      receivedAmount: inv.payment.receivedAmount,
+      referenceNumber: inv.payment.referenceNumber,
+      itemsSummary: inv.itemsSummary,
+      status: inv.status,
+      waterLiters: inv.waterLiters,
+    };
+
+    // 5. Create Audit Entry
+    const auditEntry: AuditLogEntry = {
+      id: `aud-${Date.now()}`,
+      invoiceId: inv.id,
+      invoiceNo: inv.invoiceNo,
+      action: 'TRANSACTION_EDIT',
+      actionLabel: 'Corrección / Modificación de Transacción',
+      authorizedBy: 'Supervisor / Administrador',
+      operator: params.operator || 'Operador en Caja',
+      timestamp: new Date().toISOString(),
+      reason: params.reason,
+      previousState,
+      newState,
+      details: `Factura ${inv.invoiceNo} corregida con éxito. Motivo: ${params.reason}`,
+    };
+
+    auditLogs.value.unshift(auditEntry);
+    saveAuditToStorage();
+    saveToStorage();
+
+    return { success: true, invoice: inv, audit: auditEntry };
+  };
+
+  /**
+   * Cancel an invoice / Process return (requires supervisor PIN)
+   */
+  const cancelInvoice = (params: {
+    invoiceId: string;
+    supervisorPin: string;
+    reason: string;
+    operator?: string;
+    returnWaterToTank?: boolean;
+    restockPhysicalItems?: boolean;
+  }): { success: boolean; error?: string; invoice?: SaleInvoice; audit?: AuditLogEntry } => {
+    if (!verifySupervisorPin(params.supervisorPin)) {
+      return { success: false, error: 'Clave / PIN de Supervisor inválido' };
+    }
+
+    const inv = invoices.value.find((i) => i.id === params.invoiceId || i.invoiceNo === params.invoiceId);
+    if (!inv) {
+      return { success: false, error: 'Factura no encontrada' };
+    }
+
+    if (inv.status === 'CANCELLED') {
+      return { success: false, error: 'Esta factura ya se encuentra anulada' };
+    }
+
+    const previousState = {
+      total: inv.total,
+      totalVes: inv.totalVes,
+      paymentMethod: inv.payment.methodLabel || inv.payment.method,
+      receivedAmount: inv.payment.receivedAmount,
+      referenceNumber: inv.payment.referenceNumber,
+      itemsSummary: inv.itemsSummary,
+      status: inv.status,
+      waterLiters: inv.waterLiters,
+    };
+
+    const tanksStore = useTanksStore();
+    const inventoryStore = useInventoryStore();
+
+    // 1. Revert Water
+    if (inv.waterLiters > 0) {
+      tanksStore.revertLiters(
+        inv.waterLiters,
+        params.returnWaterToTank ?? false,
+        `Anulación Factura ${inv.invoiceNo}: ${params.reason}`
+      );
+    }
+
+    // 2. Restock physical items
+    if (params.restockPhysicalItems !== false && inv.items && inv.items.length > 0) {
+      inventoryStore.restockItems(
+        inv.items.map((i) => ({ productId: i.productId, quantity: i.quantity }))
+      );
+    }
+
+    // 3. Mark invoice as cancelled
+    inv.status = 'CANCELLED';
+    inv.hasAuditLogs = true;
+
+    const newState = {
+      total: 0,
+      totalVes: 0,
+      paymentMethod: inv.payment.methodLabel || inv.payment.method,
+      receivedAmount: inv.payment.receivedAmount,
+      referenceNumber: inv.payment.referenceNumber,
+      itemsSummary: inv.itemsSummary,
+      status: 'CANCELLED' as InvoiceStatus,
+      waterLiters: inv.waterLiters,
+    };
+
+    // 4. Create Audit Log
+    const auditEntry: AuditLogEntry = {
+      id: `aud-${Date.now()}`,
+      invoiceId: inv.id,
+      invoiceNo: inv.invoiceNo,
+      action: 'TRANSACTION_CANCEL',
+      actionLabel: 'Anulación de Factura / Venta',
+      authorizedBy: 'Supervisor / Administrador',
+      operator: params.operator || 'Operador en Caja',
+      timestamp: new Date().toISOString(),
+      reason: params.reason,
+      previousState,
+      newState,
+      details: `Factura ${inv.invoiceNo} anulada. ${
+        params.returnWaterToTank ? 'Agua reintegrada al tanque.' : 'Agua declarada como merma/desecho.'
+      } ${params.restockPhysicalItems !== false ? 'Inventario restituido.' : ''}`,
+    };
+
+    auditLogs.value.unshift(auditEntry);
+    saveAuditToStorage();
+    saveToStorage();
+
+    return { success: true, invoice: inv, audit: auditEntry };
+  };
+
+  const getInvoiceAuditLogs = (invoiceId: string): AuditLogEntry[] => {
+    return auditLogs.value.filter(
+      (log) => log.invoiceId === invoiceId || log.invoiceNo === invoiceId
+    );
   };
 
   const markInvoiceAsPaid = (invoiceId: string, paymentDetails?: PaymentDetails) => {
@@ -377,13 +738,22 @@ export const useSalesStore = defineStore('sales', () => {
 
   return {
     invoices,
+    auditLogs,
+    supervisorPin,
+    verifySupervisorPin,
+    setSupervisorPin,
     totalSalesAmount,
     totalWaterDispensed,
     paidSales,
     paidSalesAmount,
     pendingSales,
     pendingSalesAmount,
+    cancelledSales,
+    cancelledSalesAmount,
     processSale,
+    editInvoice,
+    cancelInvoice,
+    getInvoiceAuditLogs,
     markInvoiceAsPaid,
     deleteInvoice,
     init,

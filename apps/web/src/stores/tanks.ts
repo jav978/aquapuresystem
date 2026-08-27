@@ -339,6 +339,38 @@ export const useTanksStore = defineStore('tanks', () => {
     }
   };
 
+  const revertLiters = (liters: number, returnToTank = false, reason = 'Anulación de venta / Devolución') => {
+    const qty = Math.max(0, liters);
+    if (returnToTank && qty > 0) {
+      const newLiters = Math.min(masterTank.value.capacity, masterTank.value.currentLiters + qty);
+      masterTank.value.currentLiters = newLiters;
+      masterTank.value.level = Math.round((newLiters / masterTank.value.capacity) * 100);
+      masterTank.value.status = calculateStatus(masterTank.value.level);
+      masterTank.value.totalDispensedLiters = Math.max(0, masterTank.value.totalDispensedLiters - qty);
+
+      movements.value.unshift({
+        id: `mov-${Date.now()}-rev`,
+        type: 'ADJUSTMENT',
+        liters: qty,
+        remainingLiters: newLiters,
+        reason: `${reason} (Reintegrado al tanque)`,
+        timestamp: new Date().toISOString(),
+      });
+    } else if (qty > 0) {
+      // Discarded / Waste (no re-added to master tank for biosecurity)
+      movements.value.unshift({
+        id: `mov-${Date.now()}-waste-rev`,
+        type: 'ADJUSTMENT',
+        liters: qty,
+        remainingLiters: masterTank.value.currentLiters,
+        reason: `${reason} (Merma/Desecho - No reintegrado por bioseguridad)`,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    saveToStorage();
+  };
+
   const setMasterCapacity = (capacity: number) => {
     if (capacity > 0) {
       masterTank.value.capacity = capacity;
@@ -366,6 +398,7 @@ export const useTanksStore = defineStore('tanks', () => {
     totalWaterWasted,
     init,
     deductLiters,
+    revertLiters,
     recordCisternRefill,
     recordWashWaste,
     setWashWastePercentage,

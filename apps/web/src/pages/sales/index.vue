@@ -219,6 +219,12 @@
                   <span class="w-1.5 h-1.5 rounded-full bg-billing-green"></span> Pagada
                 </span>
                 <span
+                  v-else-if="sale.status === 'CANCELLED'"
+                  class="inline-flex items-center gap-1.5 bg-error/15 text-error px-3 py-1 rounded-full text-xs font-bold"
+                >
+                  <span class="w-1.5 h-1.5 rounded-full bg-error"></span> Anulada
+                </span>
+                <span
                   v-else
                   class="inline-flex items-center gap-1.5 bg-admin-gold/15 text-admin-gold px-3 py-1 rounded-full text-xs font-bold"
                 >
@@ -229,6 +235,7 @@
               <!-- Actions -->
               <td class="py-4 px-6 text-right">
                 <div class="flex items-center justify-end gap-1">
+                  <!-- Imprimir Comprobante QR -->
                   <button
                     @click="openPrintModal(sale)"
                     class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-xl hover:bg-surface-container cursor-pointer active:scale-95"
@@ -236,12 +243,34 @@
                   >
                     <span class="material-symbols-outlined text-lg">receipt_long</span>
                   </button>
+
+                  <!-- Corregir Transacción (Supervisor) -->
                   <button
-                    @click="deleteSale(sale)"
-                    class="p-2 text-on-surface-variant hover:text-error-red transition-colors rounded-xl hover:bg-surface-container cursor-pointer active:scale-95"
-                    title="Eliminar Registro de Venta"
+                    v-if="sale.status !== 'CANCELLED'"
+                    @click="openEditModal(sale)"
+                    class="p-2 text-on-surface-variant hover:text-amber-500 transition-colors rounded-xl hover:bg-amber-500/10 cursor-pointer active:scale-95"
+                    title="Corregir Transacción (Requiere Clave de Supervisor)"
                   >
-                    <span class="material-symbols-outlined text-lg">delete</span>
+                    <span class="material-symbols-outlined text-lg">edit_note</span>
+                  </button>
+
+                  <!-- Anular / Devolución -->
+                  <button
+                    v-if="sale.status !== 'CANCELLED'"
+                    @click="openCancelModal(sale)"
+                    class="p-2 text-on-surface-variant hover:text-error transition-colors rounded-xl hover:bg-error/10 cursor-pointer active:scale-95"
+                    title="Anular / Devolución (Requiere Supervisor)"
+                  >
+                    <span class="material-symbols-outlined text-lg">assignment_return</span>
+                  </button>
+
+                  <!-- Ver Historial de Auditoría -->
+                  <button
+                    @click="openAuditModal(sale)"
+                    class="p-2 text-on-surface-variant hover:text-indigo-500 transition-colors rounded-xl hover:bg-indigo-500/10 cursor-pointer active:scale-95"
+                    title="Ver Historial de Auditoría"
+                  >
+                    <span class="material-symbols-outlined text-lg">history</span>
                   </button>
                 </div>
               </td>
@@ -740,6 +769,28 @@
       v-model="showPrintModal"
       :invoice="printInvoiceData"
     />
+
+    <!-- Edit Transaction Modal (Supervisor Authorized) -->
+    <EditTransactionModal
+      v-if="selectedEditInvoice"
+      v-model="showEditModal"
+      :invoice="selectedEditInvoice"
+      @updated="onInvoiceUpdated"
+    />
+
+    <!-- Cancel / Refund Transaction Modal -->
+    <CancelTransactionModal
+      v-if="selectedCancelInvoice"
+      v-model="showCancelModal"
+      :invoice="selectedCancelInvoice"
+      @cancelled="onInvoiceCancelled"
+    />
+
+    <!-- Transaction Audit Trail Modal -->
+    <AuditLogModal
+      v-model="showAuditModal"
+      :invoice="selectedAuditInvoice"
+    />
   </div>
 </template>
 
@@ -753,6 +804,9 @@ import { useInventoryStore, type Product } from '~/stores/inventory';
 import { useSalesStore, type SaleInvoice, type PaymentMethodType } from '~/stores/sales';
 import { useToast } from '~/composables/useToast';
 import InvoicePrintModal from '~/components/ui/InvoicePrintModal.vue';
+import EditTransactionModal from '~/components/ui/EditTransactionModal.vue';
+import CancelTransactionModal from '~/components/ui/CancelTransactionModal.vue';
+import AuditLogModal from '~/components/ui/AuditLogModal.vue';
 import {
   validateRequired,
   validatePositiveNumber,
@@ -776,6 +830,16 @@ const statusFilter = ref('');
 const showSaleModal = ref(false);
 const showPrintModal = ref(false);
 const printInvoiceData = ref<SaleInvoice | null>(null);
+
+const showEditModal = ref(false);
+const selectedEditInvoice = ref<SaleInvoice | null>(null);
+
+const showCancelModal = ref(false);
+const selectedCancelInvoice = ref<SaleInvoice | null>(null);
+
+const showAuditModal = ref(false);
+const selectedAuditInvoice = ref<SaleInvoice | null>(null);
+
 const formError = ref<string | null>(null);
 const activeCategory = ref('Todos');
 const salePaymentStatus = ref<'PAID' | 'PENDING'>('PAID');
@@ -878,6 +942,29 @@ const formatMoney = (val: number): string => {
 
 const formatNumber = (val: number): string => {
   return new Intl.NumberFormat('es-ES').format(Math.round(val || 0));
+};
+
+const openEditModal = (sale: SaleInvoice) => {
+  selectedEditInvoice.value = sale;
+  showEditModal.value = true;
+};
+
+const openCancelModal = (sale: SaleInvoice) => {
+  selectedCancelInvoice.value = sale;
+  showCancelModal.value = true;
+};
+
+const openAuditModal = (sale: SaleInvoice) => {
+  selectedAuditInvoice.value = sale;
+  showAuditModal.value = true;
+};
+
+const onInvoiceUpdated = (updatedInv: SaleInvoice) => {
+  printInvoiceData.value = updatedInv;
+};
+
+const onInvoiceCancelled = (cancelledInv: SaleInvoice) => {
+  // handled
 };
 
 const setQuickSaleMode = (quick: boolean) => {

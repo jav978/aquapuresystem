@@ -396,6 +396,8 @@ export const useTanksStore = defineStore('tanks', () => {
     totalWaterPurchased,
     totalWaterSold,
     totalWaterWasted,
+    loadFromStorage,
+    saveToStorage,
     init,
     deductLiters,
     revertLiters,

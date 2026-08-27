@@ -73,4 +73,45 @@ describe('Sales & Invoicing Store with Banking Reconciliation and QR', () => {
     expect(firstInvoice.status).toBe('PAID');
     expect(firstInvoice.payment.receivedAmount).toBe(200);
   });
+
+  it('should guarantee idempotency when processing sale with same idempotencyKey', () => {
+    const store = useSalesStore();
+    const initialCount = store.invoices.length;
+    const testKey = 'tx_unique_crash_test_123';
+
+    const saleParams = {
+      customer: {
+        type: 'NATURAL' as const,
+        docType: 'V' as const,
+        docNumber: '19876543',
+        name: 'Maria Perez',
+        address: 'Calle 5 Casa 12',
+      },
+      items: [
+        {
+          productId: 'prod-2',
+          name: 'Recarga 20L',
+          price: 3.50,
+          quantity: 2,
+          waterLiters: 20,
+        },
+      ],
+      payment: {
+        method: 'CASH_USD' as const,
+        methodLabel: 'Efectivo',
+      },
+      status: 'PAID' as const,
+      idempotencyKey: testKey,
+    };
+
+    // First attempt
+    const firstInvoice = store.processSale(saleParams);
+    expect(store.invoices.length).toBe(initialCount + 1);
+    expect(firstInvoice.idempotencyKey).toBe(testKey);
+
+    // Second attempt (simulating retry after power crash / double click)
+    const duplicateAttempt = store.processSale(saleParams);
+    expect(store.invoices.length).toBe(initialCount + 1); // Count did not increase
+    expect(duplicateAttempt.id).toBe(firstInvoice.id);
+  });
 });

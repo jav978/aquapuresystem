@@ -234,6 +234,8 @@ export const useInventoryStore = defineStore('inventory', () => {
     getProductsByCategory,
     deductStock,
     restockItems,
+    loadFromStorage,
+    saveToStorage,
     init,
   };
 });

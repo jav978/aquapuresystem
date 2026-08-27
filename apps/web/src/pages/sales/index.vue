@@ -56,6 +56,53 @@
       </NuxtLink>
     </div>
 
+    <!-- Outage / Crash Recovery Alert Banner -->
+    <div
+      v-if="posDraft.hasDraft.value && !showSaleModal"
+      class="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-primary/15 border border-amber-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-lg backdrop-blur-md animate-in"
+    >
+      <div class="flex items-start gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center flex-shrink-0 shadow-inner">
+          <span class="material-symbols-outlined text-2xl">electric_bolt</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h3 class="text-sm sm:text-base font-extrabold text-on-surface">
+              Venta en Proceso Detectada (Protección contra Apagones)
+            </h3>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-400 uppercase tracking-wide">
+              Borrador Seguro
+            </span>
+          </div>
+          <p class="text-xs text-on-surface-variant mt-1 leading-relaxed">
+            Existe una venta no concluida previa al último apagón o cierre con
+            <strong class="text-on-surface font-semibold">{{ posDraft.currentDraft.value?.cartItems?.length || 0 }} producto(s)</strong>
+            por <strong class="text-billing-green font-mono font-bold">${{ formatMoney(posDraft.currentDraft.value?.totalUsd || 0) }}</strong>
+            <span v-if="posDraft.currentDraft.value?.customerForm?.name"> (Cliente: <strong>{{ posDraft.currentDraft.value.customerForm.name }}</strong>)</span>
+            guardada a las <strong class="text-on-surface font-mono">{{ posDraft.formatDraftDate(posDraft.currentDraft.value?.savedAt) }}</strong>.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2.5 w-full md:w-auto flex-shrink-0 self-end md:self-center">
+        <button
+          type="button"
+          @click="discardDraft"
+          class="px-3.5 py-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-error-red text-xs font-bold transition-all cursor-pointer"
+        >
+          Descartar
+        </button>
+        <button
+          type="button"
+          @click="recoverDraft"
+          class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer active:scale-95 transition-all"
+        >
+          <span class="material-symbols-outlined text-base">restore_page</span>
+          <span>⚡ Recuperar Venta</span>
+        </button>
+      </div>
+    </div>
+
     <!-- KPIs Bento Grid with Dual Currency -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
       <div class="card-elevated p-5 sm:p-6 flex flex-col justify-between relative overflow-hidden">
@@ -795,13 +842,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted } from 'vue';
+import { ref, computed, reactive, watch, onMounted } from 'vue';
 import { useRoute, onBeforeRouteLeave } from 'vue-router';
 import { useTanksStore } from '~/stores/tanks';
 import { useCurrencyStore } from '~/stores/currency';
 import { useCustomersStore } from '~/stores/customers';
 import { useInventoryStore, type Product } from '~/stores/inventory';
 import { useSalesStore, type SaleInvoice, type PaymentMethodType } from '~/stores/sales';
+import { usePosDraft } from '~/composables/usePosDraft';
 import { useToast } from '~/composables/useToast';
 import InvoicePrintModal from '~/components/ui/InvoicePrintModal.vue';
 import EditTransactionModal from '~/components/ui/EditTransactionModal.vue';
@@ -823,7 +871,10 @@ const currencyStore = useCurrencyStore();
 const customersStore = useCustomersStore();
 const inventoryStore = useInventoryStore();
 const salesStore = useSalesStore();
+const posDraft = usePosDraft();
 const toast = useToast();
+
+const activeTransactionId = ref<string>(posDraft.generateTransactionId());
 
 const searchQuery = ref('');
 const statusFilter = ref('');
@@ -986,9 +1037,87 @@ const setQuickSaleMode = (quick: boolean) => {
   }
 };
 
+// Watch and Auto-Save draft reactively in background for power outage resilience
+watch(
+  [showSaleModal, cartItems, customerForm, paymentForm, isQuickSale, salePaymentStatus],
+  () => {
+    if (showSaleModal.value && cartItems.value.length > 0) {
+      posDraft.saveDraft({
+        transactionId: activeTransactionId.value,
+        isQuickSale: isQuickSale.value,
+        customerForm: {
+          type: customerForm.type,
+          docType: customerForm.docType,
+          docNumber: customerForm.docNumber,
+          name: customerForm.name,
+          address: customerForm.address,
+          phone: customerForm.phone,
+          email: customerForm.email,
+        },
+        cartItems: cartItems.value.map((i) => ({
+          productId: i.productId,
+          name: i.name,
+          price: i.price,
+          quantity: i.quantity,
+          waterLiters: i.waterLiters || 0,
+        })),
+        paymentForm: {
+          method: paymentForm.method,
+          receivedAmount: paymentForm.receivedAmount,
+          bankName: paymentForm.bankName,
+          referenceNumber: paymentForm.referenceNumber,
+          authCode: paymentForm.authCode,
+        },
+        salePaymentStatus: salePaymentStatus.value,
+      });
+    }
+  },
+  { deep: true }
+);
+
+const recoverDraft = () => {
+  const draft = posDraft.loadDraftFromStorage();
+  if (draft) {
+    activeTransactionId.value = draft.transactionId || posDraft.generateTransactionId();
+    isQuickSale.value = draft.isQuickSale;
+    customerForm.type = draft.customerForm.type;
+    customerForm.docType = draft.customerForm.docType;
+    customerForm.docNumber = draft.customerForm.docNumber;
+    customerForm.name = draft.customerForm.name;
+    customerForm.address = draft.customerForm.address;
+    customerForm.phone = draft.customerForm.phone;
+    customerForm.email = draft.customerForm.email;
+
+    cartItems.value = draft.cartItems.map((i) => ({
+      productId: i.productId,
+      name: i.name,
+      price: i.price,
+      quantity: i.quantity,
+      waterLiters: i.waterLiters || 0,
+    }));
+
+    paymentForm.method = draft.paymentForm.method;
+    paymentForm.receivedAmount = draft.paymentForm.receivedAmount;
+    paymentForm.bankName = draft.paymentForm.bankName;
+    paymentForm.referenceNumber = draft.paymentForm.referenceNumber;
+    paymentForm.authCode = draft.paymentForm.authCode;
+
+    salePaymentStatus.value = draft.salePaymentStatus || 'PAID';
+
+    showSaleModal.value = true;
+    toast.info('Venta Recuperada', 'Se restauró el borrador previo al apagón/cierre con éxito.');
+  }
+};
+
+const discardDraft = () => {
+  posDraft.clearDraft();
+  toast.info('Borrador descartado', 'El borrador anterior fue eliminado.');
+};
+
 const openQuickSaleModal = () => {
   formError.value = null;
   salePaymentStatus.value = 'PAID';
+  activeTransactionId.value = posDraft.generateTransactionId();
   setQuickSaleMode(true);
 
   paymentForm.method = 'CASH_USD';
@@ -1013,6 +1142,7 @@ const openQuickSaleModal = () => {
 const openNewSaleModal = () => {
   formError.value = null;
   salePaymentStatus.value = 'PAID';
+  activeTransactionId.value = posDraft.generateTransactionId();
   setQuickSaleMode(false);
 
   paymentForm.method = 'CASH_USD';
@@ -1152,7 +1282,7 @@ const submitSale = () => {
 
   const methodObj = paymentMethodsList.find((m) => m.type === paymentForm.method);
 
-  // Process synchronized sale & invoice
+  // Process synchronized sale & invoice with idempotency key
   const newInvoice = salesStore.processSale({
     customer: finalCustomer,
     items: cartItems.value,
@@ -1167,8 +1297,12 @@ const submitSale = () => {
       authCode: paymentForm.authCode.trim(),
     },
     status: salePaymentStatus.value,
+    idempotencyKey: activeTransactionId.value,
   });
 
+  // Clear draft only after successful transaction
+  posDraft.clearDraft();
+  activeTransactionId.value = posDraft.generateTransactionId();
   showSaleModal.value = false;
 
   const vesTotal = currencyStore.formatVes(newInvoice.totalVes);
@@ -1185,7 +1319,7 @@ const submitSale = () => {
 onBeforeRouteLeave((to, from, next) => {
   if (showSaleModal.value && cartItems.value.length > 0) {
     const confirmLeave = window.confirm(
-      '¿Desea salir del Punto de Venta? Hay una venta en proceso y los productos en el carrito se perderán.'
+      '¿Desea salir del Punto de Venta? Hay una venta en proceso. El borrador ha sido guardado de forma segura.'
     );
     if (confirmLeave) {
       next();

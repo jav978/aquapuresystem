@@ -90,6 +90,7 @@ export interface SaleInvoice {
   payment: PaymentDetails;
   qrPayload: string;
   hasAuditLogs?: boolean;
+  idempotencyKey?: string;
 }
 
 const DEFAULT_SALES: SaleInvoice[] = [
@@ -359,7 +360,16 @@ export const useSalesStore = defineStore('sales', () => {
     }[];
     payment: PaymentDetails;
     status: InvoiceStatus;
+    idempotencyKey?: string;
   }): SaleInvoice => {
+    // 0. Idempotency Check: if this exact transaction was already committed, return existing
+    if (params.idempotencyKey) {
+      const existing = invoices.value.find((inv) => inv.idempotencyKey === params.idempotencyKey);
+      if (existing) {
+        return existing;
+      }
+    }
+
     const tanksStore = useTanksStore();
     const inventoryStore = useInventoryStore();
     const customersStore = useCustomersStore();
@@ -441,6 +451,7 @@ export const useSalesStore = defineStore('sales', () => {
       payment: params.payment,
       qrPayload,
       hasAuditLogs: false,
+      idempotencyKey: params.idempotencyKey,
     };
 
     invoices.value.unshift(newInvoice);
@@ -756,6 +767,8 @@ export const useSalesStore = defineStore('sales', () => {
     getInvoiceAuditLogs,
     markInvoiceAsPaid,
     deleteInvoice,
+    loadFromStorage,
+    saveToStorage,
     init,
   };
 });

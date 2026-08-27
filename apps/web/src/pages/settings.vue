@@ -291,6 +291,95 @@
           </div>
         </div>
       </div>
+
+      <!-- Card 5: Copias de Seguridad & Respaldo (Backups & Disaster Recovery) -->
+      <div class="card-elevated p-6 flex flex-col justify-between xl:col-span-2 border border-primary/20 bg-gradient-to-br from-surface-container/80 via-surface-container to-surface-container-high/60">
+        <div>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-black/5 dark:border-white/5">
+            <div class="flex items-center gap-2.5">
+              <div class="w-10 h-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center shadow-inner">
+                <span class="material-symbols-outlined text-2xl">shield_lock</span>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-on-surface">Copias de Seguridad & Respaldo de Datos</h3>
+                <p class="text-xs text-on-surface-variant">Protección contra apagones, desastres y pérdida de datos operativos.</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-billing-green/15 text-billing-green border border-billing-green/20">
+                <span class="w-2 h-2 rounded-full bg-billing-green animate-pulse"></span>
+                Base de Datos Protegida
+              </span>
+            </div>
+          </div>
+
+          <!-- Stats Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+            <div class="p-3.5 rounded-xl bg-surface-container-high/60 border border-black/5 dark:border-white/5">
+              <span class="text-[11px] font-semibold text-on-surface-variant block">Facturas / Ventas</span>
+              <strong class="text-lg font-extrabold text-primary">{{ salesStore.invoices.length }}</strong>
+            </div>
+            <div class="p-3.5 rounded-xl bg-surface-container-high/60 border border-black/5 dark:border-white/5">
+              <span class="text-[11px] font-semibold text-on-surface-variant block">Clientes Registrados</span>
+              <strong class="text-lg font-extrabold text-cyan-400">{{ customersStore.customers.length }}</strong>
+            </div>
+            <div class="p-3.5 rounded-xl bg-surface-container-high/60 border border-black/5 dark:border-white/5">
+              <span class="text-[11px] font-semibold text-on-surface-variant block">Productos & Insumos</span>
+              <strong class="text-lg font-extrabold text-admin-gold">{{ inventoryStore.products.length }}</strong>
+            </div>
+            <div class="p-3.5 rounded-xl bg-surface-container-high/60 border border-black/5 dark:border-white/5">
+              <span class="text-[11px] font-semibold text-on-surface-variant block">Tanque Consolidado</span>
+              <strong class="text-lg font-extrabold text-billing-green">{{ tanksStore.masterTank.currentLiters }} L</strong>
+            </div>
+          </div>
+
+          <!-- Options and Actions Row -->
+          <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 p-4 rounded-xl bg-surface-container/50 border border-black/5 dark:border-white/5">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-base text-primary">history</span>
+                <span class="text-xs text-on-surface-variant">Último Respaldo:</span>
+                <strong class="text-xs text-on-surface font-mono">{{ backupStore.formattedLastBackup }}</strong>
+              </div>
+              <div class="flex items-center gap-2 mt-2">
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    :checked="backupStore.autoBackupOnDayClose"
+                    @change="toggleAutoBackup"
+                    class="sr-only peer"
+                  />
+                  <div class="w-9 h-5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                </label>
+                <span class="text-xs text-on-surface font-medium">Respaldo automático al cierre de caja / fin de jornada</span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+              <button
+                type="button"
+                @click="openRestoreModal"
+                class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-bold text-xs flex items-center justify-center gap-2 border border-black/10 dark:border-white/10 transition-all cursor-pointer active:scale-95"
+              >
+                <span class="material-symbols-outlined text-base text-admin-gold">upload_file</span>
+                <span>Restaurar Base de Datos</span>
+              </button>
+
+              <button
+                type="button"
+                @click="triggerExportBackup"
+                :disabled="backupStore.isBackingUp"
+                class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-primary/20 glow-cyan-hover transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+              >
+                <span class="material-symbols-outlined text-base">download</span>
+                <span>{{ backupStore.isBackingUp ? 'Generando...' : 'Descargar Copia de Seguridad (.JSON)' }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Save Settings Floating / Bottom Action Bar -->
@@ -366,12 +455,108 @@
         </form>
       </div>
     </div>
+
+    <!-- Restore Backup Modal -->
+    <div v-if="showRestoreModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="closeRestoreModal"></div>
+      <div class="relative glass-card w-full max-w-lg p-6 z-10 animate-in">
+        <div class="flex items-center justify-between pb-4 border-b border-black/5 dark:border-white/5 mb-4">
+          <div class="flex items-center gap-2">
+            <span class="p-2 rounded-xl bg-admin-gold/15 text-admin-gold material-symbols-outlined">settings_backup_restore</span>
+            <div>
+              <h4 class="text-base font-bold text-on-surface">Restaurar Copia de Seguridad</h4>
+              <p class="text-xs text-on-surface-variant">Recuperación completa de base de datos desde archivo .JSON</p>
+            </div>
+          </div>
+          <button @click="closeRestoreModal" class="p-1 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <div v-if="restoreError" class="mb-4 p-3.5 rounded-xl bg-error-red/10 border border-error-red/20 text-error-red text-xs font-semibold flex items-center gap-2">
+          <span class="material-symbols-outlined text-base flex-shrink-0">error</span>
+          <span>{{ restoreError }}</span>
+        </div>
+
+        <div class="space-y-4">
+          <!-- File selection -->
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1.5">Seleccionar archivo de respaldo (.json) *</label>
+            <input
+              type="file"
+              accept=".json"
+              @change="handleFileSelected"
+              class="w-full text-xs text-on-surface file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-primary file:text-on-primary hover:file:bg-primary-hover cursor-pointer bg-surface-container p-2 rounded-xl"
+            />
+          </div>
+
+          <!-- Preview details if package is parsed -->
+          <div v-if="pendingBackupPackage" class="p-4 rounded-xl bg-surface-container-high border border-primary/20 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-primary flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">verified</span>
+                Copia de Seguridad Verificada
+              </span>
+              <span class="text-[10px] font-mono text-on-surface-variant">{{ pendingBackupPackage.metadata.checksum }}</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="text-on-surface-variant">Fecha: <strong class="text-on-surface">{{ formatIsoDate(pendingBackupPackage.metadata.createdAt) }}</strong></div>
+              <div class="text-on-surface-variant">Ventas / Facturas: <strong class="text-on-surface font-mono">{{ pendingBackupPackage.metadata.totalInvoices }}</strong></div>
+              <div class="text-on-surface-variant">Clientes: <strong class="text-on-surface font-mono">{{ pendingBackupPackage.metadata.totalCustomers }}</strong></div>
+              <div class="text-on-surface-variant">Tanque: <strong class="text-on-surface font-mono">{{ pendingBackupPackage.metadata.masterTankLiters }} L</strong></div>
+            </div>
+          </div>
+
+          <!-- Supervisor PIN Input -->
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">PIN de Supervisor (Autorización requerida) *</label>
+            <input
+              v-model="supervisorPinInput"
+              type="password"
+              maxlength="8"
+              placeholder="Ingrese PIN de Supervisor (Ej: 1234)"
+              class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none font-mono shadow-sm"
+            />
+          </div>
+
+          <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs flex items-start gap-2">
+            <span class="material-symbols-outlined text-base flex-shrink-0 mt-0.5">warning</span>
+            <span>Esta operación sobreescribirá los datos del sistema con los contenidos del archivo de respaldo.</span>
+          </div>
+
+          <div class="flex justify-end gap-3 pt-3 border-t border-black/5 dark:border-white/5">
+            <button
+              type="button"
+              @click="closeRestoreModal"
+              class="px-4 py-2.5 rounded-xl text-xs font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              @click="executeRestore"
+              :disabled="!pendingBackupPackage || !supervisorPinInput || backupStore.isRestoring"
+              class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-primary text-white font-bold text-xs flex items-center gap-2 shadow-md cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <span class="material-symbols-outlined text-base">restore</span>
+              <span>{{ backupStore.isRestoring ? 'Restaurando...' : 'Confirmar y Restaurar' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import { useThemeStore } from '~/stores/theme';
+import { useBackupStore } from '~/stores/backup';
+import { useSalesStore } from '~/stores/sales';
+import { useCustomersStore } from '~/stores/customers';
+import { useInventoryStore } from '~/stores/inventory';
+import { useTanksStore } from '~/stores/tanks';
 import { useToast } from '~/composables/useToast';
 import {
   validateRequired,
@@ -385,12 +570,23 @@ definePageMeta({
 });
 
 const themeStore = useThemeStore();
+const backupStore = useBackupStore();
+const salesStore = useSalesStore();
+const customersStore = useCustomersStore();
+const inventoryStore = useInventoryStore();
+const tanksStore = useTanksStore();
 const toast = useToast();
 
 const showBranchModal = ref(false);
 const isEditingBranch = ref(false);
 const editingBranchId = ref<string | null>(null);
 const branchError = ref('');
+
+// Backup & Restoration Modal state
+const showRestoreModal = ref(false);
+const restoreError = ref('');
+const supervisorPinInput = ref('');
+const pendingBackupPackage = ref<any>(null);
 
 const branchForm = reactive({
   name: '',
@@ -500,6 +696,105 @@ const deleteBranch = (branch: any) => {
   toast.deleteSuccess('Sucursal', `Sucursal ${branch.name} eliminada.`);
 };
 
+// Backup & Disaster Recovery Actions
+const triggerExportBackup = () => {
+  const result = backupStore.exportBackupToFile();
+  if (result.success) {
+    toast.success(
+      'Copia de Seguridad Generada',
+      `Archivo ${result.filename} (${Math.round(result.sizeBytes / 1024)} KB) descargado exitosamente.`
+    );
+  } else {
+    toast.error('Error al generar respaldo', 'No se pudo crear el archivo de copia de seguridad.');
+  }
+};
+
+const toggleAutoBackup = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  backupStore.setAutoBackup(target.checked);
+  toast.info(
+    'Respaldo Automático',
+    target.checked
+      ? 'Respaldo automático al cierre de caja activado.'
+      : 'Respaldo automático al cierre de caja desactivado.'
+  );
+};
+
+const openRestoreModal = () => {
+  restoreError.value = '';
+  supervisorPinInput.value = '';
+  pendingBackupPackage.value = null;
+  showRestoreModal.value = true;
+};
+
+const closeRestoreModal = () => {
+  showRestoreModal.value = false;
+  restoreError.value = '';
+  supervisorPinInput.value = '';
+  pendingBackupPackage.value = null;
+};
+
+const handleFileSelected = (event: Event) => {
+  restoreError.value = '';
+  pendingBackupPackage.value = null;
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const text = e.target?.result as string;
+    const validation = backupStore.validateBackupContent(text);
+    if (!validation.valid || !validation.pkg) {
+      restoreError.value = validation.error || 'Archivo de respaldo inválido.';
+      return;
+    }
+    pendingBackupPackage.value = validation.pkg;
+  };
+  reader.onerror = () => {
+    restoreError.value = 'Error al leer el archivo seleccionado.';
+  };
+  reader.readAsText(file);
+};
+
+const executeRestore = () => {
+  restoreError.value = '';
+  if (!pendingBackupPackage.value) {
+    restoreError.value = 'Debe seleccionar un archivo de respaldo válido.';
+    return;
+  }
+  if (!supervisorPinInput.value.trim()) {
+    restoreError.value = 'Debe ingresar el PIN de Supervisor para autorizar la restauración.';
+    return;
+  }
+
+  const result = backupStore.restoreFromBackupPackage(
+    pendingBackupPackage.value,
+    supervisorPinInput.value.trim()
+  );
+
+  if (!result.success) {
+    restoreError.value = result.error || 'No se pudo restaurar la base de datos.';
+    return;
+  }
+
+  toast.success(
+    'Base de Datos Restaurada',
+    `Se restauraron exitosamente ${result.stats?.invoices || 0} facturas, ${result.stats?.customers || 0} clientes y niveles de tanque.`
+  );
+  closeRestoreModal();
+};
+
+const formatIsoDate = (iso?: string) => {
+  if (!iso) return '-';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } catch {
+    return iso;
+  }
+};
+
 const saveAllSettings = () => {
   const cleanedCompany = sanitizeFormData(companyForm);
 
@@ -519,6 +814,18 @@ const saveAllSettings = () => {
   if (phoneErr) {
     toast.error('Error de validación', phoneErr);
     return;
+  }
+
+  // Persist company form to localStorage for backup consistency
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem('aquapure_company_form_v1', JSON.stringify(cleanedCompany));
+      localStorage.setItem('aquapure_branches_v1', JSON.stringify(branches.value));
+      localStorage.setItem('aquapure_payment_methods_v1', JSON.stringify(paymentMethods));
+      localStorage.setItem('aquapure_general_settings_v1', JSON.stringify(generalSettings));
+    } catch {
+      // ignore
+    }
   }
 
   toast.success('Configuración guardada', 'Todos los parámetros corporativos fueron actualizados.');

@@ -180,6 +180,7 @@ export const useCurrencyStore = defineStore('currency', () => {
     formatUsd,
     fetchBcvRate,
     setManualRate,
+    loadFromStorage,
     init,
   };
 });

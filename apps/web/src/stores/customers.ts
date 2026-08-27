@@ -191,6 +191,8 @@ export const useCustomersStore = defineStore('customers', () => {
     customers,
     findCustomer,
     registerOrUpdateCustomer,
+    loadFromStorage,
+    saveToStorage,
     init,
   };
 });

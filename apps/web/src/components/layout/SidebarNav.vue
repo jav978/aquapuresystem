@@ -20,15 +20,15 @@
     </div>
 
     <!-- Section Title: MENÚ PRINCIPAL -->
-    <div class="px-4 pt-2 pb-8 flex items-center justify-between">
-      <span class="text-[10px] font-extrabold uppercase tracking-widest text-on-surface-variant/70">
+    <div class="px-4 pt-2 pb-2 flex items-center justify-between">
+      <span class="text-[10px] font-extrabold uppercase tracking-widest text-on-surface-variant/80">
         Menú Principal
       </span>
       <span class="w-1.5 h-1.5 rounded-full bg-primary/80"></span>
     </div>
 
     <!-- Navigation Links -->
-    <div class="flex-1 flex flex-col gap-1.5 px-3 custom-scrollbar overflow-y-auto">
+    <div class="flex-1 flex flex-col gap-1.5 px-3 py-3 custom-scrollbar overflow-y-auto">
       <NuxtLink
         v-for="item in navLinks"
         :key="item.path"

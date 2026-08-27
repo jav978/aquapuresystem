@@ -20,11 +20,11 @@
     </div>
 
     <!-- Section Title: MENÚ PRINCIPAL -->
-    <div class="px-4 pt-2 pb-2.5 flex items-center justify-between">
+    <div class="px-4 pt-2 pb-8 flex items-center justify-between">
       <span class="text-[10px] font-extrabold uppercase tracking-widest text-on-surface-variant/70">
         Menú Principal
       </span>
-      <span class="w-1.5 h-1.5 rounded-full bg-primary/40"></span>
+      <span class="w-1.5 h-1.5 rounded-full bg-primary/80"></span>
     </div>
 
     <!-- Navigation Links -->

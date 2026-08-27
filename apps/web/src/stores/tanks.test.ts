@@ -53,4 +53,36 @@ describe('Tanks Store (Master Consolidated Tank & Water Balance)', () => {
     // 18400 / 2300 = 8.0 days
     expect(store.estimatedDaysRemaining).toBe(8.0);
   });
+
+  it('should configure physical tank battery and recalculate consolidated capacity', () => {
+    const store = useTanksStore();
+    
+    // Set 2 tanks of 8,000L = 16,000L total
+    store.setTankBattery([
+      { id: 'pt-1', name: 'Tanque 1', capacity: 8000 },
+      { id: 'pt-2', name: 'Tanque 2', capacity: 8000 },
+    ], 12000);
+
+    expect(store.masterTank.capacity).toBe(16000);
+    expect(store.masterTank.tankCount).toBe(2);
+    expect(store.masterTank.currentLiters).toBe(12000);
+    expect(store.masterTank.level).toBe(75);
+    expect(store.tankBatteryDescription).toContain('2 Tanques');
+  });
+
+  it('should format mixed physical tank capacities in battery description', () => {
+    const store = useTanksStore();
+
+    // Set mixed tanks: 10k + 7k = 17k
+    store.setTankBattery([
+      { id: 'pt-1', name: 'Tanque Principal', capacity: 10000 },
+      { id: 'pt-2', name: 'Tanque Auxiliar', capacity: 7000 },
+    ], 8500);
+
+    expect(store.masterTank.capacity).toBe(17000);
+    expect(store.masterTank.level).toBe(50);
+    expect(store.tankBatteryDescription).toContain('Batería de 2 Tanques');
+    expect(store.tankBatteryDescription).toContain('T1:');
+    expect(store.tankBatteryDescription).toContain('T2:');
+  });
 });

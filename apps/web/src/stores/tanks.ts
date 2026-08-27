@@ -1,17 +1,25 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 
+export interface PhysicalTank {
+  id: string;
+  name: string;
+  capacity: number; // Litros individuales
+}
+
 export interface Tank {
   id: string;
   name: string;
   type: string;
-  capacity: number; // Litros totales
+  capacity: number; // Litros totales consolidados
   currentLiters: number; // Litros disponibles
   level: number; // Porcentaje 0-100%
   status: 'normal' | 'warning' | 'critical';
   lastRefillAt: string;
   totalDispensedLiters: number;
   totalWashWasteLiters: number;
+  tankCount?: number;
+  physicalTanks?: PhysicalTank[];
 }
 
 export interface TankMovement {
@@ -26,6 +34,12 @@ export interface TankMovement {
   timestamp: string;
 }
 
+const DEFAULT_PHYSICAL_TANKS: PhysicalTank[] = [
+  { id: 'pt-1', name: 'Tanque #1', capacity: 10000 },
+  { id: 'pt-2', name: 'Tanque #2', capacity: 10000 },
+  { id: 'pt-3', name: 'Tanque #3', capacity: 10000 },
+];
+
 const DEFAULT_MASTER_TANK: Tank = {
   id: 'master-tank',
   name: 'Tanque Consolidado de Planta',
@@ -37,6 +51,8 @@ const DEFAULT_MASTER_TANK: Tank = {
   lastRefillAt: new Date(Date.now() - 3600000 * 24 * 2).toISOString(),
   totalDispensedLiters: 38400,
   totalWashWasteLiters: 5760,
+  tankCount: 3,
+  physicalTanks: [...DEFAULT_PHYSICAL_TANKS],
 };
 
 const DEFAULT_MOVEMENTS: TankMovement[] = [
@@ -138,12 +154,37 @@ export const useTanksStore = defineStore('tanks', () => {
       .reduce((sum, m) => sum + m.liters, 0);
   });
 
+  // Descriptive text for the physical tank battery
+  const tankBatteryDescription = computed(() => {
+    const list = masterTank.value.physicalTanks || [];
+    if (list.length === 0) {
+      return `Tanque Único (${new Intl.NumberFormat('es-ES').format(masterTank.value.capacity)} L)`;
+    }
+    if (list.length === 1) {
+      return `1 Tanque Físico (${new Intl.NumberFormat('es-ES').format(list[0].capacity)} L)`;
+    }
+    // Check if all tanks have same capacity
+    const allSame = list.every((t) => t.capacity === list[0].capacity);
+    if (allSame) {
+      return `Batería de ${list.length} Tanques (${list.length} × ${new Intl.NumberFormat('es-ES').format(list[0].capacity)} L c/u)`;
+    }
+    // Mixed capacities
+    const breakdown = list.map((t, idx) => `T${idx + 1}: ${new Intl.NumberFormat('es-ES').format(t.capacity)}L`).join(' + ');
+    return `Batería de ${list.length} Tanques (${breakdown})`;
+  });
+
   const loadFromStorage = () => {
     if (typeof localStorage === 'undefined') return;
     try {
       const storedTank = localStorage.getItem(STORAGE_KEY);
       if (storedTank) {
-        masterTank.value = JSON.parse(storedTank);
+        const parsed = JSON.parse(storedTank);
+        // Ensure physicalTanks exists
+        if (!parsed.physicalTanks || !Array.isArray(parsed.physicalTanks) || parsed.physicalTanks.length === 0) {
+          parsed.physicalTanks = [{ id: 'pt-1', name: 'Tanque #1', capacity: parsed.capacity || 30000 }];
+          parsed.tankCount = 1;
+        }
+        masterTank.value = parsed;
       }
 
       const storedHistory = localStorage.getItem(HISTORY_STORAGE_KEY);
@@ -374,10 +415,51 @@ export const useTanksStore = defineStore('tanks', () => {
   const setMasterCapacity = (capacity: number) => {
     if (capacity > 0) {
       masterTank.value.capacity = capacity;
+      // Also update single tank representation in battery if 1 tank
+      if (masterTank.value.physicalTanks && masterTank.value.physicalTanks.length <= 1) {
+        masterTank.value.physicalTanks = [{ id: 'pt-1', name: 'Tanque #1', capacity }];
+        masterTank.value.tankCount = 1;
+      }
       masterTank.value.level = Math.round((masterTank.value.currentLiters / capacity) * 100);
       masterTank.value.status = calculateStatus(masterTank.value.level);
       saveToStorage();
     }
+  };
+
+  /**
+   * Configure physical tank battery (e.g. 3 tanks of 10,000L = 30,000L)
+   */
+  const setTankBattery = (physicalTanks: PhysicalTank[], currentLiters?: number) => {
+    if (!physicalTanks || physicalTanks.length === 0) return;
+
+    const validTanks = physicalTanks.map((t, idx) => ({
+      id: t.id || `pt-${idx + 1}-${Date.now()}`,
+      name: t.name?.trim() || `Tanque #${idx + 1}`,
+      capacity: Math.max(100, Math.round(t.capacity || 1000)),
+    }));
+
+    const totalCapacity = validTanks.reduce((acc, t) => acc + t.capacity, 0);
+    masterTank.value.physicalTanks = validTanks;
+    masterTank.value.tankCount = validTanks.length;
+    masterTank.value.capacity = totalCapacity;
+
+    if (currentLiters !== undefined && currentLiters >= 0) {
+      masterTank.value.currentLiters = Math.min(totalCapacity, Math.round(currentLiters));
+    } else {
+      masterTank.value.currentLiters = Math.min(totalCapacity, masterTank.value.currentLiters);
+    }
+
+    masterTank.value.level = Math.round((masterTank.value.currentLiters / totalCapacity) * 100);
+    masterTank.value.status = calculateStatus(masterTank.value.level);
+
+    saveToStorage();
+
+    return {
+      totalCapacity,
+      tankCount: validTanks.length,
+      currentLiters: masterTank.value.currentLiters,
+      level: masterTank.value.level,
+    };
   };
 
   const init = () => {
@@ -396,6 +478,7 @@ export const useTanksStore = defineStore('tanks', () => {
     totalWaterPurchased,
     totalWaterSold,
     totalWaterWasted,
+    tankBatteryDescription,
     loadFromStorage,
     saveToStorage,
     init,
@@ -405,6 +488,7 @@ export const useTanksStore = defineStore('tanks', () => {
     recordWashWaste,
     setWashWastePercentage,
     setMasterCapacity,
+    setTankBattery,
     parseLitersFromItemText,
   };
 });

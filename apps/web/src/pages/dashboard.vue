@@ -136,9 +136,14 @@
         <div class="card-elevated p-5 sm:p-6 flex flex-col items-center justify-between relative overflow-hidden h-full">
           <div class="w-full flex items-center justify-between mb-1">
             <div>
-              <span class="text-xs font-bold text-primary uppercase tracking-wider">Tanque Único Maestro</span>
+              <span class="text-xs font-bold text-primary uppercase tracking-wider">Almacenamiento Consolidado</span>
               <h3 class="text-base sm:text-lg font-extrabold text-on-surface">{{ tanksStore.masterTank.name }}</h3>
-              <p class="text-xs text-on-surface-variant">Capacidad Total: {{ formatNumber(tanksStore.masterTank.capacity) }} Litros</p>
+              <div class="flex items-center gap-1.5 mt-0.5">
+                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+                  <span class="material-symbols-outlined text-[13px]">database</span>
+                  {{ tanksStore.tankBatteryDescription }}
+                </span>
+              </div>
             </div>
             <span
               class="px-3 py-1 rounded-full text-xs font-extrabold uppercase"
@@ -166,9 +171,9 @@
                 </p>
               </div>
               <div class="p-2.5 rounded-xl bg-surface-container/60">
-                <span class="text-on-surface-variant">Agua Despachada:</span>
+                <span class="text-on-surface-variant">Capacidad Consolidada:</span>
                 <p class="text-sm font-extrabold text-billing-green font-mono mt-0.5">
-                  {{ formatNumber(tanksStore.masterTank.totalDispensedLiters) }} L
+                  {{ formatNumber(tanksStore.masterTank.capacity) }} L
                 </p>
               </div>
             </div>
@@ -185,10 +190,11 @@
               <button
                 @click="openCapacityModal"
                 type="button"
-                title="Ajustar / Calibrar Capacidad"
-                class="p-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all cursor-pointer border-0 bg-surface-container/50 shadow-sm"
+                title="Configurar Batería de Tanques Físicos y Aforo"
+                class="p-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all cursor-pointer border-0 bg-surface-container/50 shadow-sm flex items-center gap-1 text-xs font-semibold"
               >
                 <span class="material-symbols-outlined text-sm">tune</span>
+                <span class="hidden sm:inline">Calibrar</span>
               </button>
             </div>
           </div>
@@ -382,208 +388,344 @@
     </div>
 
     <!-- Modal 1: Recarga de Agua por Camión Cisterna -->
-    <div v-if="showRefillModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="showRefillModal = false"></div>
-      <div class="relative glass-card w-full max-w-lg p-6 z-10 animate-in">
-        <div class="flex items-center justify-between pb-4 border-b border-black/5 dark:border-white/5 mb-4">
-          <div class="flex items-center gap-2">
-            <span class="p-2 rounded-xl bg-primary/15 text-primary material-symbols-outlined">local_shipping</span>
-            <div>
-              <h4 class="text-base font-bold text-on-surface">Registrar Recarga de Cisterna</h4>
-              <p class="text-xs text-on-surface-variant">Ingreso formal de agua al Tanque Consolidado</p>
+    <Teleport to="body">
+      <div v-if="showRefillModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+        <div class="fixed inset-0 bg-black/80 backdrop-blur-sm" @click="showRefillModal = false"></div>
+        <div class="relative glass-card w-full max-w-lg p-6 z-10 animate-in rounded-3xl shadow-2xl">
+          <div class="flex items-center justify-between pb-4 border-b border-black/5 dark:border-white/5 mb-4">
+            <div class="flex items-center gap-2">
+              <span class="p-2 rounded-xl bg-primary/15 text-primary material-symbols-outlined">local_shipping</span>
+              <div>
+                <h4 class="text-base font-bold text-on-surface">Registrar Recarga de Cisterna</h4>
+                <p class="text-xs text-on-surface-variant">Ingreso formal de agua al Tanque Consolidado</p>
+              </div>
             </div>
-          </div>
-          <button @click="showRefillModal = false" class="p-1 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer">
-            <span class="material-symbols-outlined">close</span>
-          </button>
-        </div>
-
-        <div v-if="refillError" class="mb-4 p-3 rounded-xl bg-error-red/10 text-error-red text-xs font-semibold flex items-center gap-2">
-          <span class="material-symbols-outlined text-sm">error</span>
-          <span>{{ refillError }}</span>
-        </div>
-
-        <form @submit.prevent="submitRefill" class="space-y-4">
-          <div>
-            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Volumen de la Cisterna (Litros) *</label>
-            <input
-              v-model.number="refillForm.liters"
-              type="number"
-              min="100"
-              step="100"
-              required
-              class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none font-bold font-mono shadow-sm"
-            />
-            <!-- Quick Presets -->
-            <div class="flex gap-2 mt-2">
-              <button
-                type="button"
-                @click="refillForm.liters = 10000"
-                class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-surface-container-high hover:bg-primary/20 text-on-surface hover:text-primary transition-colors cursor-pointer"
-              >
-                +10.000 L (Cisterna Mediana)
-              </button>
-              <button
-                type="button"
-                @click="refillForm.liters = 30000"
-                class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-surface-container-high hover:bg-primary/20 text-on-surface hover:text-primary transition-colors cursor-pointer"
-              >
-                +30.000 L (Cisterna Grande)
-              </button>
-            </div>
+            <button @click="showRefillModal = false" class="p-1 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer">
+              <span class="material-symbols-outlined">close</span>
+            </button>
           </div>
 
-          <div>
-            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Proveedor del Camión Cisterna *</label>
-            <input
-              v-model="refillForm.supplier"
-              type="text"
-              required
-              placeholder="Ej: Cisternas HidroOriente C.A."
-              class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
-            />
+          <div v-if="refillError" class="mb-4 p-3 rounded-xl bg-error-red/10 text-error-red text-xs font-semibold flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">error</span>
+            <span>{{ refillError }}</span>
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
+          <form @submit.prevent="submitRefill" class="space-y-4">
             <div>
-              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Costo ($ USD)</label>
+              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Volumen de la Cisterna (Litros) *</label>
               <input
-                v-model.number="refillForm.cost"
+                v-model.number="refillForm.liters"
                 type="number"
-                min="0"
-                step="0.01"
-                placeholder="120.00"
-                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none font-mono font-bold shadow-sm"
+                min="100"
+                step="100"
+                required
+                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none font-bold font-mono shadow-sm"
+              />
+              <!-- Quick Presets -->
+              <div class="flex gap-2 mt-2">
+                <button
+                  type="button"
+                  @click="refillForm.liters = 10000"
+                  class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-surface-container-high hover:bg-primary/20 text-on-surface hover:text-primary transition-colors cursor-pointer"
+                >
+                  +10.000 L (Cisterna Mediana)
+                </button>
+                <button
+                  type="button"
+                  @click="refillForm.liters = 30000"
+                  class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-surface-container-high hover:bg-primary/20 text-on-surface hover:text-primary transition-colors cursor-pointer"
+                >
+                  +30.000 L (Cisterna Grande)
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Proveedor del Camión Cisterna *</label>
+              <input
+                v-model="refillForm.supplier"
+                type="text"
+                required
+                placeholder="Ej: Cisternas HidroOriente C.A."
+                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
               />
             </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-on-surface-variant mb-1">Costo ($ USD)</label>
+                <input
+                  v-model.number="refillForm.cost"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="120.00"
+                  class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none font-mono font-bold shadow-sm"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-on-surface-variant mb-1">Equivalente BCV</label>
+                <div class="h-10 px-3 py-2 bg-surface-container-high/60 rounded-xl flex items-center justify-between text-xs font-mono font-bold text-billing-green shadow-sm">
+                  <span>{{ currencyStore.formatVes(currencyStore.toVes(refillForm.cost || 0)) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t border-black/5 dark:border-white/5">
+              <button
+                type="button"
+                @click="showRefillModal = false"
+                class="px-4 py-2.5 rounded-xl text-xs font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                class="px-5 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-xs glow-cyan-hover transition-all cursor-pointer active:scale-95"
+              >
+                Confirmar Recarga
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Modal 2: Ajuste de Merma y Lavado de Botellones -->
+    <Teleport to="body">
+      <div v-if="showWashModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+        <div class="fixed inset-0 bg-black/80 backdrop-blur-sm" @click="showWashModal = false"></div>
+        <div class="relative glass-card w-full max-w-md p-6 z-10 animate-in rounded-3xl shadow-2xl">
+          <div class="flex items-center justify-between pb-4 border-b border-black/5 dark:border-white/5 mb-4">
+            <div class="flex items-center gap-2">
+              <span class="p-2 rounded-xl bg-admin-gold/15 text-admin-gold material-symbols-outlined">cleaning_services</span>
+              <div>
+                <h4 class="text-base font-bold text-on-surface">Configuración de Merma & Lavado</h4>
+                <p class="text-xs text-on-surface-variant">Control del porcentaje de agua para desinfección</p>
+              </div>
+            </div>
+            <button @click="showWashModal = false" class="p-1 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          <div class="space-y-4">
             <div>
-              <label class="block text-xs font-semibold text-on-surface-variant mb-1">Equivalente BCV</label>
-              <div class="h-10 px-3 py-2 bg-surface-container-high/60 rounded-xl flex items-center justify-between text-xs font-mono font-bold text-billing-green shadow-sm">
-                <span>{{ currencyStore.formatVes(currencyStore.toVes(refillForm.cost || 0)) }}</span>
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-xs font-semibold text-on-surface-variant">Porcentaje de Merma Operativa (10% - 20%):</label>
+                <span class="text-sm font-extrabold text-admin-gold font-mono">{{ tempWastePercentage }}%</span>
+              </div>
+              <input
+                v-model.number="tempWastePercentage"
+                type="range"
+                min="10"
+                max="20"
+                step="1"
+                class="w-full accent-primary cursor-pointer"
+              />
+              <p class="text-[11px] text-on-surface-variant mt-1.5 leading-relaxed">
+                Por cada 100 Litros de agua despachada, el sistema deducirá automáticamente {{ tempWastePercentage }} Litros adicionales por concepto de lavado y purga de botellones.
+              </p>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-surface-container/60 text-xs text-on-surface-variant">
+              <span class="font-bold text-on-surface block mb-1">Registrar Merma Extraordinaria (Opcional):</span>
+              <div class="flex gap-2 mt-2">
+                <input
+                  v-model.number="manualWasteLiters"
+                  type="number"
+                  min="10"
+                  step="10"
+                  placeholder="Litros (ej: 200)"
+                  class="flex-1 bg-surface-container-high border-0 rounded-xl px-3 py-1.5 text-on-surface text-xs font-mono font-bold outline-none focus:ring-1 focus:ring-primary shadow-sm"
+                />
+                <button
+                  type="button"
+                  @click="submitManualWaste"
+                  class="px-3 py-1.5 rounded-xl bg-admin-gold text-slate-950 font-bold text-xs cursor-pointer active:scale-95"
+                >
+                  Deducir
+                </button>
+              </div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t border-black/5 dark:border-white/5">
+              <button
+                type="button"
+                @click="showWashModal = false"
+                class="px-4 py-2.5 rounded-xl text-xs font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer"
+              >
+                Cerrar
+              </button>
+              <button
+                type="button"
+                @click="saveWastePercentage"
+                class="px-5 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-xs glow-cyan-hover transition-all cursor-pointer active:scale-95"
+              >
+                Guardar Porcentaje
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Modal 3: Configuración de Batería de Tanques Físicos & Aforo (Centrado en Viewport con Teleport) -->
+    <Teleport to="body">
+      <div v-if="showCapacityModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+        <div class="fixed inset-0 bg-black/80 backdrop-blur-sm" @click="showCapacityModal = false"></div>
+        <div class="relative glass-card w-full max-w-lg max-h-[90vh] overflow-y-auto p-5 sm:p-6 z-10 animate-in rounded-3xl shadow-2xl space-y-4">
+          <!-- Header -->
+          <div class="flex items-center justify-between pb-3.5 border-b border-black/5 dark:border-white/5">
+            <div class="flex items-center gap-2.5">
+              <div class="w-10 h-10 rounded-2xl bg-primary/15 text-primary flex items-center justify-center">
+                <span class="material-symbols-outlined text-xl">tune</span>
+              </div>
+              <div>
+                <h4 class="text-base font-bold text-on-surface">Batería de Tanques Físicos</h4>
+                <p class="text-xs text-on-surface-variant">Configuración de tanques y aforo consolidado</p>
+              </div>
+            </div>
+            <button @click="showCapacityModal = false" class="p-1 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          <!-- Plantillas Rápidas -->
+          <div>
+            <label class="block text-xs font-bold text-on-surface-variant mb-1.5">Plantillas Rápidas de Configuración:</label>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <button
+                type="button"
+                @click="applyPreset(1, 10000)"
+                class="p-2 rounded-xl text-xs font-semibold bg-surface-container hover:bg-primary/20 text-on-surface hover:text-primary transition-all text-left border-0 cursor-pointer"
+              >
+                <p class="font-bold">1 Tanque</p>
+                <p class="text-[10px] text-on-surface-variant">10.000 L</p>
+              </button>
+              <button
+                type="button"
+                @click="applyPreset(2, 10000)"
+                class="p-2 rounded-xl text-xs font-semibold bg-surface-container hover:bg-primary/20 text-on-surface hover:text-primary transition-all text-left border-0 cursor-pointer"
+              >
+                <p class="font-bold">2 Tanques</p>
+                <p class="text-[10px] text-on-surface-variant">2 × 10.000 L (20k)</p>
+              </button>
+              <button
+                type="button"
+                @click="applyPreset(3, 10000)"
+                class="p-2 rounded-xl text-xs font-semibold bg-surface-container hover:bg-primary/20 text-on-surface hover:text-primary transition-all text-left border-0 cursor-pointer"
+              >
+                <p class="font-bold">3 Tanques</p>
+                <p class="text-[10px] text-on-surface-variant">3 × 10.000 L (30k)</p>
+              </button>
+              <button
+                type="button"
+                @click="applyPreset(2, 8000)"
+                class="p-2 rounded-xl text-xs font-semibold bg-surface-container hover:bg-primary/20 text-on-surface hover:text-primary transition-all text-left border-0 cursor-pointer"
+              >
+                <p class="font-bold">2 Tanques</p>
+                <p class="text-[10px] text-on-surface-variant">2 × 8.000 L (16k)</p>
+              </button>
+              <button
+                type="button"
+                @click="applyPreset(2, 7000)"
+                class="p-2 rounded-xl text-xs font-semibold bg-surface-container hover:bg-primary/20 text-on-surface hover:text-primary transition-all text-left border-0 cursor-pointer"
+              >
+                <p class="font-bold">2 Tanques</p>
+                <p class="text-[10px] text-on-surface-variant">2 × 7.000 L (14k)</p>
+              </button>
+              <button
+                type="button"
+                @click="applyPreset(4, 5000)"
+                class="p-2 rounded-xl text-xs font-semibold bg-surface-container hover:bg-primary/20 text-on-surface hover:text-primary transition-all text-left border-0 cursor-pointer"
+              >
+                <p class="font-bold">4 Tanques</p>
+                <p class="text-[10px] text-on-surface-variant">4 × 5.000 L (20k)</p>
+              </button>
+            </div>
+          </div>
+
+          <!-- Desglose de Tanques Físicos -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-bold text-on-surface-variant">Desglose de Tanques Físicos:</label>
+              <button
+                type="button"
+                @click="addPhysicalTank"
+                class="text-xs font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <span class="material-symbols-outlined text-sm">add_circle</span>
+                <span>Agregar Tanque</span>
+              </button>
+            </div>
+
+            <div class="space-y-2 max-h-44 overflow-y-auto pr-1">
+              <div
+                v-for="(tank, idx) in tempPhysicalTanks"
+                :key="tank.id || idx"
+                class="p-2 rounded-2xl bg-surface-container/70 flex items-center gap-2"
+              >
+                <span class="w-6 h-6 rounded-lg bg-primary/10 text-primary text-xs font-extrabold flex items-center justify-center flex-shrink-0">
+                  {{ idx + 1 }}
+                </span>
+                <input
+                  v-model="tank.name"
+                  type="text"
+                  placeholder="Nombre del tanque"
+                  class="w-1/2 bg-surface-container-high border-0 rounded-xl px-3 py-1.5 text-xs text-on-surface font-semibold outline-none focus:ring-1 focus:ring-primary shadow-sm"
+                />
+                <div class="relative flex-1">
+                  <input
+                    v-model.number="tank.capacity"
+                    type="number"
+                    min="100"
+                    step="500"
+                    placeholder="Capacidad"
+                    class="w-full bg-surface-container-high border-0 rounded-xl pl-3 pr-7 py-1.5 text-xs text-on-surface font-mono font-bold outline-none focus:ring-1 focus:ring-primary shadow-sm"
+                  />
+                  <span class="absolute right-2.5 top-1.5 text-[10px] font-bold text-on-surface-variant">L</span>
+                </div>
+                <button
+                  v-if="tempPhysicalTanks.length > 1"
+                  type="button"
+                  @click="removePhysicalTank(idx)"
+                  class="p-1 rounded-lg text-error-red hover:bg-error-red/10 cursor-pointer"
+                  title="Eliminar este tanque"
+                >
+                  <span class="material-symbols-outlined text-base">delete</span>
+                </button>
               </div>
             </div>
           </div>
 
-          <div class="flex justify-end gap-3 pt-4 border-t border-black/5 dark:border-white/5">
-            <button
-              type="button"
-              @click="showRefillModal = false"
-              class="px-4 py-2.5 rounded-xl text-xs font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              class="px-5 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-xs glow-cyan-hover transition-all cursor-pointer active:scale-95"
-            >
-              Confirmar Recarga
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Modal 2: Ajuste de Merma y Lavado de Botellones -->
-    <div v-if="showWashModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="showWashModal = false"></div>
-      <div class="relative glass-card w-full max-w-md p-6 z-10 animate-in">
-        <div class="flex items-center justify-between pb-4 border-b border-black/5 dark:border-white/5 mb-4">
-          <div class="flex items-center gap-2">
-            <span class="p-2 rounded-xl bg-admin-gold/15 text-admin-gold material-symbols-outlined">cleaning_services</span>
-            <div>
-              <h4 class="text-base font-bold text-on-surface">Configuración de Merma & Lavado</h4>
-              <p class="text-xs text-on-surface-variant">Control del porcentaje de agua para desinfección</p>
+          <!-- Calibración de Nivel Actual / Aforo Real -->
+          <div class="p-3.5 rounded-2xl bg-surface-container/50 border border-black/5 dark:border-white/5 space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold text-on-surface">Agua Disponible Actual (Aforo Real):</label>
+              <span class="text-xs font-mono font-bold text-primary">
+                {{ computedLevelPercent }}% de Nivel
+              </span>
             </div>
-          </div>
-          <button @click="showWashModal = false" class="p-1 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer">
-            <span class="material-symbols-outlined">close</span>
-          </button>
-        </div>
-
-        <div class="space-y-4">
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <label class="text-xs font-semibold text-on-surface-variant">Porcentaje de Merma Operativa (10% - 20%):</label>
-              <span class="text-sm font-extrabold text-admin-gold font-mono">{{ tempWastePercentage }}%</span>
-            </div>
-            <input
-              v-model.number="tempWastePercentage"
-              type="range"
-              min="10"
-              max="20"
-              step="1"
-              class="w-full accent-primary cursor-pointer"
-            />
-            <p class="text-[11px] text-on-surface-variant mt-1.5 leading-relaxed">
-              Por cada 100 Litros de agua despachada, el sistema deducirá automáticamente {{ tempWastePercentage }} Litros adicionales por concepto de lavado y purga de botellones.
-            </p>
-          </div>
-
-          <div class="p-3.5 rounded-2xl bg-surface-container/60 text-xs text-on-surface-variant">
-            <span class="font-bold text-on-surface block mb-1">Registrar Merma Extraordinaria (Opcional):</span>
-            <div class="flex gap-2 mt-2">
+            <div class="relative">
               <input
-                v-model.number="manualWasteLiters"
+                v-model.number="tempCurrentLiters"
                 type="number"
-                min="10"
-                step="10"
-                placeholder="Litros (ej: 200)"
-                class="flex-1 bg-surface-container-high border-0 rounded-xl px-3 py-1.5 text-on-surface text-xs font-mono font-bold outline-none focus:ring-1 focus:ring-primary shadow-sm"
+                min="0"
+                :max="computedTotalCapacity"
+                step="500"
+                class="w-full bg-surface-container-high border-0 rounded-xl px-3 py-2 text-sm text-on-surface font-mono font-bold outline-none focus:ring-2 focus:ring-primary shadow-sm"
               />
-              <button
-                type="button"
-                @click="submitManualWaste"
-                class="px-3 py-1.5 rounded-xl bg-admin-gold text-slate-950 font-bold text-xs cursor-pointer active:scale-95"
-              >
-                Deducir
-              </button>
+              <span class="absolute right-3 top-2 text-xs font-bold text-on-surface-variant">Litros</span>
+            </div>
+            <div class="flex items-center justify-between text-[11px] text-on-surface-variant">
+              <span>Capacidad Total Batería:</span>
+              <strong class="text-on-surface font-mono font-bold">{{ formatNumber(computedTotalCapacity) }} L</strong>
             </div>
           </div>
 
-          <div class="flex justify-end gap-3 pt-4 border-t border-black/5 dark:border-white/5">
-            <button
-              type="button"
-              @click="showWashModal = false"
-              class="px-4 py-2.5 rounded-xl text-xs font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer"
-            >
-              Cerrar
-            </button>
-            <button
-              type="button"
-              @click="saveWastePercentage"
-              class="px-5 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-xs glow-cyan-hover transition-all cursor-pointer active:scale-95"
-            >
-              Guardar Porcentaje
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal 3: Capacidad Total del Tanque -->
-    <div v-if="showCapacityModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="showCapacityModal = false"></div>
-      <div class="relative glass-card w-full max-w-sm p-6 z-10 animate-in">
-        <div class="flex items-center justify-between pb-4 border-b border-black/5 dark:border-white/5 mb-4">
-          <h4 class="text-base font-bold text-on-surface">Capacidad del Tanque</h4>
-          <button @click="showCapacityModal = false" class="p-1 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer">
-            <span class="material-symbols-outlined">close</span>
-          </button>
-        </div>
-
-        <div class="space-y-4">
-          <div>
-            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Capacidad Total (Litros) *</label>
-            <input
-              v-model.number="tempCapacity"
-              type="number"
-              min="1000"
-              step="1000"
-              class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none font-bold font-mono shadow-sm"
-            />
-          </div>
-
-          <div class="flex justify-end gap-3 pt-4 border-t border-black/5 dark:border-white/5">
+          <!-- Acciones -->
+          <div class="flex justify-end gap-3 pt-3 border-t border-black/5 dark:border-white/5">
             <button
               type="button"
               @click="showCapacityModal = false"
@@ -596,18 +738,18 @@
               @click="saveCapacity"
               class="px-5 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-xs glow-cyan-hover transition-all cursor-pointer active:scale-95"
             >
-              Actualizar
+              Guardar Configuración
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
-import { useTanksStore } from '~/stores/tanks';
+import { ref, reactive, computed, onMounted } from 'vue';
+import { useTanksStore, type PhysicalTank } from '~/stores/tanks';
 import { useCurrencyStore } from '~/stores/currency';
 import { useToast } from '~/composables/useToast';
 import LiquidTank3D from '~/components/ui/LiquidTank3D.vue';
@@ -629,7 +771,20 @@ const refillError = ref<string | null>(null);
 
 const tempWastePercentage = ref<number>(tanksStore.washWastePercentage);
 const manualWasteLiters = ref<number | null>(null);
-const tempCapacity = ref<number>(tanksStore.masterTank.capacity);
+
+// Multi-tank battery management
+const tempPhysicalTanks = ref<PhysicalTank[]>([]);
+const tempCurrentLiters = ref<number>(tanksStore.masterTank.currentLiters);
+
+const computedTotalCapacity = computed(() => {
+  return tempPhysicalTanks.value.reduce((sum, t) => sum + (Number(t.capacity) || 0), 0);
+});
+
+const computedLevelPercent = computed(() => {
+  const cap = computedTotalCapacity.value;
+  if (cap <= 0) return 0;
+  return Math.min(100, Math.max(0, Math.round((tempCurrentLiters.value / cap) * 100)));
+});
 
 const refillForm = reactive({
   liters: 10000,
@@ -640,8 +795,46 @@ const refillForm = reactive({
 onMounted(() => {
   tanksStore.init();
   tempWastePercentage.value = tanksStore.washWastePercentage;
-  tempCapacity.value = tanksStore.masterTank.capacity;
+  syncLocalBatteryState();
 });
+
+const syncLocalBatteryState = () => {
+  const list = tanksStore.masterTank.physicalTanks || [];
+  if (list.length > 0) {
+    tempPhysicalTanks.value = list.map((t) => ({ ...t }));
+  } else {
+    tempPhysicalTanks.value = [{ id: 'pt-1', name: 'Tanque #1', capacity: tanksStore.masterTank.capacity || 30000 }];
+  }
+  tempCurrentLiters.value = tanksStore.masterTank.currentLiters;
+};
+
+const applyPreset = (count: number, capacityPerTank: number) => {
+  tempPhysicalTanks.value = Array.from({ length: count }, (_, i) => ({
+    id: `pt-${i + 1}-${Date.now()}`,
+    name: `Tanque #${i + 1}`,
+    capacity: capacityPerTank,
+  }));
+  const total = count * capacityPerTank;
+  if (tempCurrentLiters.value > total) {
+    tempCurrentLiters.value = total;
+  }
+};
+
+const addPhysicalTank = () => {
+  const nextNum = tempPhysicalTanks.value.length + 1;
+  const defaultCap = tempPhysicalTanks.value[0]?.capacity || 10000;
+  tempPhysicalTanks.value.push({
+    id: `pt-${nextNum}-${Date.now()}`,
+    name: `Tanque #${nextNum}`,
+    capacity: defaultCap,
+  });
+};
+
+const removePhysicalTank = (index: number) => {
+  if (tempPhysicalTanks.value.length > 1) {
+    tempPhysicalTanks.value.splice(index, 1);
+  }
+};
 
 const formatNumber = (val: number): string => {
   return new Intl.NumberFormat('es-ES').format(Math.round(val || 0));
@@ -675,7 +868,7 @@ const openWashModal = () => {
 };
 
 const openCapacityModal = () => {
-  tempCapacity.value = tanksStore.masterTank.capacity;
+  syncLocalBatteryState();
   showCapacityModal.value = true;
 };
 
@@ -733,12 +926,12 @@ const submitManualWaste = () => {
 };
 
 const saveCapacity = () => {
-  if (tempCapacity.value > 0) {
-    tanksStore.setMasterCapacity(tempCapacity.value);
+  if (computedTotalCapacity.value > 0) {
+    tanksStore.setTankBattery(tempPhysicalTanks.value, tempCurrentLiters.value);
     showCapacityModal.value = false;
     toast.updateSuccess(
-      'Capacidad del Tanque',
-      `Capacidad total ajustada a ${formatNumber(tempCapacity.value)} Litros.`
+      'Batería de Tanques',
+      `Almacenamiento actualizado: ${tanksStore.tankBatteryDescription} (${formatNumber(tanksStore.masterTank.capacity)}L Totales).`
     );
   }
 };

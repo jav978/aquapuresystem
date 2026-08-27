@@ -380,6 +380,176 @@
           </div>
         </div>
       </div>
+
+      <!-- Card 6: Seguridad & Autorizaciones de Supervisor (PIN Dinámico 24 Horas) -->
+      <div class="card-elevated p-6 flex flex-col justify-between xl:col-span-2 border border-amber-500/30 bg-gradient-to-br from-surface-container/90 via-surface-container to-surface-container-high/70 shadow-lg shadow-amber-500/5">
+        <div>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-black/5 dark:border-white/5">
+            <div class="flex items-center gap-2.5">
+              <div class="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-500 flex items-center justify-center shadow-inner">
+                <span class="material-symbols-outlined text-2xl">shield_person</span>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-on-surface">PIN de Supervisor & Control de Seguridad (24 Horas)</h3>
+                <p class="text-xs text-on-surface-variant">Autorización dinámica requerida para edición de facturas, anulaciones y reversos de inventario.</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span
+                v-if="salesStore.supervisorSecurity.isLocked"
+                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-error text-white shadow-md shadow-error/25 animate-pulse"
+              >
+                <span class="material-symbols-outlined text-sm">lock</span>
+                BLOQUEADO (3 Intentos Fallidos)
+              </span>
+              <span
+                v-else
+                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-500 border border-amber-500/30"
+              >
+                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                PIN Activo y Seguro
+              </span>
+            </div>
+          </div>
+
+          <!-- Main PIN Panel and Metrics -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+            <!-- Left: Active PIN Card -->
+            <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col justify-between relative overflow-hidden">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">PIN Activo del Día</span>
+                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-surface text-on-surface-variant border border-black/5 dark:border-white/5">
+                  {{ salesStore.supervisorSecurity.mode === 'AUTO_DAILY' ? 'Automático' : 'Manual' }}
+                </span>
+              </div>
+
+              <div class="my-2 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="text-3xl font-black font-mono tracking-widest text-on-surface">
+                    {{ showSupervisorPin ? salesStore.supervisorSecurity.pin : '••••' }}
+                  </span>
+                  <button
+                    type="button"
+                    @click="showSupervisorPin = !showSupervisorPin"
+                    class="p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface transition-colors cursor-pointer"
+                    :title="showSupervisorPin ? 'Ocultar PIN' : 'Mostrar PIN'"
+                  >
+                    <span class="material-symbols-outlined text-lg">{{ showSupervisorPin ? 'visibility_off' : 'visibility' }}</span>
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  @click="copySupervisorPin"
+                  class="px-2.5 py-1.5 rounded-xl bg-surface hover:bg-surface-container-highest text-on-surface text-xs font-semibold flex items-center gap-1 border border-black/5 dark:border-white/5 transition-all active:scale-95 cursor-pointer shadow-sm"
+                  title="Copiar PIN"
+                >
+                  <span class="material-symbols-outlined text-sm text-amber-500">content_copy</span>
+                  <span>Copiar</span>
+                </button>
+              </div>
+
+              <p class="text-[10px] text-on-surface-variant">
+                Generado: {{ formatIsoDate(salesStore.supervisorSecurity.generatedAt) }}
+              </p>
+            </div>
+
+            <!-- Middle: 24h Expiration Timer -->
+            <div class="p-4 rounded-2xl bg-surface-container-high/60 border border-black/5 dark:border-white/5 flex flex-col justify-between">
+              <div class="flex items-center gap-2 mb-2 text-primary">
+                <span class="material-symbols-outlined text-lg">timer</span>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">Vigencia (24 Horas)</span>
+              </div>
+              <div>
+                <strong class="text-lg font-extrabold text-on-surface block font-mono">
+                  {{ salesStore.timeRemainingFormatted }}
+                </strong>
+                <span class="text-xs text-on-surface-variant">
+                  Expira: {{ formatIsoDate(salesStore.supervisorSecurity.expiresAt) }}
+                </span>
+              </div>
+              <div class="w-full bg-surface-container-highest rounded-full h-1.5 mt-3 overflow-hidden">
+                <div class="bg-primary h-1.5 rounded-full" style="width: 75%"></div>
+              </div>
+            </div>
+
+            <!-- Right: Security Attempts & Lock Status -->
+            <div
+              class="p-4 rounded-2xl border flex flex-col justify-between"
+              :class="salesStore.supervisorSecurity.isLocked ? 'bg-error/15 border-error/40' : 'bg-surface-container-high/60 border-black/5 dark:border-white/5'"
+            >
+              <div class="flex items-center gap-2 mb-2" :class="salesStore.supervisorSecurity.isLocked ? 'text-error' : 'text-billing-green'">
+                <span class="material-symbols-outlined text-lg">{{ salesStore.supervisorSecurity.isLocked ? 'lock_person' : 'verified_user' }}</span>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">Protección Anti-Fuerza Bruta</span>
+              </div>
+              <div>
+                <strong class="text-lg font-extrabold block" :class="salesStore.supervisorSecurity.isLocked ? 'text-error font-black' : 'text-on-surface'">
+                  {{ salesStore.supervisorSecurity.failedAttempts }} / 3 Intentos Fallidos
+                </strong>
+                <span class="text-xs" :class="salesStore.supervisorSecurity.isLocked ? 'text-error font-semibold' : 'text-on-surface-variant'">
+                  {{ salesStore.supervisorSecurity.isLocked ? 'Bloqueado. Requiere desbloqueo de Administrador.' : 'Límite de seguridad de 3 intentos.' }}
+                </span>
+              </div>
+              <div class="mt-2">
+                <button
+                  v-if="salesStore.supervisorSecurity.isLocked || salesStore.supervisorSecurity.failedAttempts > 0"
+                  type="button"
+                  @click="unlockSupervisorSecurity"
+                  class="w-full px-3 py-1.5 rounded-xl bg-error hover:bg-error/90 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
+                >
+                  <span class="material-symbols-outlined text-sm">lock_open</span>
+                  <span>Desbloquear Intentos Ahora</span>
+                </button>
+                <span v-else class="text-[10px] text-billing-green font-semibold flex items-center gap-1">
+                  <span class="material-symbols-outlined text-xs">check_circle</span>
+                  Sistema Operativo y Seguro
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Actions Bar -->
+          <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 p-4 rounded-xl bg-surface-container/50 border border-black/5 dark:border-white/5">
+            <div class="flex items-center gap-2">
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  :checked="salesStore.supervisorSecurity.autoRotateDaily"
+                  @change="toggleAutoRotateDaily"
+                  class="sr-only peer"
+                />
+                <div class="w-9 h-5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
+              </label>
+              <div>
+                <span class="text-xs text-on-surface font-semibold block">Rotación Diaria Automática</span>
+                <span class="text-[10px] text-on-surface-variant">Generar un nuevo código aleatorio automáticamente cada 24 horas.</span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+              <button
+                type="button"
+                @click="openManualPinModal"
+                class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-bold text-xs flex items-center justify-center gap-2 border border-black/10 dark:border-white/10 transition-all cursor-pointer active:scale-95"
+              >
+                <span class="material-symbols-outlined text-base text-amber-500">edit_square</span>
+                <span>Asignar PIN Manual</span>
+              </button>
+
+              <button
+                type="button"
+                @click="generateDailyRandomPin"
+                class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer active:scale-95"
+              >
+                <span class="material-symbols-outlined text-base">autorenew</span>
+                <span>Generar Nuevo PIN Aleatorio (24h)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Save Settings Floating / Bottom Action Bar -->
@@ -546,6 +716,59 @@
         </div>
       </div>
     </div>
+
+    <!-- Manual PIN Assignment Modal -->
+    <div v-if="showManualPinModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="showManualPinModal = false"></div>
+      <div class="relative glass-card w-full max-w-md p-6 z-10 animate-in">
+        <div class="flex items-center justify-between pb-4 border-b border-black/5 dark:border-white/5 mb-4">
+          <div class="flex items-center gap-2">
+            <span class="p-2 rounded-xl bg-amber-500/15 text-amber-500 material-symbols-outlined">pin</span>
+            <h4 class="text-base font-bold text-on-surface">Asignar PIN de Supervisor</h4>
+          </div>
+          <button @click="showManualPinModal = false" class="p-1 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <div v-if="manualPinError" class="mb-4 p-3 rounded-xl bg-error/10 text-error text-xs font-semibold flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm">error</span>
+          <span>{{ manualPinError }}</span>
+        </div>
+
+        <form @submit.prevent="saveManualPin" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Nuevo Código PIN (4 a 8 dígitos) *</label>
+            <input
+              v-model="manualPinInput"
+              type="password"
+              maxlength="8"
+              required
+              placeholder="Ej: 5824"
+              class="w-full bg-surface-container border-0 rounded-xl px-4 py-3 text-on-surface text-lg font-mono text-center tracking-widest focus:ring-2 focus:ring-amber-500 outline-none shadow-sm"
+            />
+            <p class="text-[11px] text-on-surface-variant mt-1">Este PIN tendrá vigencia de 24 horas a partir del momento en que sea guardado.</p>
+          </div>
+
+          <div class="flex justify-end gap-3 pt-4 border-t border-black/5 dark:border-white/5">
+            <button
+              type="button"
+              @click="showManualPinModal = false"
+              class="px-4 py-2.5 rounded-xl text-xs font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs flex items-center gap-2 shadow-md cursor-pointer active:scale-95"
+            >
+              <span class="material-symbols-outlined text-base">save</span>
+              <span>Guardar y Activar PIN (24h)</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -587,6 +810,12 @@ const showRestoreModal = ref(false);
 const restoreError = ref('');
 const supervisorPinInput = ref('');
 const pendingBackupPackage = ref<any>(null);
+
+// Supervisor Security State
+const showSupervisorPin = ref(false);
+const showManualPinModal = ref(false);
+const manualPinInput = ref('');
+const manualPinError = ref('');
 
 const branchForm = reactive({
   name: '',
@@ -694,6 +923,62 @@ const saveBranch = () => {
 const deleteBranch = (branch: any) => {
   branches.value = branches.value.filter((b) => b.id !== branch.id);
   toast.deleteSuccess('Sucursal', `Sucursal ${branch.name} eliminada.`);
+};
+
+// Supervisor PIN Security Handlers
+const generateDailyRandomPin = () => {
+  const newPin = salesStore.generateNewDailyPin('AUTO_DAILY');
+  showSupervisorPin.value = true;
+  toast.success('Nuevo PIN Diario Generado', `PIN de Supervisor del día: ${newPin} (Vigente por 24h)`);
+};
+
+const openManualPinModal = () => {
+  manualPinInput.value = '';
+  manualPinError.value = '';
+  showManualPinModal.value = true;
+};
+
+const saveManualPin = () => {
+  manualPinError.value = '';
+  const pin = manualPinInput.value.trim();
+  if (pin.length < 4 || pin.length > 8) {
+    manualPinError.value = 'El PIN debe tener entre 4 y 8 dígitos.';
+    return;
+  }
+
+  salesStore.generateNewDailyPin('MANUAL', pin);
+  showSupervisorPin.value = true;
+  showManualPinModal.value = false;
+  toast.success('PIN Asignado Manualmente', `Nuevo PIN de Supervisor: ${pin} activado con vigencia de 24 horas.`);
+};
+
+const unlockSupervisorSecurity = () => {
+  salesStore.unlockSupervisorPin();
+  toast.success('Sistema Desbloqueado', 'Se restableció el contador de intentos y se reactivaron las autorizaciones.');
+};
+
+const copySupervisorPin = async () => {
+  if (typeof navigator !== 'undefined' && navigator.clipboard) {
+    try {
+      await navigator.clipboard.writeText(salesStore.supervisorSecurity.pin);
+      toast.info('PIN Copiado', 'El código de supervisor fue copiado al portapapeles.');
+      return;
+    } catch {
+      // ignore
+    }
+  }
+  toast.info('PIN de Supervisor', `Código: ${salesStore.supervisorSecurity.pin}`);
+};
+
+const toggleAutoRotateDaily = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  salesStore.setAutoRotateDaily(target.checked);
+  toast.info(
+    'Rotación de PIN',
+    target.checked
+      ? 'Rotación automática diaria activada (nuevo PIN cada 24h).'
+      : 'Rotación automática desactivada.'
+  );
 };
 
 // Backup & Disaster Recovery Actions

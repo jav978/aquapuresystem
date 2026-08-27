@@ -260,8 +260,9 @@ export const useBackupStore = defineStore('backup', () => {
     const salesStore = useSalesStore();
 
     // Verify supervisor authorization
-    if (!salesStore.verifySupervisorPin(enteredSupervisorPin)) {
-      return { success: false, error: 'PIN de Supervisor incorrecto. Restauración denegada.' };
+    const authCheck = salesStore.verifySupervisorPin(enteredSupervisorPin);
+    if (!authCheck.success) {
+      return { success: false, error: authCheck.error || 'PIN de Supervisor incorrecto. Restauración denegada.' };
     }
 
     isRestoring.value = true;

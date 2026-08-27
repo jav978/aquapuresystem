@@ -114,4 +114,57 @@ describe('Sales & Invoicing Store with Banking Reconciliation and QR', () => {
     expect(store.invoices.length).toBe(initialCount + 1); // Count did not increase
     expect(duplicateAttempt.id).toBe(firstInvoice.id);
   });
+
+  it('should verify supervisor PIN and lock system after 3 failed attempts', () => {
+    const store = useSalesStore();
+    store.setSupervisorPin('9876');
+
+    // Attempt 1: wrong PIN
+    const res1 = store.verifySupervisorPin('0000');
+    expect(res1.success).toBe(false);
+    expect(res1.attemptsLeft).toBe(2);
+    expect(store.supervisorSecurity.isLocked).toBe(false);
+
+    // Attempt 2: wrong PIN
+    const res2 = store.verifySupervisorPin('1111');
+    expect(res2.success).toBe(false);
+    expect(res2.attemptsLeft).toBe(1);
+    expect(store.supervisorSecurity.isLocked).toBe(false);
+
+    // Attempt 3: wrong PIN -> Lockout
+    const res3 = store.verifySupervisorPin('2222');
+    expect(res3.success).toBe(false);
+    expect(res3.attemptsLeft).toBe(0);
+    expect(res3.isLocked).toBe(true);
+    expect(store.supervisorSecurity.isLocked).toBe(true);
+
+    // Attempt 4: Even with correct PIN, system is locked
+    const res4 = store.verifySupervisorPin('9876');
+    expect(res4.success).toBe(false);
+    expect(res4.isLocked).toBe(true);
+
+    // Administrator unlocks
+    store.unlockSupervisorPin();
+    expect(store.supervisorSecurity.isLocked).toBe(false);
+    expect(store.supervisorSecurity.failedAttempts).toBe(0);
+
+    // Now correct PIN succeeds
+    const res5 = store.verifySupervisorPin('9876');
+    expect(res5.success).toBe(true);
+  });
+
+  it('should generate a 24-hour dynamic random PIN and support manual override', () => {
+    const store = useSalesStore();
+    const generated = store.generateNewDailyPin('AUTO_DAILY');
+    expect(generated.length).toBe(4);
+    expect(store.supervisorPin).toBe(generated);
+    expect(store.isPinExpired).toBe(false);
+    expect(store.timeRemainingFormatted).toContain('h');
+
+    // Manual override
+    const manualSuccess = store.setSupervisorPin('4567');
+    expect(manualSuccess).toBe(true);
+    expect(store.supervisorPin).toBe('4567');
+    expect(store.supervisorSecurity.mode).toBe('MANUAL');
+  });
 });

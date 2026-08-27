@@ -227,24 +227,47 @@
         </div>
 
         <!-- Section 4: Supervisor Authorization & Reason -->
-        <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 space-y-3">
-          <div class="flex items-center gap-2 text-amber-500">
-            <span class="material-symbols-outlined text-base">lock</span>
-            <h3 class="text-xs font-bold uppercase tracking-wider">Autorización de Supervisor (Requerida)</h3>
+        <div
+          class="rounded-2xl p-4 space-y-3 transition-colors"
+          :class="salesStore.supervisorSecurity.isLocked ? 'bg-error/10 border border-error/30' : 'bg-amber-500/10 border border-amber-500/30'"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2" :class="salesStore.supervisorSecurity.isLocked ? 'text-error' : 'text-amber-500'">
+              <span class="material-symbols-outlined text-base">{{ salesStore.supervisorSecurity.isLocked ? 'lock_person' : 'lock' }}</span>
+              <h3 class="text-xs font-bold uppercase tracking-wider">Autorización de Supervisor (Requerida)</h3>
+            </div>
+            <span
+              v-if="salesStore.supervisorSecurity.isLocked"
+              class="px-2 py-0.5 text-[10px] font-black bg-error/20 text-error border border-error/30 rounded-full animate-pulse"
+            >
+              BLOQUEADO POR INTENTOS
+            </span>
+            <span
+              v-else-if="salesStore.supervisorSecurity.failedAttempts > 0"
+              class="px-2 py-0.5 text-[10px] font-bold bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded-full"
+            >
+              {{ 3 - salesStore.supervisorSecurity.failedAttempts }} intentos restantes
+            </span>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block text-[11px] font-semibold text-on-surface-variant mb-1">
-                PIN de Supervisor * (Default: 1234)
+                PIN de Supervisor del Día *
               </label>
               <input
                 v-model="supervisorPinInput"
                 type="password"
                 maxlength="8"
                 placeholder="••••"
-                class="w-full bg-surface border border-amber-500/40 rounded-xl px-3 py-2 text-sm font-mono tracking-widest text-on-surface text-center focus:ring-2 focus:ring-amber-500 outline-none"
+                :disabled="salesStore.supervisorSecurity.isLocked"
+                class="w-full bg-surface border rounded-xl px-3 py-2 text-sm font-mono tracking-widest text-on-surface text-center outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                :class="salesStore.supervisorSecurity.isLocked ? 'border-error/40 focus:ring-2 focus:ring-error' : 'border-amber-500/40 focus:ring-2 focus:ring-amber-500'"
               />
+              <p class="text-[10px] text-on-surface-variant/70 mt-1 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[12px]">schedule</span>
+                PIN dinámico 24h (Configuración)
+              </p>
             </div>
 
             <div>
@@ -255,7 +278,8 @@
                 v-model="correctionReason"
                 type="text"
                 placeholder="Ej: Error en cantidad digitada por cajero"
-                class="w-full bg-surface border border-amber-500/40 rounded-xl px-3 py-2 text-xs text-on-surface focus:ring-2 focus:ring-amber-500 outline-none"
+                :disabled="salesStore.supervisorSecurity.isLocked"
+                class="w-full bg-surface border border-amber-500/40 rounded-xl px-3 py-2 text-xs text-on-surface focus:ring-2 focus:ring-amber-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
           </div>

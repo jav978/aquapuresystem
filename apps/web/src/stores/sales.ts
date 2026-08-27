@@ -229,14 +229,65 @@ const DEFAULT_SALES: SaleInvoice[] = [
   },
 ];
 
+export interface SupervisorSecurityState {
+  pin: string;
+  generatedAt: string; // ISO String
+  expiresAt: string; // ISO String (24h validity)
+  mode: 'AUTO_DAILY' | 'MANUAL';
+  failedAttempts: number;
+  maxAttempts: number;
+  isLocked: boolean;
+  lockedAt: string | null;
+  autoRotateDaily: boolean;
+  lastRotatedDate?: string; // YYYY-MM-DD
+}
+
 const STORAGE_KEY = 'aquapure_sales_invoices_v3';
 const AUDIT_STORAGE_KEY = 'aquapure_sales_audit_logs_v1';
 const SUPERVISOR_PIN_KEY = 'aquapure_supervisor_pin_v1';
+const SUPERVISOR_SECURITY_KEY = 'aquapure_supervisor_security_v2';
+
+const DEFAULT_SECURITY_STATE: SupervisorSecurityState = {
+  pin: '1234',
+  generatedAt: new Date().toISOString(),
+  expiresAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+  mode: 'MANUAL',
+  failedAttempts: 0,
+  maxAttempts: 3,
+  isLocked: false,
+  lockedAt: null,
+  autoRotateDaily: true,
+  lastRotatedDate: new Date().toISOString().split('T')[0],
+};
 
 export const useSalesStore = defineStore('sales', () => {
   const invoices = ref<SaleInvoice[]>([...DEFAULT_SALES]);
   const auditLogs = ref<AuditLogEntry[]>([]);
-  const supervisorPin = ref<string>('1234'); // Default supervisor PIN
+  const supervisorSecurity = ref<SupervisorSecurityState>({ ...DEFAULT_SECURITY_STATE });
+
+  const supervisorPin = computed(() => supervisorSecurity.value.pin);
+
+  const isPinExpired = computed(() => {
+    try {
+      const exp = new Date(supervisorSecurity.value.expiresAt).getTime();
+      return Date.now() > exp;
+    } catch {
+      return false;
+    }
+  });
+
+  const timeRemainingFormatted = computed(() => {
+    try {
+      const exp = new Date(supervisorSecurity.value.expiresAt).getTime();
+      const diffMs = exp - Date.now();
+      if (diffMs <= 0) return 'Expirado (Renovación requerida)';
+      const hours = Math.floor(diffMs / (3600 * 1000));
+      const mins = Math.floor((diffMs % (3600 * 1000)) / (60 * 1000));
+      return `${hours}h ${mins}m restantes`;
+    } catch {
+      return '24h';
+    }
+  });
 
   const loadFromStorage = () => {
     if (typeof localStorage === 'undefined') return;
@@ -253,10 +304,20 @@ export const useSalesStore = defineStore('sales', () => {
         auditLogs.value = JSON.parse(storedAudit);
       }
 
-      const storedPin = localStorage.getItem(SUPERVISOR_PIN_KEY);
-      if (storedPin) {
-        supervisorPin.value = storedPin;
+      const storedSecurity = localStorage.getItem(SUPERVISOR_SECURITY_KEY);
+      if (storedSecurity) {
+        supervisorSecurity.value = JSON.parse(storedSecurity);
+      } else {
+        // Fallback from legacy PIN key if available
+        const legacyPin = localStorage.getItem(SUPERVISOR_PIN_KEY);
+        if (legacyPin) {
+          supervisorSecurity.value.pin = legacyPin;
+        }
+        saveSecurityToStorage();
       }
+
+      // Check auto-rotation on load if expired
+      checkAndRotateDaily();
     } catch {
       // ignore
     }
@@ -280,26 +341,127 @@ export const useSalesStore = defineStore('sales', () => {
     }
   };
 
-  const savePinToStorage = () => {
+  const saveSecurityToStorage = () => {
     if (typeof localStorage === 'undefined') return;
     try {
-      localStorage.setItem(SUPERVISOR_PIN_KEY, supervisorPin.value);
+      localStorage.setItem(SUPERVISOR_SECURITY_KEY, JSON.stringify(supervisorSecurity.value));
+      localStorage.setItem(SUPERVISOR_PIN_KEY, supervisorSecurity.value.pin);
     } catch {
       // ignore
     }
   };
 
-  const verifySupervisorPin = (pin: string): boolean => {
-    return pin.trim() === supervisorPin.value.trim();
+  const checkAndRotateDaily = () => {
+    if (supervisorSecurity.value.autoRotateDaily && isPinExpired.value) {
+      generateNewDailyPin('AUTO_DAILY');
+    }
+  };
+
+  const generateNewDailyPin = (
+    mode: 'AUTO_DAILY' | 'MANUAL' = 'AUTO_DAILY',
+    customPin?: string
+  ): string => {
+    const newCode = customPin && customPin.trim().length >= 4
+      ? customPin.trim()
+      : Math.floor(1000 + Math.random() * 9000).toString();
+
+    const now = new Date();
+    const expires = new Date(now.getTime() + 24 * 3600 * 1000);
+
+    supervisorSecurity.value = {
+      ...supervisorSecurity.value,
+      pin: newCode,
+      generatedAt: now.toISOString(),
+      expiresAt: expires.toISOString(),
+      mode,
+      failedAttempts: 0,
+      isLocked: false,
+      lockedAt: null,
+      lastRotatedDate: now.toISOString().split('T')[0],
+    };
+
+    saveSecurityToStorage();
+    return newCode;
   };
 
   const setSupervisorPin = (newPin: string): boolean => {
     if (newPin && newPin.trim().length >= 4) {
-      supervisorPin.value = newPin.trim();
-      savePinToStorage();
+      generateNewDailyPin('MANUAL', newPin.trim());
       return true;
     }
     return false;
+  };
+
+  const unlockSupervisorPin = () => {
+    supervisorSecurity.value.failedAttempts = 0;
+    supervisorSecurity.value.isLocked = false;
+    supervisorSecurity.value.lockedAt = null;
+    saveSecurityToStorage();
+  };
+
+  const setAutoRotateDaily = (enabled: boolean) => {
+    supervisorSecurity.value.autoRotateDaily = enabled;
+    saveSecurityToStorage();
+  };
+
+  const verifySupervisorPin = (
+    pin: string
+  ): { success: boolean; error?: string; attemptsLeft?: number; isLocked?: boolean } => {
+    // 1. Lock check
+    if (supervisorSecurity.value.isLocked) {
+      return {
+        success: false,
+        error: '🔒 Sistema de autorizaciones bloqueado por 3 intentos fallidos. Solicite al Administrador desbloquear o generar un nuevo PIN en Configuración.',
+        isLocked: true,
+        attemptsLeft: 0,
+      };
+    }
+
+    // 2. Expiration check
+    if (isPinExpired.value) {
+      if (supervisorSecurity.value.autoRotateDaily) {
+        generateNewDailyPin('AUTO_DAILY');
+      } else {
+        return {
+          success: false,
+          error: '⏳ El PIN de Supervisor ha expirado (vigencia de 24 horas). El Administrador debe renovar el PIN del día.',
+          attemptsLeft: Math.max(0, supervisorSecurity.value.maxAttempts - supervisorSecurity.value.failedAttempts),
+        };
+      }
+    }
+
+    // 3. Match comparison
+    if (pin && pin.trim() === supervisorSecurity.value.pin.trim()) {
+      supervisorSecurity.value.failedAttempts = 0;
+      saveSecurityToStorage();
+      return { success: true };
+    } else {
+      supervisorSecurity.value.failedAttempts += 1;
+      const attemptsLeft = Math.max(
+        0,
+        supervisorSecurity.value.maxAttempts - supervisorSecurity.value.failedAttempts
+      );
+
+      if (supervisorSecurity.value.failedAttempts >= supervisorSecurity.value.maxAttempts) {
+        supervisorSecurity.value.isLocked = true;
+        supervisorSecurity.value.lockedAt = new Date().toISOString();
+        saveSecurityToStorage();
+        return {
+          success: false,
+          error: '🔒 Has superado el límite de 3 intentos. El sistema de autorizaciones de supervisor ha sido BLOQUEADO por seguridad.',
+          attemptsLeft: 0,
+          isLocked: true,
+        };
+      }
+
+      saveSecurityToStorage();
+      return {
+        success: false,
+        error: `❌ PIN de Supervisor incorrecto. Intentos restantes: ${attemptsLeft} de ${supervisorSecurity.value.maxAttempts}.`,
+        attemptsLeft,
+        isLocked: false,
+      };
+    }
   };
 
   const totalSalesAmount = computed(() => {
@@ -492,8 +654,9 @@ export const useSalesStore = defineStore('sales', () => {
     }[];
     newStatus?: InvoiceStatus;
   }): { success: boolean; error?: string; invoice?: SaleInvoice; audit?: AuditLogEntry } => {
-    if (!verifySupervisorPin(params.supervisorPin)) {
-      return { success: false, error: 'Clave / PIN de Supervisor inválido' };
+    const authCheck = verifySupervisorPin(params.supervisorPin);
+    if (!authCheck.success) {
+      return { success: false, error: authCheck.error || 'Clave / PIN de Supervisor inválido' };
     }
 
     const inv = invoices.value.find((i) => i.id === params.invoiceId || i.invoiceNo === params.invoiceId);
@@ -638,8 +801,9 @@ export const useSalesStore = defineStore('sales', () => {
     returnWaterToTank?: boolean;
     restockPhysicalItems?: boolean;
   }): { success: boolean; error?: string; invoice?: SaleInvoice; audit?: AuditLogEntry } => {
-    if (!verifySupervisorPin(params.supervisorPin)) {
-      return { success: false, error: 'Clave / PIN de Supervisor inválido' };
+    const authCheck = verifySupervisorPin(params.supervisorPin);
+    if (!authCheck.success) {
+      return { success: false, error: authCheck.error || 'Clave / PIN de Supervisor inválido' };
     }
 
     const inv = invoices.value.find((i) => i.id === params.invoiceId || i.invoiceNo === params.invoiceId);
@@ -666,57 +830,55 @@ export const useSalesStore = defineStore('sales', () => {
     const inventoryStore = useInventoryStore();
 
     // 1. Revert Water
-    if (inv.waterLiters > 0) {
+    if (inv.waterLiters > 0 && params.returnWaterToTank !== false) {
       tanksStore.revertLiters(
         inv.waterLiters,
-        params.returnWaterToTank ?? false,
-        `Anulación Factura ${inv.invoiceNo}: ${params.reason}`
+        `Anulación Factura ${inv.invoiceNo} (${params.reason})`
       );
     }
 
-    // 2. Restock physical items
+    // 2. Restock Physical Items
     if (params.restockPhysicalItems !== false && inv.items && inv.items.length > 0) {
       inventoryStore.restockItems(
         inv.items.map((i) => ({ productId: i.productId, quantity: i.quantity }))
       );
     }
 
-    // 3. Mark invoice as cancelled
+    // 3. Mark as Cancelled
     inv.status = 'CANCELLED';
-    inv.hasAuditLogs = true;
 
-    const newState = {
-      total: 0,
-      totalVes: 0,
-      paymentMethod: inv.payment.methodLabel || inv.payment.method,
-      receivedAmount: inv.payment.receivedAmount,
-      referenceNumber: inv.payment.referenceNumber,
-      itemsSummary: inv.itemsSummary,
-      status: 'CANCELLED' as InvoiceStatus,
-      waterLiters: inv.waterLiters,
-    };
-
-    // 4. Create Audit Log
+    // 4. Record Audit Log
     const auditEntry: AuditLogEntry = {
-      id: `aud-${Date.now()}`,
+      id: `AUD-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       invoiceId: inv.id,
       invoiceNo: inv.invoiceNo,
       action: 'TRANSACTION_CANCEL',
-      actionLabel: 'Anulación de Factura / Venta',
-      authorizedBy: 'Supervisor / Administrador',
-      operator: params.operator || 'Operador en Caja',
+      actionLabel: 'Anulación de Factura',
+      authorizedBy: 'Supervisor de Turno',
+      operator: params.operator || 'Cajero Principal',
       timestamp: new Date().toISOString(),
       reason: params.reason,
       previousState,
-      newState,
+      newState: {
+        total: inv.total,
+        totalVes: inv.totalVes,
+        paymentMethod: inv.payment.methodLabel || inv.payment.method,
+        receivedAmount: inv.payment.receivedAmount,
+        referenceNumber: inv.payment.referenceNumber,
+        itemsSummary: inv.itemsSummary,
+        status: 'CANCELLED',
+        waterLiters: inv.waterLiters,
+      },
       details: `Factura ${inv.invoiceNo} anulada. ${
-        params.returnWaterToTank ? 'Agua reintegrada al tanque.' : 'Agua declarada como merma/desecho.'
+        params.returnWaterToTank !== false ? `${inv.waterLiters}L revertidos al tanque.` : ''
       } ${params.restockPhysicalItems !== false ? 'Inventario restituido.' : ''}`,
     };
 
     auditLogs.value.unshift(auditEntry);
-    saveAuditToStorage();
+    inv.hasAuditLogs = true;
+
     saveToStorage();
+    saveAuditToStorage();
 
     return { success: true, invoice: inv, audit: auditEntry };
   };
@@ -751,8 +913,14 @@ export const useSalesStore = defineStore('sales', () => {
     invoices,
     auditLogs,
     supervisorPin,
+    supervisorSecurity,
+    isPinExpired,
+    timeRemainingFormatted,
     verifySupervisorPin,
     setSupervisorPin,
+    generateNewDailyPin,
+    unlockSupervisorPin,
+    setAutoRotateDaily,
     totalSalesAmount,
     totalWaterDispensed,
     paidSales,

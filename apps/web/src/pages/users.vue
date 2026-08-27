@@ -1,42 +1,43 @@
 <template>
   <div class="flex flex-col gap-6 animate-in">
     <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
       <div>
-        <h2 class="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">Gestión de Usuarios</h2>
-        <p class="text-sm text-on-surface-variant mt-1">Administra los accesos y roles del equipo técnico y administrativo.</p>
+        <h2 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-on-surface tracking-tight">Gestión de Usuarios</h2>
+        <p class="text-xs sm:text-sm text-on-surface-variant mt-1">Administra los accesos y roles del equipo técnico y administrativo.</p>
       </div>
 
       <button
         @click="openCreateModal"
-        class="bg-primary text-on-primary font-bold text-sm px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 glow-cyan-hover transition-all shadow-lg shadow-primary/25 cursor-pointer active:scale-95 self-start sm:self-auto"
+        class="bg-primary text-on-primary font-bold text-xs sm:text-sm px-4 sm:px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 glow-cyan-hover transition-all shadow-lg shadow-primary/25 cursor-pointer active:scale-95 whitespace-nowrap self-start sm:self-auto flex-shrink-0"
       >
-        <span class="material-symbols-outlined text-lg">person_add</span>
-        Registrar Nuevo Usuario
+        <span class="material-symbols-outlined text-base sm:text-lg">person_add</span>
+        <span>Registrar Nuevo Usuario</span>
       </button>
     </div>
 
     <!-- Search and Filter Bar -->
-    <div class="card-elevated p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+    <div class="card-elevated p-3.5 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
       <!-- Search Input -->
       <div class="relative flex-1 max-w-lg">
         <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
         <input
           v-model="searchQuery"
+          @input="onSearchInput"
           type="text"
           placeholder="Buscar por nombre o correo..."
-          class="w-full bg-surface-container border-0 rounded-xl pl-10 pr-4 py-2 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none placeholder:text-on-surface-variant/60 shadow-sm"
+          class="w-full bg-surface-container border-0 rounded-xl pl-10 pr-4 py-2 text-on-surface text-xs sm:text-sm focus:ring-2 focus:ring-primary outline-none placeholder:text-on-surface-variant/60 shadow-sm"
         />
       </div>
 
-      <!-- Filter Tabs & Button -->
-      <div class="flex items-center gap-2">
-        <div class="bg-surface-container-high/60 p-1 rounded-xl flex items-center gap-1">
+      <!-- Filter Tabs & Refresh Button -->
+      <div class="flex items-center justify-between sm:justify-end gap-2 overflow-x-auto max-w-full pb-1 sm:pb-0">
+        <div class="bg-surface-container-high/60 p-1 rounded-xl flex items-center gap-1 flex-shrink-0">
           <button
             v-for="filter in roleFilters"
             :key="filter.value"
-            @click="activeFilter = filter.value"
-            class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+            @click="setFilter(filter.value)"
+            class="px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap"
             :class="activeFilter === filter.value ? 'bg-surface-container-lowest text-on-surface shadow-sm font-bold' : 'text-on-surface-variant hover:text-on-surface'"
           >
             {{ filter.label }}
@@ -44,28 +45,42 @@
         </div>
 
         <button
-          @click="toggleSortOrder"
-          class="p-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer border-0 shadow-sm"
-          title="Filtros avanzados"
+          @click="fetchUsers"
+          class="p-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer border-0 shadow-sm flex-shrink-0"
+          title="Recargar usuarios"
         >
-          <span class="material-symbols-outlined text-lg">filter_list</span>
+          <span class="material-symbols-outlined text-lg" :class="{ 'animate-spin': isLoading }">refresh</span>
         </button>
       </div>
     </div>
 
     <!-- Users Table -->
     <div class="card-elevated overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+      <!-- Loading State -->
+      <div v-if="isLoading" class="p-12 text-center text-on-surface-variant flex flex-col items-center gap-3">
+        <span class="material-symbols-outlined text-3xl animate-spin text-primary">progress_activity</span>
+        <p class="text-sm font-medium">Cargando usuarios desde la base de datos...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div v-else-if="users.length === 0" class="p-12 text-center text-on-surface-variant flex flex-col items-center gap-3">
+        <span class="material-symbols-outlined text-4xl text-on-surface-variant/50">group_off</span>
+        <p class="text-base font-bold text-on-surface">No se encontraron usuarios</p>
+        <p class="text-xs text-on-surface-variant max-w-sm">No hay registros que coincidan con la búsqueda o el filtro seleccionado.</p>
+        <button
+          @click="openCreateModal"
+          class="mt-2 bg-primary/15 text-primary hover:bg-primary/25 font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-2 cursor-pointer transition-all"
+        >
+          <span class="material-symbols-outlined text-base">person_add</span>
+          Crear Primer Usuario
+        </button>
+      </div>
+
+      <!-- Table Content -->
+      <div v-else class="overflow-x-auto custom-scrollbar w-full">
+        <table class="w-full text-left border-collapse min-w-[650px]">
           <thead>
             <tr class="bg-surface-container-highest/40 border-b border-black/5 dark:border-white/5 text-[11px] font-extrabold text-on-surface-variant uppercase tracking-wider">
-              <th class="py-4 px-5 w-12 text-center">
-                <input
-                  type="checkbox"
-                  v-model="selectAll"
-                  class="rounded border-outline-variant text-primary focus:ring-primary bg-surface-container cursor-pointer"
-                />
-              </th>
               <th class="py-4 px-6">Usuario</th>
               <th class="py-4 px-6">Rol</th>
               <th class="py-4 px-6">Estado</th>
@@ -75,31 +90,21 @@
           </thead>
           <tbody class="divide-y divide-outline-variant/20">
             <tr
-              v-for="user in filteredUsers"
+              v-for="user in users"
               :key="user.id"
               class="hover:bg-surface-container-highest/30 transition-colors group"
             >
-              <!-- Checkbox -->
-              <td class="py-4 px-5 text-center">
-                <input
-                  type="checkbox"
-                  :value="user.id"
-                  v-model="selectedUserIds"
-                  class="rounded border-outline-variant text-primary focus:ring-primary bg-surface-container cursor-pointer"
-                />
-              </td>
-
               <!-- Usuario (Avatar + Name + Email) -->
               <td class="py-4 px-6">
                 <div class="flex items-center gap-3">
                   <div
                     class="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold font-mono tracking-wider flex-shrink-0"
-                    :class="user.role === 'ADMIN' ? 'bg-admin-gold/20 text-admin-gold' : 'bg-primary/20 text-primary'"
+                    :class="getAvatarClass(user.role)"
                   >
-                    {{ user.initials }}
+                    {{ getInitials(user) }}
                   </div>
                   <div>
-                    <p class="text-sm font-bold text-on-surface leading-tight">{{ user.fullName }}</p>
+                    <p class="text-sm font-bold text-on-surface leading-tight">{{ user.fullName || `${user.firstName} ${user.lastName}` }}</p>
                     <p class="text-xs text-on-surface-variant font-mono mt-0.5">{{ user.email }}</p>
                   </div>
                 </div>
@@ -150,7 +155,7 @@
 
               <!-- Último Acceso -->
               <td class="py-4 px-6 text-xs text-on-surface-variant font-medium">
-                {{ user.lastAccess }}
+                {{ formatAccessDate(user.lastLoginAt) }}
               </td>
 
               <!-- Acciones -->
@@ -174,7 +179,7 @@
                   </button>
 
                   <button
-                    @click="deleteUser(user)"
+                    @click="confirmDeleteUser(user)"
                     class="p-2 text-on-surface-variant hover:text-error-red hover:bg-error-red/10 rounded-lg transition-colors cursor-pointer active:scale-95"
                     title="Eliminar Usuario"
                   >
@@ -187,33 +192,11 @@
         </table>
       </div>
 
-      <!-- Pagination Footer -->
+      <!-- Pagination / Count Footer -->
       <div class="p-4 border-t border-black/5 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-surface-container-highest/20 text-xs">
         <span class="text-on-surface-variant">
-          Mostrando {{ filteredUsers.length }} de {{ totalUsersCount }} usuarios
+          Mostrando {{ users.length }} de {{ totalUsersCount }} usuario(s) registrado(s)
         </span>
-
-        <div class="flex items-center gap-1.5">
-          <button
-            class="p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container disabled:opacity-40 cursor-pointer"
-            disabled
-          >
-            <span class="material-symbols-outlined text-base">chevron_left</span>
-          </button>
-          <button class="w-8 h-8 rounded-lg bg-primary text-on-primary font-bold text-xs flex items-center justify-center shadow-sm">
-            1
-          </button>
-          <button class="w-8 h-8 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high font-medium text-xs flex items-center justify-center transition-colors cursor-pointer">
-            2
-          </button>
-          <button class="w-8 h-8 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high font-medium text-xs flex items-center justify-center transition-colors cursor-pointer">
-            3
-          </button>
-          <span class="px-1 text-on-surface-variant">...</span>
-          <button class="p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer">
-            <span class="material-symbols-outlined text-base">chevron_right</span>
-          </button>
-        </div>
       </div>
     </div>
 
@@ -236,7 +219,6 @@
           </button>
         </div>
 
-        <!-- Modal Error Message -->
         <!-- Inline Form Error Alert -->
         <div v-if="modalError" class="mb-4 p-3 rounded-xl bg-error-red/10 text-error-red text-xs font-semibold flex items-center gap-2">
           <span class="material-symbols-outlined text-base">error</span>
@@ -251,7 +233,7 @@
                 v-model="userForm.firstName"
                 type="text"
                 required
-                placeholder="Ej: Elena"
+                placeholder="Ej: Carlos"
                 class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
               />
             </div>
@@ -261,7 +243,7 @@
                 v-model="userForm.lastName"
                 type="text"
                 required
-                placeholder="Ej: Castillo"
+                placeholder="Ej: Pérez"
                 class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
               />
             </div>
@@ -273,7 +255,7 @@
               v-model="userForm.email"
               type="email"
               required
-              placeholder="elena.c@aquapure.com"
+              placeholder="carlos.perez@aquapure.com"
               class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
             />
           </div>
@@ -304,12 +286,14 @@
             </div>
           </div>
 
-          <div v-if="!isEditing">
-            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Contraseña Inicial *</label>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant mb-1">
+              {{ isEditing ? 'Nueva Contraseña (dejar en blanco para no cambiar)' : 'Contraseña Inicial *' }}
+            </label>
             <input
               v-model="userForm.password"
               type="password"
-              required
+              :required="!isEditing"
               placeholder="••••••••"
               class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
             />
@@ -325,9 +309,11 @@
             </button>
             <button
               type="submit"
-              class="px-5 py-2 rounded-xl text-sm font-bold bg-primary text-on-primary glow-cyan-hover shadow-lg shadow-primary/25 cursor-pointer"
+              :disabled="isSubmitting"
+              class="px-5 py-2 rounded-xl text-sm font-bold bg-primary text-on-primary glow-cyan-hover shadow-lg shadow-primary/25 cursor-pointer disabled:opacity-50 flex items-center gap-2"
             >
-              {{ isEditing ? 'Guardar Cambios' : 'Crear Usuario' }}
+              <span v-if="isSubmitting" class="material-symbols-outlined text-base animate-spin">progress_activity</span>
+              <span>{{ isEditing ? 'Guardar Cambios' : 'Crear Usuario' }}</span>
             </button>
           </div>
         </form>
@@ -337,41 +323,37 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { useToast } from '~/composables/useToast';
-import { z } from 'zod';
+import { useFeathers } from '~/composables/useFeathers';
+import { useAuthStore } from '~/stores/auth';
 
 definePageMeta({
   middleware: ['auth'],
 });
 
 const toast = useToast();
+const authStore = useAuthStore();
+const { client: feathers } = useFeathers();
 
 interface UserItem {
   id: string;
   firstName: string;
   lastName: string;
-  fullName: string;
+  fullName?: string;
   email: string;
   role: 'ADMIN' | 'MANAGER' | 'OPERATOR';
   isActive: boolean;
-  lastAccess: string;
-  initials: string;
+  lastLoginAt?: string | null;
+  createdAt?: string;
 }
 
-const UserSchema = z.object({
-  firstName: z.string().trim().min(2, 'El nombre debe tener al menos 2 caracteres.'),
-  lastName: z.string().trim().min(2, 'El apellido debe tener al menos 2 caracteres.'),
-  email: z.string().trim().email('Ingrese un correo electrónico válido.'),
-  role: z.enum(['ADMIN', 'MANAGER', 'OPERATOR']),
-  isActive: z.boolean(),
-});
-
 const searchQuery = ref('');
-const activeFilter = ref<'ALL' | 'ADMIN' | 'OPERATOR'>('ALL');
-const selectAll = ref(false);
-const selectedUserIds = ref<string[]>([]);
-const totalUsersCount = 24;
+const activeFilter = ref<'ALL' | 'ADMIN' | 'OPERATOR' | 'MANAGER'>('ALL');
+const users = ref<UserItem[]>([]);
+const totalUsersCount = ref(0);
+const isLoading = ref(false);
+const isSubmitting = ref(false);
 
 const showUserModal = ref(false);
 const isEditing = ref(false);
@@ -379,46 +361,11 @@ const editingUserId = ref<string | null>(null);
 const modalError = ref<string | null>(null);
 
 const roleFilters = [
-  { label: 'Todos', value: 'ALL' },
-  { label: 'Administradores', value: 'ADMIN' },
-  { label: 'Operadores', value: 'OPERATOR' },
+  { label: 'Todos', value: 'ALL' as const },
+  { label: 'Administradores', value: 'ADMIN' as const },
+  { label: 'Supervisores', value: 'MANAGER' as const },
+  { label: 'Operadores', value: 'OPERATOR' as const },
 ];
-
-const users = ref<UserItem[]>([
-  {
-    id: 'user-1',
-    firstName: 'Elena',
-    lastName: 'Castillo',
-    fullName: 'Elena Castillo',
-    email: 'elena.c@aquapure.com',
-    role: 'ADMIN',
-    isActive: true,
-    lastAccess: 'Hoy, 09:41 AM',
-    initials: 'EC',
-  },
-  {
-    id: 'user-2',
-    firstName: 'Miguel',
-    lastName: 'Rivera',
-    fullName: 'Miguel Rivera',
-    email: 'm.rivera@aquapure.com',
-    role: 'OPERATOR',
-    isActive: true,
-    lastAccess: 'Ayer, 16:30 PM',
-    initials: 'MR',
-  },
-  {
-    id: 'user-3',
-    firstName: 'Sofia',
-    lastName: 'Lopez',
-    fullName: 'Sofia Lopez',
-    email: 's.lopez@aquapure.com',
-    role: 'OPERATOR',
-    isActive: false,
-    lastAccess: '12 Oct 2023',
-    initials: 'SL',
-  },
-]);
 
 const userForm = reactive({
   firstName: '',
@@ -429,26 +376,75 @@ const userForm = reactive({
   password: '',
 });
 
-const filteredUsers = computed(() => {
-  return users.value.filter((u) => {
-    const matchesFilter =
-      activeFilter.value === 'ALL' ||
-      (activeFilter.value === 'ADMIN' && u.role === 'ADMIN') ||
-      (activeFilter.value === 'OPERATOR' && u.role === 'OPERATOR');
+let searchDebounceTimeout: any = null;
+const onSearchInput = () => {
+  clearTimeout(searchDebounceTimeout);
+  searchDebounceTimeout = setTimeout(() => {
+    fetchUsers();
+  }, 300);
+};
 
-    const q = searchQuery.value.trim().toLowerCase();
-    const matchesSearch =
-      !q ||
-      u.fullName.toLowerCase().includes(q) ||
-      u.email.toLowerCase().includes(q);
+const setFilter = (val: 'ALL' | 'ADMIN' | 'OPERATOR' | 'MANAGER') => {
+  activeFilter.value = val;
+  fetchUsers();
+};
 
-    return matchesFilter && matchesSearch;
-  });
-});
+const getInitials = (user: UserItem) => {
+  const f = user.firstName ? user.firstName.charAt(0) : '';
+  const l = user.lastName ? user.lastName.charAt(0) : '';
+  return (f + l).toUpperCase() || 'U';
+};
 
-const toggleSortOrder = () => {
-  users.value.reverse();
-  toast.info('Orden de lista actualizado');
+const getAvatarClass = (role: string) => {
+  if (role === 'ADMIN') return 'bg-admin-gold/20 text-admin-gold';
+  if (role === 'MANAGER') return 'bg-cyan-500/20 text-cyan-400';
+  return 'bg-primary/20 text-primary';
+};
+
+const formatAccessDate = (dateStr?: string | null) => {
+  if (!dateStr) return 'Sin ingresos aún';
+  try {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return dateStr;
+  }
+};
+
+const fetchUsers = async () => {
+  isLoading.value = true;
+  try {
+    const query: any = {};
+    if (activeFilter.value !== 'ALL') {
+      query.role = activeFilter.value;
+    }
+    if (searchQuery.value.trim().length > 0) {
+      query.search = searchQuery.value.trim();
+    }
+
+    const response = await feathers.service('users').find({ query });
+    if (response && Array.isArray(response.data)) {
+      users.value = response.data;
+      totalUsersCount.value = response.total ?? response.data.length;
+    } else if (Array.isArray(response)) {
+      users.value = response;
+      totalUsersCount.value = response.length;
+    } else {
+      users.value = [];
+      totalUsersCount.value = 0;
+    }
+  } catch (error: any) {
+    console.error('Error al cargar usuarios:', error);
+    toast.error('Error de conexión', error.message || 'No se pudieron obtener los usuarios.');
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const openCreateModal = () => {
@@ -473,92 +469,97 @@ const openEditModal = (user: UserItem) => {
   userForm.email = user.email;
   userForm.role = user.role;
   userForm.isActive = user.isActive;
+  userForm.password = '';
   showUserModal.value = true;
 };
 
-const saveUser = () => {
+const saveUser = async () => {
   modalError.value = null;
-  const cleaned = sanitizeFormData(userForm);
 
-  const fNameErr = validateRequired(cleaned.firstName, 'El nombre');
-  if (fNameErr) {
-    modalError.value = fNameErr;
+  if (!userForm.firstName.trim()) {
+    modalError.value = 'El nombre es obligatorio.';
+    return;
+  }
+  if (!userForm.lastName.trim()) {
+    modalError.value = 'El apellido es obligatorio.';
+    return;
+  }
+  if (!userForm.email.trim() || !userForm.email.includes('@')) {
+    modalError.value = 'Ingrese un correo electrónico válido.';
+    return;
+  }
+  if (!isEditing.value && (!userForm.password || userForm.password.length < 6)) {
+    modalError.value = 'La contraseña inicial debe tener al menos 6 caracteres.';
     return;
   }
 
-  const lNameErr = validateRequired(cleaned.lastName, 'El apellido');
-  if (lNameErr) {
-    modalError.value = lNameErr;
-    return;
-  }
-
-  const emailErr = validateEmail(cleaned.email);
-  if (emailErr) {
-    modalError.value = emailErr;
-    return;
-  }
-
-  if (!isEditing.value) {
-    const passErr = validatePassword(cleaned.password, 6);
-    if (passErr) {
-      modalError.value = passErr;
-      return;
-    }
-  }
-
-  const initials = `${cleaned.firstName.charAt(0)}${cleaned.lastName.charAt(0)}`.toUpperCase();
-  const fullName = `${cleaned.firstName} ${cleaned.lastName}`;
-
-  if (isEditing.value && editingUserId.value) {
-    const userIndex = users.value.findIndex((u) => u.id === editingUserId.value);
-    if (userIndex !== -1) {
-      users.value[userIndex] = {
-        ...users.value[userIndex],
-        firstName: cleaned.firstName,
-        lastName: cleaned.lastName,
-        fullName,
-        email: cleaned.email,
-        role: cleaned.role,
-        isActive: cleaned.isActive,
-        initials,
+  isSubmitting.value = true;
+  try {
+    if (isEditing.value && editingUserId.value) {
+      const payload: any = {
+        firstName: userForm.firstName.trim(),
+        lastName: userForm.lastName.trim(),
+        email: userForm.email.trim(),
+        role: userForm.role,
+        isActive: userForm.isActive,
       };
-      toast.updateSuccess('Usuario', `Usuario ${fullName} actualizado exitosamente.`);
-    }
-  } else {
-    // Check duplicate email
-    if (users.value.some(u => u.email.toLowerCase() === cleaned.email.toLowerCase())) {
-      modalError.value = 'Ya existe un usuario con este correo electrónico.';
-      return;
+      if (userForm.password && userForm.password.trim().length > 0) {
+        payload.password = userForm.password.trim();
+      }
+
+      await feathers.service('users').patch(editingUserId.value, payload);
+      toast.updateSuccess('Usuario', `Usuario ${userForm.firstName} ${userForm.lastName} actualizado exitosamente.`);
+    } else {
+      await feathers.service('users').create({
+        firstName: userForm.firstName.trim(),
+        lastName: userForm.lastName.trim(),
+        email: userForm.email.trim(),
+        role: userForm.role,
+        isActive: userForm.isActive,
+        password: userForm.password.trim(),
+      });
+      toast.createSuccess('Usuario', `Usuario ${userForm.firstName} ${userForm.lastName} registrado exitosamente.`);
     }
 
-    const newId = `user-${Date.now()}`;
-    users.value.unshift({
-      id: newId,
-      firstName: cleaned.firstName,
-      lastName: cleaned.lastName,
-      fullName,
-      email: cleaned.email,
-      role: cleaned.role,
-      isActive: cleaned.isActive,
-      lastAccess: 'Recién creado',
-      initials,
-    });
-    toast.createSuccess('Usuario', `Usuario ${fullName} registrado exitosamente.`);
+    showUserModal.value = false;
+    await fetchUsers();
+  } catch (err: any) {
+    console.error('Error al guardar usuario:', err);
+    modalError.value = err.message || 'Error al guardar el usuario en el servidor.';
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
+const toggleUserStatus = async (user: UserItem) => {
+  try {
+    const nextStatus = !user.isActive;
+    await feathers.service('users').patch(user.id, { isActive: nextStatus });
+    user.isActive = nextStatus;
+    toast.info(
+      'Estado de usuario',
+      `Usuario ${user.fullName || user.email} ${nextStatus ? 'activado' : 'desactivado'} correctamente.`
+    );
+  } catch (err: any) {
+    toast.error('Error', err.message || 'No se pudo cambiar el estado del usuario.');
+  }
+};
+
+const confirmDeleteUser = async (user: UserItem) => {
+  if (!confirm(`¿Está seguro de que desea eliminar al usuario ${user.fullName || user.email}? Esta acción no se puede deshacer.`)) {
+    return;
   }
 
-  showUserModal.value = false;
+  try {
+    await feathers.service('users').remove(user.id);
+    toast.deleteSuccess('Usuario', `Usuario ${user.fullName || user.email} eliminado.`);
+    await fetchUsers();
+  } catch (err: any) {
+    toast.error('Error', err.message || 'No se pudo eliminar el usuario.');
+  }
 };
 
-const toggleUserStatus = (user: UserItem) => {
-  user.isActive = !user.isActive;
-  toast.info(
-    'Estado de usuario',
-    `Usuario ${user.fullName} ${user.isActive ? 'activado' : 'desactivado'} correctamente.`
-  );
-};
-
-const deleteUser = (user: UserItem) => {
-  users.value = users.value.filter((u) => u.id !== user.id);
-  toast.deleteSuccess('Usuario', `Usuario ${user.fullName} eliminado.`);
-};
+onMounted(() => {
+  fetchUsers();
+});
 </script>

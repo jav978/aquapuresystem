@@ -1,32 +1,33 @@
 <template>
-  <header class="bg-surface-container/80 dark:bg-surface-container/80 backdrop-blur-xl fixed top-0 right-0 h-16 left-0 md:left-[280px] z-30 flex justify-between items-center px-4 md:px-8 w-full md:w-[calc(100%-280px)] shadow-md shadow-black/5 dark:shadow-black/25 transition-all duration-200">
-    <!-- Mobile Menu Toggle Button -->
+  <header class="bg-surface-container/80 dark:bg-surface-container/80 backdrop-blur-xl fixed top-0 right-0 h-14 left-0 lg:left-[230px] z-30 flex justify-between items-center px-3 sm:px-5 lg:px-6 shadow-md shadow-black/5 dark:shadow-black/25 transition-all duration-200 box-border">
+    <!-- Mobile & Tablet Menu Toggle Button (Visible on < 1024px) -->
     <button
       @click="$emit('menu-toggle')"
-      class="md:hidden p-2 rounded-xl text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors mr-2 cursor-pointer"
+      class="lg:hidden p-1.5 rounded-xl text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors mr-2 cursor-pointer flex-shrink-0"
       aria-label="Toggle navigation menu"
     >
-      <span class="material-symbols-outlined">{{ menuOpen ? 'close' : 'menu' }}</span>
+      <span class="material-symbols-outlined text-xl">{{ menuOpen ? 'close' : 'menu' }}</span>
     </button>
 
     <!-- Global Search Bar / Command Palette Trigger -->
-    <div class="flex-1 max-w-md">
+    <div class="flex-1 max-w-sm min-w-0">
       <div
         @click="showSearchModal = true"
-        class="relative flex items-center bg-surface-container-high/80 hover:bg-surface-container-highest dark:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-xl px-4 py-2 transition-all cursor-pointer group shadow-sm ring-1 ring-black/5 dark:ring-white/10"
+        class="relative flex items-center bg-surface-container-high/80 hover:bg-surface-container-highest dark:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-xl px-2.5 sm:px-3 py-1.5 transition-all cursor-pointer group shadow-sm ring-1 ring-black/5 dark:ring-white/10"
       >
-        <span class="material-symbols-outlined text-primary mr-3 text-lg group-hover:scale-110 transition-transform">search</span>
-        <span class="text-on-surface-variant font-medium text-sm flex-1 truncate select-none">
-          Buscar productos, clientes, facturas...
+        <span class="material-symbols-outlined text-primary mr-1.5 sm:mr-3 text-lg group-hover:scale-110 transition-transform flex-shrink-0">search</span>
+        <span class="text-on-surface-variant font-medium text-xs sm:text-sm flex-1 truncate select-none">
+          <span class="hidden sm:inline">Buscar productos, clientes, facturas...</span>
+          <span class="sm:hidden">Buscar...</span>
         </span>
-        <kbd class="hidden sm:inline-flex items-center gap-0.5 px-2 py-0.5 text-[10px] font-mono font-semibold bg-surface-container-lowest/80 text-on-surface-variant rounded shadow-sm">
+        <kbd class="hidden sm:inline-flex items-center gap-0.5 px-2 py-0.5 text-[10px] font-mono font-semibold bg-surface-container-lowest/80 text-on-surface-variant rounded shadow-sm flex-shrink-0">
           Ctrl K
         </kbd>
       </div>
     </div>
 
     <!-- Trailing Actions & Profile -->
-    <div class="flex items-center gap-2 sm:gap-3 ml-4">
+    <div class="flex items-center gap-1.5 sm:gap-3 ml-2 sm:ml-4 flex-shrink-0">
       <!-- BCV Live Exchange Rate Modal -->
       <BcvCurrencyModal />
 
@@ -133,12 +134,14 @@
           class="flex items-center gap-3 pl-2 sm:pl-3 hover:opacity-95 transition-opacity cursor-pointer p-1.5 rounded-xl hover:bg-surface-container-high/60"
           aria-label="Menú de usuario"
         >
-          <div class="h-9 w-9 rounded-full overflow-hidden bg-primary/20 border border-primary/40 flex items-center justify-center text-primary font-bold text-sm shadow-sm flex-shrink-0">
+          <div class="h-9 w-9 rounded-xl overflow-hidden bg-gradient-to-br from-sky-400 via-primary to-blue-600 dark:from-sky-400 dark:to-cyan-600 text-white font-black text-sm shadow-md shadow-primary/30 ring-2 ring-white/20 dark:ring-primary/40 flex items-center justify-center flex-shrink-0 font-sans tracking-wide">
             {{ userInitial }}
           </div>
           <div class="text-left hidden lg:block">
-            <p class="text-xs font-bold text-on-surface leading-tight">{{ authStore.user?.fullName || 'Admin Principal' }}</p>
-            <p class="text-[11px] text-admin-gold font-medium leading-tight">{{ authStore.user?.role === 'ADMIN' ? 'Super Administrador' : (authStore.user?.role || 'Operaciones') }}</p>
+            <p class="text-xs font-bold text-on-surface leading-tight">{{ authStore.user?.fullName || `${authStore.user?.firstName || ''} ${authStore.user?.lastName || ''}`.trim() || 'Admin Principal' }}</p>
+            <p class="text-[11px] font-medium leading-tight" :class="authStore.user?.role === 'ADMIN' ? 'text-admin-gold' : 'text-primary'">
+              {{ authStore.user?.role === 'ADMIN' ? 'Super Administrador' : (authStore.user?.role === 'MANAGER' ? 'Supervisor' : 'Operador') }}
+            </p>
           </div>
         </button>
 
@@ -150,14 +153,14 @@
           >
             <!-- User Info Header -->
             <div class="px-4 py-3 border-b border-black/5 dark:border-white/5 flex items-center gap-3">
-              <div class="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm shadow-sm flex-shrink-0">
+              <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-sky-400 via-primary to-blue-600 dark:from-sky-400 dark:to-cyan-600 text-white font-black text-sm shadow-md shadow-primary/30 ring-2 ring-white/20 dark:ring-primary/40 flex items-center justify-center flex-shrink-0 font-sans tracking-wide">
                 {{ userInitial }}
               </div>
               <div class="min-w-0 flex-1">
-                <p class="text-sm font-bold text-on-surface truncate">{{ authStore.user?.fullName || 'Admin Principal' }}</p>
+                <p class="text-sm font-bold text-on-surface truncate">{{ authStore.user?.fullName || `${authStore.user?.firstName || ''} ${authStore.user?.lastName || ''}`.trim() || 'Admin Principal' }}</p>
                 <p class="text-[11px] text-on-surface-variant truncate font-mono mt-0.5">{{ authStore.user?.email || 'admin@aquasystem.com' }}</p>
                 <span class="inline-block mt-1 text-[10px] px-2 py-0.5 rounded bg-primary/15 text-primary font-bold">
-                  {{ authStore.user?.role === 'ADMIN' ? 'Super Administrador' : (authStore.user?.role || 'Operaciones') }}
+                  {{ authStore.user?.role === 'ADMIN' ? 'Super Administrador' : (authStore.user?.role === 'MANAGER' ? 'Supervisor' : 'Operador') }}
                 </span>
               </div>
             </div>
@@ -165,6 +168,7 @@
             <!-- Navigation Links -->
             <div class="py-1.5 space-y-0.5">
               <NuxtLink
+                v-if="authStore.canManageUsers"
                 to="/users"
                 class="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-surface-container-high/80 transition-colors"
                 @click="showUserMenu = false"
@@ -174,6 +178,7 @@
               </NuxtLink>
 
               <NuxtLink
+                v-if="authStore.canManageSettings"
                 to="/settings"
                 class="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-surface-container-high/80 transition-colors"
                 @click="showUserMenu = false"

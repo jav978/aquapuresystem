@@ -1,11 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { feathers } from '@feathersjs/feathers';
-import socketio from '@feathersjs/socketio-client';
-import authentication from '@feathersjs/authentication-client';
-import io from 'socket.io-client';
 import { useRouter } from 'vue-router';
 import { useToast } from '~/composables/useToast';
+import { useFeathers } from '~/composables/useFeathers';
 
 interface User {
   id: string;
@@ -22,6 +19,7 @@ interface User {
 export const useAuthStore = defineStore('auth', () => {
   const router = useRouter();
   const toast = useToast();
+  const { client } = useFeathers();
 
   const user = ref<User | null>(null);
   const accessToken = ref<string | null>(null);
@@ -29,34 +27,32 @@ export const useAuthStore = defineStore('auth', () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
-  // Feathers client
-  const storage = typeof window !== 'undefined' ? window.localStorage : undefined;
-
-  const socket = io(import.meta.env.NUXT_PUBLIC_WS_URL || 'ws://localhost:3030', {
-    transports: ['websocket'],
-    autoConnect: true,
-    reconnection: true,
-    reconnectionAttempts: 10,
-    reconnectionDelay: 1000,
-  });
-
-  const client = feathers();
-  client.configure(socketio(socket));
-  if (storage) {
-    client.configure(authentication({
-      storage,
-      path: '/authentication',
-      jwtStrategy: 'jwt',
-    }));
-  }
-
   const isAuthenticated = computed(() => !!accessToken.value && !!user.value);
   const isAdmin = computed(() => user.value?.role === 'ADMIN');
-  const isManager = computed(() => ['ADMIN', 'MANAGER'].includes(user.value?.role || ''));
-  const isOperator = computed(() => ['ADMIN', 'MANAGER', 'OPERATOR'].includes(user.value?.role || ''));
+  const isManager = computed(() => user.value?.role === 'MANAGER');
+  const isOperator = computed(() => user.value?.role === 'OPERATOR');
+
+  // RBAC Permission Computeds
+  const canManageUsers = computed(() => user.value?.role === 'ADMIN');
+  const canManageSettings = computed(() => user.value?.role === 'ADMIN');
+  const canEditInventory = computed(() => ['ADMIN', 'MANAGER'].includes(user.value?.role || ''));
+  const canManageSales = computed(() => ['ADMIN', 'MANAGER', 'OPERATOR'].includes(user.value?.role || ''));
+  const canViewInvoices = computed(() => ['ADMIN', 'MANAGER', 'OPERATOR'].includes(user.value?.role || ''));
 
   const hasRole = (roles: string[]) => {
     return user.value ? roles.includes(user.value.role) : false;
+  };
+
+  const fetchUser = async () => {
+    try {
+      const userData = await client.service('users').get('me');
+      user.value = userData;
+    } catch (err) {
+      console.error('Failed to fetch user:', err);
+      if (!user.value) {
+        logout();
+      }
+    }
   };
 
   const initialize = async () => {
@@ -72,18 +68,6 @@ export const useAuthStore = defineStore('auth', () => {
       }
     } catch (err) {
       console.debug('No existing session');
-    }
-  };
-
-  const fetchUser = async () => {
-    try {
-      const userData = await client.service('users').get('me');
-      user.value = userData;
-    } catch (err) {
-      console.error('Failed to fetch user:', err);
-      if (!user.value) {
-        logout();
-      }
     }
   };
 
@@ -117,23 +101,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
   };
 
-  const register = async (data: { email: string; password: string; firstName: string; lastName: string }) => {
-    loading.value = true;
-    error.value = null;
-
-    try {
-      await client.service('users').create(data);
-      toast.success('Registration successful! Please check your email.');
-      router.push('/login');
-    } catch (err: any) {
-      error.value = err.message || 'Registration failed';
-      toast.error(error.value);
-      throw err;
-    } finally {
-      loading.value = false;
-    }
-  };
-
   const logout = async () => {
     try {
       await client.logout();
@@ -147,70 +114,19 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.removeItem('rememberMe');
       }
       router.push('/login');
-      toast.info('You have been logged out');
+      toast.info('Has cerrado sesión correctamente');
     }
   };
 
-  const forgotPassword = async (email: string) => {
-    loading.value = true;
-    try {
-      await client.service('auth/password').create({ email, action: 'forgot' });
-      toast.success('If the email exists, a reset code has been sent');
-    } catch (err: any) {
-      toast.error('Failed to send reset code');
-      throw err;
-    } finally {
-      loading.value = false;
-    }
-  };
-
-  const verifyCode = async (email: string, code: string) => {
-    loading.value = true;
-    try {
-      await client.service('auth/password').create({ email, code, action: 'verify' });
-      toast.success('Code verified successfully');
-    } catch (err: any) {
-      toast.error('Invalid or expired code');
-      throw err;
-    } finally {
-      loading.value = false;
-    }
-  };
-
-  const resetPassword = async (email: string, code: string, newPassword: string) => {
-    loading.value = true;
-    try {
-      await client.service('auth/password').create({ email, code, newPassword, action: 'reset' });
-      toast.success('Password reset successfully');
-      router.push('/login');
-    } catch (err: any) {
-      toast.error('Failed to reset password');
-      throw err;
-    } finally {
-      loading.value = false;
-    }
-  };
-
-  const refreshAccessToken = async () => {
-    try {
-      const authResult = await client.authenticate({
-        strategy: 'jwt',
-        refreshToken: refreshToken.value,
-      });
-      accessToken.value = authResult.accessToken;
-      refreshToken.value = authResult.refreshToken;
-      return true;
-    } catch (err) {
-      logout();
-      return false;
-    }
-  };
-
-  // Listen for auth changes
-  client.on('authenticated', async (authResult) => {
+  // Listen for auth changes on the shared client
+  client.on('authenticated', async (authResult: any) => {
     accessToken.value = authResult.accessToken;
     refreshToken.value = authResult.refreshToken;
-    await fetchUser();
+    if (authResult.user) {
+      user.value = authResult.user;
+    } else {
+      await fetchUser();
+    }
   });
 
   client.on('logout', () => {
@@ -229,14 +145,14 @@ export const useAuthStore = defineStore('auth', () => {
     isAdmin,
     isManager,
     isOperator,
+    canManageUsers,
+    canManageSettings,
+    canEditInventory,
+    canManageSales,
+    canViewInvoices,
     hasRole,
     login,
-    register,
     logout,
-    forgotPassword,
-    verifyCode,
-    resetPassword,
-    refreshAccessToken,
     initialize,
     client,
   };

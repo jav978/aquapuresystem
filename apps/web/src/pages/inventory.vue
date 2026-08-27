@@ -1,35 +1,40 @@
 <template>
   <div class="flex flex-col gap-6 animate-in">
     <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
       <div>
-        <h2 class="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">Control de Inventario & Stock</h2>
-        <p class="text-sm text-on-surface-variant mt-1">Gestión en tiempo real de existencias, insumos y catálogo de purificación.</p>
+        <h2 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-on-surface tracking-tight">Control de Inventario & Stock</h2>
+        <p class="text-xs sm:text-sm text-on-surface-variant mt-1">Gestión en tiempo real de existencias, insumos y catálogo de purificación.</p>
       </div>
 
-      <div class="flex gap-3">
+      <div class="flex items-center gap-2.5 flex-shrink-0">
+        <div v-if="!authStore.canEditInventory" class="px-3 py-1.5 rounded-xl bg-primary/10 text-primary text-xs font-semibold flex items-center gap-1.5 border border-primary/20">
+          <span class="material-symbols-outlined text-sm">visibility</span>
+          Consulta de Existencias (Ventas)
+        </div>
         <button
+          v-if="authStore.canEditInventory"
           @click="openCreateModal"
-          class="bg-primary text-on-primary font-bold text-sm px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 glow-cyan-hover transition-all shadow-lg shadow-primary/25 cursor-pointer active:scale-95"
+          class="bg-primary text-on-primary font-bold text-xs sm:text-sm px-4 sm:px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 glow-cyan-hover transition-all shadow-lg shadow-primary/25 cursor-pointer active:scale-95 whitespace-nowrap"
         >
-          <span class="material-symbols-outlined text-lg">add_box</span>
-          Nuevo Producto
+          <span class="material-symbols-outlined text-base sm:text-lg">add_box</span>
+          <span>Nuevo Producto</span>
         </button>
       </div>
     </div>
 
     <!-- Inventory KPIs (3 Cards) -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
       <!-- KPI 1: Valor Total -->
-      <div class="card-elevated p-6 flex flex-col justify-between relative overflow-hidden">
-        <div class="flex justify-between items-start mb-4">
-          <span class="text-sm font-semibold text-on-surface-variant">Valor Total Inventario</span>
+      <div class="card-elevated p-5 sm:p-6 flex flex-col justify-between relative overflow-hidden">
+        <div class="flex justify-between items-start mb-3">
+          <span class="text-xs sm:text-sm font-semibold text-on-surface-variant">Valor Total Inventario</span>
           <span class="p-2 bg-primary/10 rounded-xl text-primary flex items-center justify-center">
-            <span class="material-symbols-outlined">account_balance_wallet</span>
+            <span class="material-symbols-outlined text-lg">account_balance_wallet</span>
           </span>
         </div>
         <div>
-          <h3 class="text-3xl font-extrabold text-on-surface tracking-tight">${{ totalInventoryValue.toLocaleString('es-LA', { minimumFractionDigits: 2 }) }}</h3>
+          <h3 class="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">${{ totalInventoryValue.toLocaleString('es-LA', { minimumFractionDigits: 2 }) }}</h3>
           <p class="text-xs text-billing-green mt-2 flex items-center gap-1 font-semibold">
             <span class="material-symbols-outlined text-sm">trending_up</span>
             Catálogo activo y valorizado
@@ -38,36 +43,36 @@
       </div>
 
       <!-- KPI 2: Total SKUs -->
-      <div class="card-elevated p-6 flex flex-col justify-between relative overflow-hidden">
-        <div class="flex justify-between items-start mb-4">
-          <span class="text-sm font-semibold text-on-surface-variant">Total SKUs en Catálogo</span>
+      <div class="card-elevated p-5 sm:p-6 flex flex-col justify-between relative overflow-hidden">
+        <div class="flex justify-between items-start mb-3">
+          <span class="text-xs sm:text-sm font-semibold text-on-surface-variant">Total SKUs en Catálogo</span>
           <span class="p-2 bg-primary/10 rounded-xl text-primary flex items-center justify-center">
-            <span class="material-symbols-outlined">category</span>
+            <span class="material-symbols-outlined text-lg">category</span>
           </span>
         </div>
         <div>
-          <h3 class="text-3xl font-extrabold text-on-surface tracking-tight">{{ products.length }}</h3>
+          <h3 class="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">{{ products.length }}</h3>
           <p class="text-xs text-on-surface-variant mt-2">Productos registrados</p>
         </div>
       </div>
 
       <!-- KPI 3: Alertas de Stock -->
-      <div class="card-elevated p-6 flex flex-col justify-between relative overflow-hidden">
-        <div class="flex justify-between items-start mb-4">
-          <span class="text-sm font-semibold text-on-surface-variant">Alertas de Stock</span>
+      <div class="card-elevated p-5 sm:p-6 flex flex-col justify-between relative overflow-hidden">
+        <div class="flex justify-between items-start mb-3">
+          <span class="text-xs sm:text-sm font-semibold text-on-surface-variant">Alertas de Stock</span>
           <span class="p-2 bg-error-red/10 rounded-xl text-error-red flex items-center justify-center">
-            <span class="material-symbols-outlined">warning</span>
+            <span class="material-symbols-outlined text-lg">warning</span>
           </span>
         </div>
         <div>
-          <h3 class="text-3xl font-extrabold text-error-red tracking-tight">{{ stockAlertsCount }}</h3>
+          <h3 class="text-2xl sm:text-3xl font-extrabold text-error-red tracking-tight">{{ stockAlertsCount }}</h3>
           <p class="text-xs text-on-surface-variant mt-2">SKUs por debajo del nivel crítico</p>
         </div>
       </div>
     </div>
 
     <!-- Search & Filter Controls Toolbar -->
-    <div class="card-elevated p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+    <div class="card-elevated p-3.5 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
       <!-- High-Contrast Search Input -->
       <div class="relative flex-1 max-w-md">
         <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-primary text-lg">search</span>
@@ -75,14 +80,14 @@
           v-model="searchQuery"
           type="text"
           placeholder="Buscar por SKU o nombre de producto..."
-          class="w-full bg-surface-container border-0 rounded-xl pl-10 pr-4 py-2 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none placeholder:text-on-surface-variant/60 shadow-sm"
+          class="w-full bg-surface-container border-0 rounded-xl pl-10 pr-4 py-2 text-on-surface text-xs sm:text-sm focus:ring-2 focus:ring-primary outline-none placeholder:text-on-surface-variant/60 shadow-sm"
         />
       </div>
 
-      <div class="flex flex-wrap items-center gap-3">
+      <div class="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
         <select
           v-model="selectedCategory"
-          class="bg-surface-container border-0 text-on-surface text-xs font-semibold rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary outline-none cursor-pointer shadow-sm"
+          class="bg-surface-container border-0 text-on-surface text-xs font-semibold rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary outline-none cursor-pointer shadow-sm flex-1 sm:flex-none"
         >
           <option value="">Todas las Categorías</option>
           <option value="Agua">Agua Purificada</option>
@@ -93,7 +98,7 @@
 
         <select
           v-model="selectedStatus"
-          class="bg-surface-container border-0 text-on-surface text-xs font-semibold rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary outline-none cursor-pointer shadow-sm"
+          class="bg-surface-container border-0 text-on-surface text-xs font-semibold rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary outline-none cursor-pointer shadow-sm flex-1 sm:flex-none"
         >
           <option value="">Cualquier Estado</option>
           <option value="ok">En Stock</option>
@@ -103,18 +108,18 @@
 
         <button
           @click="exportData"
-          class="bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
+          class="bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-bold px-3.5 py-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-sm flex-1 sm:flex-none"
         >
           <span class="material-symbols-outlined text-sm">file_download</span>
-          Exportar
+          <span>Exportar</span>
         </button>
       </div>
     </div>
 
     <!-- Data Table -->
-    <div class="card-elevated overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+    <div class="card-elevated overflow-hidden w-full">
+      <div class="overflow-x-auto custom-scrollbar w-full">
+        <table class="w-full text-left border-collapse min-w-[650px]">
           <thead>
             <tr class="bg-surface-container-highest/40 border-b border-black/5 dark:border-white/5 text-[11px] font-extrabold text-on-surface-variant uppercase tracking-wider">
               <th class="py-4 px-6">SKU</th>
@@ -124,7 +129,7 @@
               <th class="py-4 px-6 text-right hidden lg:table-cell">Nivel Crítico</th>
               <th class="py-4 px-6 text-right hidden xl:table-cell">Precio Venta</th>
               <th class="py-4 px-6 text-center">Estado</th>
-              <th class="py-4 px-6 text-right">Acciones</th>
+              <th v-if="authStore.canEditInventory" class="py-4 px-6 text-right">Acciones</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-black/5 dark:divide-white/5">
@@ -190,7 +195,7 @@
               </td>
 
               <!-- Acciones -->
-              <td class="py-3.5 px-6 text-right">
+              <td v-if="authStore.canEditInventory" class="py-3.5 px-6 text-right">
                 <div class="flex items-center justify-end gap-1">
                   <button
                     @click="openEditModal(item)"
@@ -362,6 +367,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useToast } from '~/composables/useToast';
+import { useAuthStore } from '~/stores/auth';
 import {
   validateRequired,
   validatePositiveNumber,
@@ -384,6 +390,7 @@ interface ProductItem {
   status: 'ok' | 'low' | 'out';
 }
 
+const authStore = useAuthStore();
 const toast = useToast();
 
 const searchQuery = ref('');

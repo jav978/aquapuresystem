@@ -35,4 +35,14 @@ export default defineNuxtRouteMiddleware(async (to) => {
       query: { redirect: to.fullPath !== '/login' ? to.fullPath : undefined },
     });
   }
+
+  // RBAC Route Protection: /users is restricted to ADMIN
+  if (to.path.startsWith('/users') && !authStore.canManageUsers) {
+    return navigateTo('/dashboard');
+  }
+
+  // RBAC Route Protection: /settings is restricted to ADMIN
+  if (to.path.startsWith('/settings') && !authStore.canManageSettings) {
+    return navigateTo('/dashboard');
+  }
 });

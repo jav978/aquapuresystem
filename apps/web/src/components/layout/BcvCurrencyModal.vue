@@ -3,14 +3,14 @@
     <!-- Trigger Pill in Header -->
     <button
       @click="showModal = true"
-      class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm border-0 bg-surface-container-high hover:bg-surface-container-highest text-on-surface group"
+      class="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm border-0 bg-surface-container-high hover:bg-surface-container-highest text-on-surface group"
       title="Tasa Oficial BCV - Banco Central de Venezuela"
     >
-      <span class="p-1 rounded-md bg-billing-green/15 text-billing-green flex items-center justify-center">
-        <span class="material-symbols-outlined text-sm font-bold">currency_exchange</span>
+      <span class="p-0.5 sm:p-1 rounded-md bg-billing-green/15 text-billing-green flex items-center justify-center">
+        <span class="material-symbols-outlined text-xs sm:text-sm font-bold">currency_exchange</span>
       </span>
-      <span class="text-on-surface-variant group-hover:text-on-surface transition-colors">BCV:</span>
-      <span class="text-billing-green font-mono font-extrabold">Bs. {{ currencyStore.formattedRate }}</span>
+      <span class="hidden sm:inline text-on-surface-variant group-hover:text-on-surface transition-colors">BCV:</span>
+      <span class="text-billing-green font-mono font-extrabold text-[11px] sm:text-xs">Bs. {{ currencyStore.formattedRate }}</span>
     </button>
 
     <!-- BCV Exchange Rate Modal & Converter -->

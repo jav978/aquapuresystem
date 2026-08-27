@@ -1,14 +1,14 @@
 <template>
   <div class="flex flex-col gap-6 animate-in">
     <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
       <div>
-        <h2 class="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">Configuración Global</h2>
-        <p class="text-sm text-on-surface-variant mt-1">Administre los parámetros operativos, identidad corporativa y puntos de venta de la plataforma.</p>
+        <h2 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-on-surface tracking-tight">Configuración Global</h2>
+        <p class="text-xs sm:text-sm text-on-surface-variant mt-1">Administre los parámetros operativos, identidad corporativa y puntos de venta.</p>
       </div>
 
       <!-- Theme Switcher Quick Toggle -->
-      <div class="flex items-center gap-2 bg-surface-container-high/70 p-1.5 rounded-xl self-start sm:self-auto shadow-sm">
+      <div class="flex items-center gap-1.5 sm:gap-2 bg-surface-container-high/70 p-1.5 rounded-xl self-start sm:self-auto shadow-sm flex-shrink-0">
         <button
           type="button"
           @click="setTheme('light')"
@@ -31,7 +31,7 @@
     </div>
 
     <!-- 2x2 Grid of Settings Cards -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
       <!-- Card 1: Información de la Empresa -->
       <div class="card-elevated p-6 flex flex-col justify-between">
         <div>

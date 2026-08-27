@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-6 animate-in">
     <!-- Header Section -->
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
       <div>
         <div class="flex items-center gap-2 mb-1">
           <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-primary/10 text-primary">
@@ -12,27 +12,27 @@
             Tasa BCV: <strong class="text-billing-green font-mono">Bs. {{ currencyStore.formattedRate }}</strong>
           </span>
         </div>
-        <h2 class="text-2xl md:text-3xl font-extrabold text-on-surface tracking-tight">Gestión de Ventas</h2>
-        <p class="text-sm text-on-surface-variant mt-0.5">Control de transacciones multiproducto (agua, insumos, tapas, café, snacks), clientes y deducción de stock.</p>
+        <h2 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-on-surface tracking-tight">Gestión de Ventas</h2>
+        <p class="text-xs sm:text-sm text-on-surface-variant mt-0.5">Control de transacciones multiproducto (agua, insumos, cafetería) y deducción de stock.</p>
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex items-center gap-3 w-full md:w-auto">
+      <div class="flex items-center gap-2.5 w-full sm:w-auto flex-shrink-0">
         <button
           @click="openNewSaleModal"
-          class="flex-1 md:flex-none bg-primary text-on-primary font-bold text-sm px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 glow-cyan-hover transition-all shadow-lg shadow-primary/25 cursor-pointer active:scale-95"
+          class="flex-1 sm:flex-none bg-primary text-on-primary font-bold text-xs sm:text-sm px-4 sm:px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 glow-cyan-hover transition-all shadow-lg shadow-primary/25 cursor-pointer active:scale-95 whitespace-nowrap"
         >
-          <span class="material-symbols-outlined text-lg">point_of_sale</span>
-          Nueva Venta (POS)
+          <span class="material-symbols-outlined text-base sm:text-lg">point_of_sale</span>
+          <span>Nueva Venta (POS)</span>
         </button>
       </div>
     </div>
 
     <!-- Navigation Sub-Tabs -->
-    <div class="flex items-center gap-2 border-b border-black/5 dark:border-white/5 pb-2">
+    <div class="flex items-center gap-2 border-b border-black/5 dark:border-white/5 pb-2 overflow-x-auto custom-scrollbar">
       <NuxtLink
         to="/sales"
-        class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
+        class="flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap"
         :class="route.path === '/sales' ? 'bg-primary/15 text-primary font-bold' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'"
       >
         <span class="material-symbols-outlined text-base">point_of_sale</span>
@@ -40,7 +40,7 @@
       </NuxtLink>
       <NuxtLink
         to="/sales/invoices"
-        class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
+        class="flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap"
         :class="route.path === '/sales/invoices' ? 'bg-primary/15 text-primary font-bold' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'"
       >
         <span class="material-symbols-outlined text-base">receipt_long</span>
@@ -49,16 +49,16 @@
     </div>
 
     <!-- KPIs Bento Grid with Dual Currency -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-      <div class="card-elevated p-6 flex flex-col justify-between relative overflow-hidden">
-        <div class="flex justify-between items-start mb-4">
-          <span class="text-sm font-semibold text-on-surface-variant">Ventas Totales</span>
-          <span class="p-2.5 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
-            <span class="material-symbols-outlined">payments</span>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+      <div class="card-elevated p-5 sm:p-6 flex flex-col justify-between relative overflow-hidden">
+        <div class="flex justify-between items-start mb-3">
+          <span class="text-xs sm:text-sm font-semibold text-on-surface-variant">Ventas Totales</span>
+          <span class="p-2 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
+            <span class="material-symbols-outlined text-lg">payments</span>
           </span>
         </div>
         <div>
-          <h3 class="text-3xl md:text-4xl font-extrabold text-on-surface tracking-tight">${{ formatMoney(salesStore.totalSalesAmount) }}</h3>
+          <h3 class="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">${{ formatMoney(salesStore.totalSalesAmount) }}</h3>
           <p class="text-xs text-billing-green mt-1 font-mono font-bold">
             ≈ {{ currencyStore.formatVes(currencyStore.toVes(salesStore.totalSalesAmount)) }}
           </p>
@@ -69,28 +69,28 @@
         </div>
       </div>
 
-      <div class="card-elevated p-6 flex flex-col justify-between relative overflow-hidden">
-        <div class="flex justify-between items-start mb-4">
-          <span class="text-sm font-semibold text-on-surface-variant">Volumen Despachado</span>
-          <span class="p-2.5 bg-cyan-500/10 text-cyan-400 rounded-xl flex items-center justify-center">
-            <span class="material-symbols-outlined">water_drop</span>
+      <div class="card-elevated p-5 sm:p-6 flex flex-col justify-between relative overflow-hidden">
+        <div class="flex justify-between items-start mb-3">
+          <span class="text-xs sm:text-sm font-semibold text-on-surface-variant">Volumen Despachado</span>
+          <span class="p-2 bg-cyan-500/10 text-cyan-400 rounded-xl flex items-center justify-center">
+            <span class="material-symbols-outlined text-lg">water_drop</span>
           </span>
         </div>
         <div>
-          <h3 class="text-3xl md:text-4xl font-extrabold text-cyan-400 tracking-tight">{{ formatNumber(salesStore.totalWaterDispensed) }} L</h3>
+          <h3 class="text-2xl sm:text-3xl font-extrabold text-cyan-400 tracking-tight">{{ formatNumber(salesStore.totalWaterDispensed) }} L</h3>
           <p class="text-xs text-on-surface-variant mt-2">Deducidos del Tanque Consolidado</p>
         </div>
       </div>
 
-      <div class="card-elevated p-6 flex flex-col justify-between relative overflow-hidden">
-        <div class="flex justify-between items-start mb-4">
-          <span class="text-sm font-semibold text-on-surface-variant">Cobrado vs Pendiente</span>
-          <span class="p-2.5 bg-billing-green/10 text-billing-green rounded-xl flex items-center justify-center">
-            <span class="material-symbols-outlined">receipt</span>
+      <div class="card-elevated p-5 sm:p-6 flex flex-col justify-between relative overflow-hidden">
+        <div class="flex justify-between items-start mb-3">
+          <span class="text-xs sm:text-sm font-semibold text-on-surface-variant">Cobrado vs Pendiente</span>
+          <span class="p-2 bg-billing-green/10 text-billing-green rounded-xl flex items-center justify-center">
+            <span class="material-symbols-outlined text-lg">receipt</span>
           </span>
         </div>
         <div>
-          <h3 class="text-3xl md:text-4xl font-extrabold text-billing-green tracking-tight">${{ formatMoney(salesStore.paidSalesAmount) }}</h3>
+          <h3 class="text-2xl sm:text-3xl font-extrabold text-billing-green tracking-tight">${{ formatMoney(salesStore.paidSalesAmount) }}</h3>
           <p class="text-xs text-billing-green mt-1 font-mono font-bold">
             ≈ {{ currencyStore.formatVes(currencyStore.toVes(salesStore.paidSalesAmount)) }}
           </p>
@@ -103,37 +103,37 @@
     </div>
 
     <!-- Search and Filter Bar -->
-    <div class="card-elevated p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+    <div class="card-elevated p-3.5 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
       <div class="relative flex-1 max-w-md">
         <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-primary text-lg">search</span>
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Buscar por Nº Factura, Cédula/RIF, Cliente, Ref. Bancaria o Producto..."
-          class="w-full bg-surface-container border-0 rounded-xl pl-10 pr-4 py-2 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none placeholder:text-on-surface-variant/60 shadow-sm"
+          placeholder="Buscar por Nº Factura, Cédula/RIF, Cliente, Ref..."
+          class="w-full bg-surface-container border-0 rounded-xl pl-10 pr-4 py-2 text-on-surface text-xs sm:text-sm focus:ring-2 focus:ring-primary outline-none placeholder:text-on-surface-variant/60 shadow-sm"
         />
       </div>
 
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 sm:gap-3">
         <select
           v-model="statusFilter"
-          class="bg-surface-container border-0 text-on-surface text-xs font-semibold rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary outline-none cursor-pointer shadow-sm"
+          class="bg-surface-container border-0 text-on-surface text-xs font-semibold rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary outline-none cursor-pointer shadow-sm flex-1 sm:flex-none"
         >
           <option value="">Todos los Estados</option>
           <option value="PAID">Pagados</option>
           <option value="PENDING">Pendientes</option>
         </select>
 
-        <span class="text-xs px-3 py-1.5 bg-surface-container rounded-xl text-on-surface-variant font-bold shadow-sm">
+        <span class="text-xs px-3 py-2 bg-surface-container rounded-xl text-on-surface-variant font-bold shadow-sm flex-shrink-0">
           {{ filteredSales.length }} Ventas
         </span>
       </div>
     </div>
 
     <!-- Ventas Recientes Table with Dual Currency -->
-    <div class="card-elevated overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+    <div class="card-elevated overflow-hidden w-full">
+      <div class="overflow-x-auto custom-scrollbar w-full">
+        <table class="w-full text-left border-collapse min-w-[700px]">
           <thead>
             <tr class="bg-surface-container-highest/40 border-b border-black/5 dark:border-white/5 text-[11px] font-extrabold text-on-surface-variant uppercase tracking-wider">
               <th class="py-4 px-6">Nº Factura</th>

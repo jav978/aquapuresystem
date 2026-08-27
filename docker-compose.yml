@@ -1,29 +1,4 @@
-version: '3.8'
-
 services:
-  # =========================================================================
-  # Web App Frontend & API Service (AquaPure Pro)
-  # =========================================================================
-  web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-    container_name: aquapure-web
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - HOST=0.0.0.0
-      - PORT=3000
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-aquapure_admin}:${POSTGRES_PASSWORD:-AquaPureSecure2026!}@db:5432/${POSTGRES_DB:-aquapuredb}?schema=public
-      - APP_SECRET_KEY=${APP_SECRET_KEY:-aquapure_cryptographic_secret_key_2026}
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - aquapure-internal-net
-
   # =========================================================================
   # Protected PostgreSQL Database (Isolated in Private Docker Network)
   # =========================================================================
@@ -37,7 +12,6 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-AquaPureSecure2026!}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      # Isolated Docker Named Volume (Inaccessible from Windows/Linux file explorer)
       - aquapure_pg_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-aquapure_admin} -d ${POSTGRES_DB:-aquapuredb}"]
@@ -47,11 +21,83 @@ services:
     networks:
       - aquapure-internal-net
 
+  # =========================================================================
+  # Redis Cache & Event Bus
+  # =========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: aquapure-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - aquapure_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - aquapure-internal-net
+
+  # =========================================================================
+  # Backend API & WebSocket Service (AquaPure Feathers API)
+  # =========================================================================
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: aquapure-api
+    restart: unless-stopped
+    ports:
+      - "3030:3030"
+    environment:
+      - NODE_ENV=production
+      - HOST=0.0.0.0
+      - PORT=3030
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-aquapure_admin}:${POSTGRES_PASSWORD:-AquaPureSecure2026!}@db:5432/${POSTGRES_DB:-aquapuredb}?schema=public
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${APP_SECRET_KEY:-aquapure_cryptographic_secret_key_2026}
+      - JWT_REFRESH_SECRET=${APP_SECRET_KEY:-aquapure_cryptographic_secret_key_2026_refresh}
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001,*
+      - INSFORGE_DATABASE_URL=postgresql://postgres:b206e860499585f06971edae2852cc2e@bt8vez2n.us-east.database.insforge.app:5432/insforge?sslmode=require
+      - INSFORGE_MIRROR_SYNC=true
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - aquapure-internal-net
+
+  # =========================================================================
+  # Web App Frontend (AquaPure Nuxt 4 Web Client)
+  # =========================================================================
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: aquapure-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - HOST=0.0.0.0
+      - PORT=3000
+      - NUXT_PUBLIC_API_URL=http://localhost:3030
+      - NUXT_PUBLIC_WS_URL=ws://localhost:3030
+    depends_on:
+      - api
+    networks:
+      - aquapure-internal-net
+
 # =========================================================================
 # Volumes & Networks (Hardened Security Isolation)
 # =========================================================================
 volumes:
   aquapure_pg_data:
+    driver: local
+  aquapure_redis_data:
     driver: local
 
 networks:

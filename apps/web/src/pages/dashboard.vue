@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-6 animate-in">
     <!-- Header Section -->
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
       <div>
         <div class="flex items-center gap-2 mb-1">
           <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-primary/10 text-primary">
@@ -12,15 +12,15 @@
             Tanque Maestro Consolidado
           </span>
         </div>
-        <h2 class="text-2xl md:text-3xl font-extrabold text-on-surface tracking-tight">Panel de Control Operativo</h2>
-        <p class="text-sm text-on-surface-variant mt-0.5">Control volumétrico de agua, balance de merma por lavado de botellones y proyección para recarga de cisterna.</p>
+        <h2 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-on-surface tracking-tight">Panel de Control Operativo</h2>
+        <p class="text-xs sm:text-sm text-on-surface-variant mt-0.5">Control volumétrico de agua, balance de merma por lavado y proyección de cisterna.</p>
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+      <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto flex-shrink-0">
         <button
           @click="openWashModal"
-          class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
+          class="flex-1 sm:flex-none px-3.5 sm:px-4 py-2.5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95 whitespace-nowrap"
         >
           <span class="material-symbols-outlined text-base text-primary">cleaning_services</span>
           <span>Merma & Lavado ({{ tanksStore.washWastePercentage }}%)</span>
@@ -28,7 +28,7 @@
 
         <button
           @click="openRefillModal"
-          class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-primary text-on-primary text-xs font-bold transition-all glow-cyan-hover shadow-lg shadow-primary/25 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+          class="flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-xl bg-primary text-on-primary text-xs font-bold transition-all glow-cyan-hover shadow-lg shadow-primary/25 flex items-center justify-center gap-2 cursor-pointer active:scale-95 whitespace-nowrap"
         >
           <span class="material-symbols-outlined text-base">local_shipping</span>
           <span>Recargar Cisterna</span>
@@ -37,7 +37,7 @@
     </div>
 
     <!-- Operational KPIs Bento Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
       <!-- KPI 1: Agua en Tanque Consolidado -->
       <div class="card-elevated p-5 flex flex-col justify-between relative overflow-hidden">
         <div class="flex justify-between items-start mb-3">
@@ -130,14 +130,14 @@
     </div>
 
     <!-- Main Tank & Operational Hub Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      <!-- Columna Izquierda: Tanque Consolidado 3D (Lg: 5 Cols) -->
-      <div class="lg:col-span-5 flex flex-col gap-4">
-        <div class="card-elevated p-6 flex flex-col items-center justify-between relative overflow-hidden">
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-5 sm:gap-6">
+      <!-- Columna Izquierda: Tanque Consolidado 3D (Xl: 5 Cols) -->
+      <div class="xl:col-span-5 flex flex-col gap-4">
+        <div class="card-elevated p-5 sm:p-6 flex flex-col items-center justify-between relative overflow-hidden">
           <div class="w-full flex items-center justify-between mb-2">
             <div>
               <span class="text-xs font-bold text-primary uppercase tracking-wider">Tanque Único Maestro</span>
-              <h3 class="text-lg font-extrabold text-on-surface">{{ tanksStore.masterTank.name }}</h3>
+              <h3 class="text-base sm:text-lg font-extrabold text-on-surface">{{ tanksStore.masterTank.name }}</h3>
               <p class="text-xs text-on-surface-variant">Capacidad Total: {{ formatNumber(tanksStore.masterTank.capacity) }} Litros</p>
             </div>
             <span
@@ -149,7 +149,7 @@
           </div>
 
           <!-- Componente 3D Liquid Tank -->
-          <div class="w-full py-4 flex justify-center">
+          <div class="w-full py-2 sm:py-4 flex justify-center">
             <LiquidTank3D
               :tank="tanksStore.masterTank"
               @refill="openRefillModal"
@@ -158,7 +158,7 @@
           </div>
 
           <!-- Indicadores de Nivel en Litros -->
-          <div class="w-full grid grid-cols-2 gap-3 pt-3 border-t border-black/5 dark:border-white/5 text-xs">
+          <div class="w-full grid grid-cols-2 gap-2.5 sm:gap-3 pt-3 border-t border-black/5 dark:border-white/5 text-xs">
             <div class="p-2.5 rounded-xl bg-surface-container/60">
               <span class="text-on-surface-variant">Agua Disponible:</span>
               <p class="text-sm font-extrabold text-primary font-mono mt-0.5">
@@ -175,8 +175,8 @@
         </div>
       </div>
 
-      <!-- Columna Derecha: Balance Hídrico, Alerta de Cisterna y Módulo IoT Opcional (Lg: 7 Cols) -->
-      <div class="lg:col-span-7 flex flex-col gap-6">
+      <!-- Columna Derecha: Balance Hídrico, Alerta de Cisterna y Módulo IoT Opcional (Xl: 7 Cols) -->
+      <div class="xl:col-span-7 flex flex-col gap-5 sm:gap-6">
         <!-- Tarjeta de Alerta de Cisterna & Autonomía -->
         <div
           class="card-elevated p-6 relative overflow-hidden"

@@ -24,7 +24,7 @@ import { InventoryMovementsService } from './infrastructure/feathers/services/in
 // ============================================================
 // Allowed CORS origins (restrict in production)
 // ============================================================
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:3001')
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:3001,*')
   .split(',')
   .map(o => o.trim());
 
@@ -58,10 +58,9 @@ app.use(async (ctx, next) => {
 app.use(cors({
   origin: (ctx) => {
     const requestOrigin = ctx.request.headers.origin;
-    if (!requestOrigin) return '';
-    if (ALLOWED_ORIGINS.includes(requestOrigin)) return requestOrigin;
-    // Reject requests from unknown origins
-    return '';
+    if (!requestOrigin) return '*';
+    if (ALLOWED_ORIGINS.includes('*') || ALLOWED_ORIGINS.includes(requestOrigin)) return requestOrigin;
+    return requestOrigin;
   },
   credentials: true,
   allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -88,7 +87,7 @@ app.configure(rest());
 // Socket.io
 app.configure(socketio({
   cors: {
-    origin: ALLOWED_ORIGINS,
+    origin: '*',
     credentials: true,
   },
 }));
@@ -169,6 +168,18 @@ async function start() {
       logger.info(`🔌 WebSocket: ws://localhost:${PORT}`);
       logger.info(`🛡️  CORS origins: ${ALLOWED_ORIGINS.join(', ')}`);
     });
+
+    // Start InsForge cloud mirror background sync
+    if (process.env.INSFORGE_MIRROR_SYNC !== 'false') {
+      try {
+        const { MirrorSyncService } = await import('./infrastructure/sync/mirror-sync.service');
+        const mirrorSync = new MirrorSyncService();
+        mirrorSync.startPeriodicSync(15); // Sync every 15 minutes
+        logger.info('☁️  InsForge Cloud Mirror Sync active (Interval: 15 min)');
+      } catch (mirrorErr) {
+        logger.warn({ err: mirrorErr }, 'InsForge mirror sync initialization skipped');
+      }
+    }
   } catch (error) {
     logger.error({ err: error }, 'Failed to start server');
     process.exit(1);

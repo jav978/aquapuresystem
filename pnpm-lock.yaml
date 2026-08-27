@@ -65,6 +65,9 @@ importers:
       '@feathersjs/configuration':
         specifier: ^5.0.0
         version: 5.0.49(typescript@5.9.3)
+      '@feathersjs/errors':
+        specifier: ^5.0.0
+        version: 5.0.49
       '@feathersjs/feathers':
         specifier: ^5.0.0
         version: 5.0.49
@@ -256,6 +259,12 @@ importers:
       '@aquasystem/shared-kernel':
         specifier: workspace:*
         version: link:../shared-kernel
+      inversify:
+        specifier: ^6.0.0
+        version: 6.2.2(reflect-metadata@0.2.2)
+      reflect-metadata:
+        specifier: ^0.2.0
+        version: 0.2.2
       zod:
         specifier: ^3.22.0
         version: 3.25.76

@@ -1,0 +1,12 @@
+node_modules
+.output
+.nuxt
+.turbo
+dist
+.git
+.gitignore
+*.log
+.data
+coverage
+playwright-report
+test-results

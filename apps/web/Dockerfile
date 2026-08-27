@@ -1,5 +1,5 @@
 # Multi-stage Dockerfile for AquaPure Pro Production
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -9,19 +9,23 @@ RUN npm install -g pnpm@9
 # Copy root configurations and workspace files
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY apps/web/package.json ./apps/web/
-COPY packages/shared/package.json ./packages/shared/
+COPY packages/application/package.json ./packages/application/
+COPY packages/design-system/package.json ./packages/design-system/
+COPY packages/domain/package.json ./packages/domain/
+COPY packages/infrastructure/package.json ./packages/infrastructure/
+COPY packages/shared-kernel/package.json ./packages/shared-kernel/
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy source code
+# Copy full source code
 COPY . .
 
 # Build application
 RUN pnpm --filter=@aquasystem/web build
 
 # Production Runner Stage
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 

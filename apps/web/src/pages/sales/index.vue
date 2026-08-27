@@ -19,11 +19,19 @@
       <!-- Action Buttons -->
       <div class="flex items-center gap-2.5 w-full sm:w-auto flex-shrink-0">
         <button
+          @click="openQuickSaleModal"
+          class="flex-1 sm:flex-none bg-gradient-to-r from-sky-500 to-primary hover:from-sky-400 hover:to-primary/90 text-white font-extrabold text-xs sm:text-sm px-4 sm:px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 glow-cyan-hover transition-all shadow-lg shadow-primary/25 cursor-pointer active:scale-95 whitespace-nowrap"
+        >
+          <span class="material-symbols-outlined text-base sm:text-lg">bolt</span>
+          <span>⚡ Venta Rápida (Consumidor Final)</span>
+        </button>
+
+        <button
           @click="openNewSaleModal"
-          class="flex-1 sm:flex-none bg-primary text-on-primary font-bold text-xs sm:text-sm px-4 sm:px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 glow-cyan-hover transition-all shadow-lg shadow-primary/25 cursor-pointer active:scale-95 whitespace-nowrap"
+          class="flex-1 sm:flex-none bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-bold text-xs sm:text-sm px-4 sm:px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all border border-black/5 dark:border-white/10 cursor-pointer active:scale-95 whitespace-nowrap"
         >
           <span class="material-symbols-outlined text-base sm:text-lg">point_of_sale</span>
-          <span>Nueva Venta (POS)</span>
+          <span>Nueva Venta (Cliente)</span>
         </button>
       </div>
     </div>
@@ -148,17 +156,37 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-black/5 dark:divide-white/5">
-            <tr v-for="sale in filteredSales" :key="sale.id" class="hover:bg-surface-container-high/40 transition-colors">
-              <td class="py-4 px-6 text-sm font-bold text-primary font-mono">{{ sale.invoiceNo }}</td>
+            <tr
+              v-for="sale in filteredSales"
+              :key="sale.id"
+              class="hover:bg-surface-container-high/40 transition-colors"
+            >
+              <!-- Invoice No with Quick View -->
+              <td class="py-4 px-6 text-sm font-bold text-primary font-mono">
+                {{ sale.invoiceNo }}
+              </td>
+
+              <!-- Customer Info & Tax ID -->
               <td class="py-4 px-6 text-sm text-on-surface font-semibold">
-                {{ sale.customer }}
-                <span v-if="sale.customerDoc" class="block text-xs font-mono font-normal text-on-surface-variant">
+                <div class="flex items-center gap-1.5">
+                  <span>{{ sale.customer }}</span>
+                  <span v-if="sale.customerDoc === 'V-00000000'" class="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-primary/15 text-primary border border-primary/20">
+                    Express
+                  </span>
+                </div>
+                <span class="block text-xs font-mono font-normal text-on-surface-variant mt-0.5">
                   {{ sale.customerDoc }}
                 </span>
               </td>
-              <td class="py-4 px-6 text-sm text-on-surface-variant">{{ sale.itemsSummary }}</td>
+
+              <!-- Items Summary -->
+              <td class="py-4 px-6 text-sm text-on-surface-variant">
+                {{ sale.itemsSummary }}
+              </td>
+
+              <!-- Payment Method & Reference -->
               <td class="py-4 px-6 text-xs text-on-surface-variant">
-                <span class="font-bold text-on-surface block">{{ sale.payment?.methodLabel || 'Efectivo / Transferencia' }}</span>
+                <span class="font-bold text-on-surface block">{{ sale.payment?.methodLabel || 'Efectivo' }}</span>
                 <span v-if="sale.payment?.referenceNumber" class="font-mono text-primary font-semibold">
                   Ref: {{ sale.payment.referenceNumber }} ({{ sale.payment?.bankName || 'Banco' }})
                 </span>
@@ -166,22 +194,29 @@
                   Vuelto: ${{ sale.payment.changeUsd.toFixed(2) }}
                 </span>
               </td>
-              <td class="py-4 px-6 text-center">
-                <span class="inline-flex items-center gap-1 text-xs font-mono font-bold text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-lg">
-                  <span class="material-symbols-outlined text-xs">water_drop</span>
-                  {{ formatNumber(sale.waterLiters || 0) }} L
-                </span>
+
+              <!-- Water Liters Deducted -->
+              <td class="py-4 px-6 text-center text-sm font-bold text-cyan-400 font-mono">
+                {{ sale.waterLiters ? `${sale.waterLiters} L` : '-' }}
               </td>
-              <td class="py-4 px-6 text-sm text-on-surface text-right font-extrabold font-mono text-billing-green">${{ formatMoney(sale.total) }}</td>
+
+              <!-- Total in USD -->
+              <td class="py-4 px-6 text-sm text-on-surface text-right font-extrabold font-mono text-billing-green">
+                ${{ formatMoney(sale.total) }}
+              </td>
+
+              <!-- Total in VES (BCV Dual Currency) -->
               <td class="py-4 px-6 text-sm text-right font-mono font-bold text-on-surface">
                 {{ currencyStore.formatVes(sale.totalVes || currencyStore.toVes(sale.total)) }}
               </td>
+
+              <!-- Status Badge -->
               <td class="py-4 px-6 text-center">
                 <span
                   v-if="sale.status === 'PAID'"
                   class="inline-flex items-center gap-1.5 bg-billing-green/15 text-billing-green px-3 py-1 rounded-full text-xs font-bold"
                 >
-                  <span class="w-1.5 h-1.5 rounded-full bg-billing-green"></span> Pagado
+                  <span class="w-1.5 h-1.5 rounded-full bg-billing-green"></span> Pagada
                 </span>
                 <span
                   v-else
@@ -190,19 +225,21 @@
                   <span class="w-1.5 h-1.5 rounded-full bg-admin-gold animate-pulse"></span> Pendiente
                 </span>
               </td>
+
+              <!-- Actions -->
               <td class="py-4 px-6 text-right">
                 <div class="flex items-center justify-end gap-1">
                   <button
                     @click="openPrintModal(sale)"
                     class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-xl hover:bg-surface-container cursor-pointer active:scale-95"
-                    title="Imprimir / Ver Comprobante Fiscal con QR"
+                    title="Imprimir Factura / Ticket con QR Fiscal"
                   >
                     <span class="material-symbols-outlined text-lg">receipt_long</span>
                   </button>
                   <button
                     @click="deleteSale(sale)"
                     class="p-2 text-on-surface-variant hover:text-error-red transition-colors rounded-xl hover:bg-surface-container cursor-pointer active:scale-95"
-                    title="Eliminar Venta"
+                    title="Eliminar Registro de Venta"
                   >
                     <span class="material-symbols-outlined text-lg">delete</span>
                   </button>
@@ -213,10 +250,10 @@
         </table>
       </div>
 
-      <!-- Pagination Footer -->
+      <!-- Table Footer / Summary -->
       <div class="p-4 border-t border-black/5 dark:border-white/5 flex items-center justify-between bg-surface-container-highest/20 text-xs">
         <span class="text-on-surface-variant font-medium">
-          Mostrando {{ filteredSales.length }} de {{ salesStore.invoices.length }} transacciones
+          Mostrando {{ filteredSales.length }} de {{ salesStore.invoices.length }} ventas registradas
         </span>
       </div>
     </div>
@@ -228,12 +265,27 @@
         <!-- Header -->
         <div class="flex items-center justify-between p-4 sm:p-5 border-b border-black/5 dark:border-white/5 bg-surface-container-highest/30">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-2xl bg-primary/15 text-primary flex items-center justify-center shadow-inner">
-              <span class="material-symbols-outlined text-xl">point_of_sale</span>
+            <div
+              class="w-10 h-10 rounded-2xl flex items-center justify-center shadow-inner"
+              :class="isQuickSale ? 'bg-primary/20 text-primary' : 'bg-primary/15 text-primary'"
+            >
+              <span class="material-symbols-outlined text-xl">{{ isQuickSale ? 'bolt' : 'point_of_sale' }}</span>
             </div>
             <div>
-              <h4 class="text-base sm:text-lg font-black text-on-surface tracking-tight">Punto de Venta (POS Comercial)</h4>
-              <p class="text-xs text-on-surface-variant">Selección multiproducto, carrito dinámico, pagos con vuelto y referencias bancarias</p>
+              <div class="flex items-center gap-2">
+                <h4 class="text-base sm:text-lg font-black text-on-surface tracking-tight">
+                  {{ isQuickSale ? 'Punto de Venta Express' : 'Punto de Venta (POS Comercial)' }}
+                </h4>
+                <span
+                  v-if="isQuickSale"
+                  class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-primary/20 text-primary border border-primary/30"
+                >
+                  ⚡ Consumidor Final
+                </span>
+              </div>
+              <p class="text-xs text-on-surface-variant">
+                {{ isQuickSale ? 'Venta mostrador inmediata sin solicitud de datos personales' : 'Selección multiproducto, carrito dinámico, pagos con vuelto y referencias bancarias' }}
+              </p>
             </div>
           </div>
           <button @click="showSaleModal = false" class="p-1.5 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer">
@@ -251,102 +303,157 @@
         <div class="flex-1 overflow-y-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5">
           <!-- Columna Izquierda: Datos del Cliente (4 cols) -->
           <div class="lg:col-span-4 flex flex-col gap-3.5 bg-surface-container-high/20 p-4 rounded-2xl border border-black/5 dark:border-white/5">
-            <h5 class="text-xs font-black text-on-surface-variant uppercase tracking-wider flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-sm text-primary">person</span>
-              Datos del Cliente
-            </h5>
+            <div class="flex items-center justify-between">
+              <h5 class="text-xs font-black text-on-surface-variant uppercase tracking-wider flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm text-primary">person</span>
+                Datos del Cliente
+              </h5>
+            </div>
 
-            <!-- Tipo de Cliente -->
-            <div class="grid grid-cols-2 gap-2 bg-surface-container-high/60 p-1 rounded-xl">
+            <!-- Segmented Mode Switch: Venta Rápida vs Cliente Registrado -->
+            <div class="grid grid-cols-2 gap-1.5 bg-surface-container-high/80 p-1 rounded-xl shadow-inner">
               <button
                 type="button"
-                @click="customerForm.type = 'NATURAL'; customerForm.docType = 'V'"
-                class="py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer"
-                :class="customerForm.type === 'NATURAL' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface'"
+                @click="setQuickSaleMode(true)"
+                class="py-2 px-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                :class="isQuickSale ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/60'"
               >
-                Persona Natural
+                <span class="material-symbols-outlined text-sm">bolt</span>
+                <span>Consumidor Final</span>
               </button>
               <button
                 type="button"
-                @click="customerForm.type = 'JURIDICO'; customerForm.docType = 'J'"
-                class="py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer"
-                :class="customerForm.type === 'JURIDICO' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface'"
+                @click="setQuickSaleMode(false)"
+                class="py-2 px-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                :class="!isQuickSale ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/60'"
               >
-                Empresa (RIF)
+                <span class="material-symbols-outlined text-sm">person</span>
+                <span>Cliente Registrado</span>
               </button>
             </div>
 
-            <!-- Cédula / RIF con Autocompletado -->
-            <div>
-              <label class="block text-[11px] font-semibold text-on-surface-variant mb-1">
-                {{ customerForm.type === 'NATURAL' ? 'Cédula de Identidad *' : 'RIF de la Empresa *' }}
-              </label>
-              <div class="flex gap-2">
-                <select
-                  v-model="customerForm.docType"
-                  class="bg-surface-container border-0 rounded-xl px-2.5 py-2 text-on-surface text-xs font-bold focus:ring-2 focus:ring-primary outline-none shadow-sm"
+            <!-- Panel cuando está activo Consumidor Final -->
+            <div v-if="isQuickSale" class="p-3.5 rounded-xl bg-primary/10 border border-primary/20 space-y-2.5 animate-in">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-primary flex items-center gap-1">
+                  <span class="material-symbols-outlined text-base">check_circle</span>
+                  Cliente Genérico Activo
+                </span>
+                <span class="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-primary/20 text-primary">Express</span>
+              </div>
+              <p class="text-[11px] text-on-surface-variant leading-tight">
+                La venta se registrará a nombre de <strong>Consumidor Final</strong> sin requerir datos personales en caja.
+              </p>
+              <div class="space-y-1.5 bg-surface-container/60 p-2.5 rounded-lg text-xs">
+                <div class="flex justify-between items-center">
+                  <span class="text-on-surface-variant text-[11px]">Razón / Nombre:</span>
+                  <span class="font-bold text-on-surface">Consumidor Final</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-on-surface-variant text-[11px]">Cédula / Documento:</span>
+                  <span class="font-mono font-bold text-primary">V-00000000</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-on-surface-variant text-[11px]">Dirección:</span>
+                  <span class="text-on-surface text-[11px]">Venta Mostrador / Planta</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel de Formulario Completo cuando es Cliente Registrado -->
+            <div v-else class="space-y-3 animate-in">
+              <!-- Tipo de Cliente -->
+              <div class="grid grid-cols-2 gap-2 bg-surface-container-high/60 p-1 rounded-xl">
+                <button
+                  type="button"
+                  @click="customerForm.type = 'NATURAL'; customerForm.docType = 'V'"
+                  class="py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer"
+                  :class="customerForm.type === 'NATURAL' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface'"
                 >
-                  <option value="V">V-</option>
-                  <option value="E">E-</option>
-                  <option value="J">J-</option>
-                  <option value="G">G-</option>
-                </select>
+                  Persona Natural
+                </button>
+                <button
+                  type="button"
+                  @click="customerForm.type = 'JURIDICO'; customerForm.docType = 'J'"
+                  class="py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer"
+                  :class="customerForm.type === 'JURIDICO' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface'"
+                >
+                  Empresa (RIF)
+                </button>
+              </div>
+
+              <!-- Cédula / RIF con Autocompletado -->
+              <div>
+                <label class="block text-[11px] font-semibold text-on-surface-variant mb-1">
+                  {{ customerForm.type === 'NATURAL' ? 'Cédula de Identidad *' : 'RIF de la Empresa *' }}
+                </label>
+                <div class="flex gap-2">
+                  <select
+                    v-model="customerForm.docType"
+                    class="bg-surface-container border-0 rounded-xl px-2.5 py-2 text-on-surface text-xs font-bold focus:ring-2 focus:ring-primary outline-none shadow-sm"
+                  >
+                    <option value="V">V-</option>
+                    <option value="E">E-</option>
+                    <option value="J">J-</option>
+                    <option value="G">G-</option>
+                  </select>
+                  <input
+                    v-model="customerForm.docNumber"
+                    @input="onDocNumberInput"
+                    type="text"
+                    required
+                    placeholder="Número de documento"
+                    class="flex-1 bg-surface-container border-0 rounded-xl px-3 py-2 text-on-surface text-xs font-bold font-mono focus:ring-2 focus:ring-primary outline-none shadow-sm"
+                  />
+                </div>
+              </div>
+
+              <!-- Nombre / Razón Social -->
+              <div>
+                <label class="block text-[11px] font-semibold text-on-surface-variant mb-1">
+                  {{ customerForm.type === 'NATURAL' ? 'Nombre y Apellido *' : 'Razón Social *' }}
+                </label>
                 <input
-                  v-model="customerForm.docNumber"
-                  @input="onDocNumberInput"
+                  v-model="customerForm.name"
                   type="text"
                   required
-                  placeholder="Número de documento"
-                  class="flex-1 bg-surface-container border-0 rounded-xl px-3 py-2 text-on-surface text-xs font-bold font-mono focus:ring-2 focus:ring-primary outline-none shadow-sm"
+                  placeholder="Ej: Distribuidora Los Andes"
+                  class="w-full bg-surface-container border-0 rounded-xl px-3 py-2 text-on-surface text-xs focus:ring-2 focus:ring-primary outline-none shadow-sm"
                 />
               </div>
-            </div>
 
-            <!-- Nombre / Razón Social -->
-            <div>
-              <label class="block text-[11px] font-semibold text-on-surface-variant mb-1">
-                {{ customerForm.type === 'NATURAL' ? 'Nombre y Apellido *' : 'Razón Social *' }}
-              </label>
-              <input
-                v-model="customerForm.name"
-                type="text"
-                required
-                placeholder="Ej: Distribuidora Los Andes"
-                class="w-full bg-surface-container border-0 rounded-xl px-3 py-2 text-on-surface text-xs focus:ring-2 focus:ring-primary outline-none shadow-sm"
-              />
-            </div>
-
-            <!-- Dirección -->
-            <div>
-              <label class="block text-[11px] font-semibold text-on-surface-variant mb-1">Dirección de Entrega / Domicilio *</label>
-              <textarea
-                v-model="customerForm.address"
-                required
-                rows="2"
-                placeholder="Calle, sector o punto de referencia"
-                class="w-full bg-surface-container border-0 rounded-xl px-3 py-2 text-on-surface text-xs focus:ring-2 focus:ring-primary outline-none shadow-sm resize-none"
-              ></textarea>
-            </div>
-
-            <!-- Teléfono & Correo Opcionales -->
-            <div class="grid grid-cols-2 gap-2">
+              <!-- Dirección -->
               <div>
-                <label class="block text-[10px] font-semibold text-on-surface-variant mb-1">Teléfono (Opcional)</label>
-                <input
-                  v-model="customerForm.phone"
-                  type="text"
-                  placeholder="+58 414 0000000"
-                  class="w-full bg-surface-container border-0 rounded-xl px-2.5 py-1.5 text-on-surface text-[11px] focus:ring-2 focus:ring-primary outline-none shadow-sm"
-                />
+                <label class="block text-[11px] font-semibold text-on-surface-variant mb-1">Dirección de Entrega / Domicilio *</label>
+                <textarea
+                  v-model="customerForm.address"
+                  required
+                  rows="2"
+                  placeholder="Calle, sector o punto de referencia"
+                  class="w-full bg-surface-container border-0 rounded-xl px-3 py-2 text-on-surface text-xs focus:ring-2 focus:ring-primary outline-none shadow-sm resize-none"
+                ></textarea>
               </div>
-              <div>
-                <label class="block text-[10px] font-semibold text-on-surface-variant mb-1">Email (Opcional)</label>
-                <input
-                  v-model="customerForm.email"
-                  type="email"
-                  placeholder="cliente@mail.com"
-                  class="w-full bg-surface-container border-0 rounded-xl px-2.5 py-1.5 text-on-surface text-[11px] focus:ring-2 focus:ring-primary outline-none shadow-sm"
-                />
+
+              <!-- Teléfono & Correo Opcionales -->
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] font-semibold text-on-surface-variant mb-1">Teléfono (Opcional)</label>
+                  <input
+                    v-model="customerForm.phone"
+                    type="text"
+                    placeholder="+58 414 0000000"
+                    class="w-full bg-surface-container border-0 rounded-xl px-2.5 py-1.5 text-on-surface text-[11px] focus:ring-2 focus:ring-primary outline-none shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label class="block text-[10px] font-semibold text-on-surface-variant mb-1">Email (Opcional)</label>
+                  <input
+                    v-model="customerForm.email"
+                    type="email"
+                    placeholder="cliente@mail.com"
+                    class="w-full bg-surface-container border-0 rounded-xl px-2.5 py-1.5 text-on-surface text-[11px] focus:ring-2 focus:ring-primary outline-none shadow-sm"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -672,6 +779,7 @@ const printInvoiceData = ref<SaleInvoice | null>(null);
 const formError = ref<string | null>(null);
 const activeCategory = ref('Todos');
 const salePaymentStatus = ref<'PAID' | 'PENDING'>('PAID');
+const isQuickSale = ref(true);
 
 const paymentMethodsList = [
   { type: 'CASH_USD' as PaymentMethodType, label: 'Efectivo $', icon: 'attach_money' },
@@ -694,9 +802,9 @@ const cartItems = ref<CartItem[]>([]);
 const customerForm = reactive({
   type: 'NATURAL' as 'NATURAL' | 'JURIDICO',
   docType: 'V' as 'V' | 'E' | 'J' | 'G',
-  docNumber: '',
-  name: '',
-  address: '',
+  docNumber: '00000000',
+  name: 'Consumidor Final',
+  address: 'Venta Mostrador / Planta',
   phone: '',
   email: '',
 });
@@ -772,19 +880,32 @@ const formatNumber = (val: number): string => {
   return new Intl.NumberFormat('es-ES').format(Math.round(val || 0));
 };
 
-const openNewSaleModal = () => {
+const setQuickSaleMode = (quick: boolean) => {
+  isQuickSale.value = quick;
+  if (quick) {
+    customerForm.type = 'NATURAL';
+    customerForm.docType = 'V';
+    customerForm.docNumber = '00000000';
+    customerForm.name = 'Consumidor Final';
+    customerForm.address = 'Venta Mostrador / Planta';
+    customerForm.phone = '';
+    customerForm.email = '';
+  } else {
+    customerForm.docNumber = '';
+    customerForm.name = '';
+    customerForm.address = '';
+    customerForm.phone = '';
+    customerForm.email = '';
+  }
+};
+
+const openQuickSaleModal = () => {
   formError.value = null;
-  customerForm.type = 'NATURAL';
-  customerForm.docType = 'V';
-  customerForm.docNumber = '';
-  customerForm.name = '';
-  customerForm.address = '';
-  customerForm.phone = '';
-  customerForm.email = '';
   salePaymentStatus.value = 'PAID';
+  setQuickSaleMode(true);
 
   paymentForm.method = 'CASH_USD';
-  paymentForm.receivedAmount = 0;
+  paymentForm.receivedAmount = 5.00;
   paymentForm.bankName = 'Banco de Venezuela';
   paymentForm.referenceNumber = '';
   paymentForm.authCode = '';
@@ -799,7 +920,30 @@ const openNewSaleModal = () => {
       waterLiters: 20,
     },
   ];
+  showSaleModal.value = true;
+};
+
+const openNewSaleModal = () => {
+  formError.value = null;
+  salePaymentStatus.value = 'PAID';
+  setQuickSaleMode(false);
+
+  paymentForm.method = 'CASH_USD';
   paymentForm.receivedAmount = 5.00;
+  paymentForm.bankName = 'Banco de Venezuela';
+  paymentForm.referenceNumber = '';
+  paymentForm.authCode = '';
+
+  // Default 1x Recarga 20L
+  cartItems.value = [
+    {
+      productId: 'prod-2',
+      name: 'Recarga de Botellón 20L (Retornable)',
+      price: 3.50,
+      quantity: 1,
+      waterLiters: 20,
+    },
+  ];
   showSaleModal.value = true;
 };
 
@@ -860,29 +1004,54 @@ const deleteSale = (sale: SaleInvoice) => {
 
 const submitSale = () => {
   formError.value = null;
-  const cleanedCustomer = sanitizeFormData(customerForm);
 
   if (cartItems.value.length === 0) {
     formError.value = 'Debes agregar al menos un producto al carrito.';
     return;
   }
 
-  const docErr = validateRequired(cleanedCustomer.docNumber, 'La Cédula / RIF');
-  if (docErr) {
-    formError.value = docErr;
-    return;
-  }
+  let finalCustomer = {
+    type: customerForm.type,
+    docType: customerForm.docType,
+    docNumber: customerForm.docNumber.trim(),
+    name: customerForm.name.trim(),
+    address: customerForm.address.trim(),
+    phone: customerForm.phone?.trim() || '',
+    email: customerForm.email?.trim() || '',
+  };
 
-  const nameErr = validateRequired(cleanedCustomer.name, 'El Nombre o Razón Social');
-  if (nameErr) {
-    formError.value = nameErr;
-    return;
-  }
+  if (isQuickSale.value) {
+    finalCustomer = {
+      type: 'NATURAL',
+      docType: 'V',
+      docNumber: '00000000',
+      name: 'Consumidor Final',
+      address: 'Venta Mostrador / Planta',
+      phone: '',
+      email: '',
+    };
+  } else {
+    const cleanedCustomer = sanitizeFormData(customerForm);
 
-  const addrErr = validateRequired(cleanedCustomer.address, 'La Dirección de entrega');
-  if (addrErr) {
-    formError.value = addrErr;
-    return;
+    const docErr = validateRequired(cleanedCustomer.docNumber, 'La Cédula / RIF');
+    if (docErr) {
+      formError.value = docErr;
+      return;
+    }
+
+    const nameErr = validateRequired(cleanedCustomer.name, 'El Nombre o Razón Social');
+    if (nameErr) {
+      formError.value = nameErr;
+      return;
+    }
+
+    const addrErr = validateRequired(cleanedCustomer.address, 'La Dirección de entrega');
+    if (addrErr) {
+      formError.value = addrErr;
+      return;
+    }
+
+    finalCustomer = cleanedCustomer;
   }
 
   // Payment method validation
@@ -898,15 +1067,7 @@ const submitSale = () => {
 
   // Process synchronized sale & invoice
   const newInvoice = salesStore.processSale({
-    customer: {
-      type: cleanedCustomer.type,
-      docType: cleanedCustomer.docType,
-      docNumber: cleanedCustomer.docNumber,
-      name: cleanedCustomer.name,
-      address: cleanedCustomer.address,
-      phone: cleanedCustomer.phone,
-      email: cleanedCustomer.email,
-    },
+    customer: finalCustomer,
     items: cartItems.value,
     payment: {
       method: paymentForm.method,

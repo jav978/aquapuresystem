@@ -18,7 +18,22 @@ export interface Customer {
   createdAt: string;
 }
 
+export const GENERIC_CUSTOMER: Customer = {
+  id: 'cust-generic',
+  type: 'NATURAL',
+  docType: 'V',
+  docNumber: '00000000',
+  fullDoc: 'V-00000000',
+  name: 'Consumidor Final',
+  address: 'Venta Mostrador / Planta',
+  phone: '',
+  email: '',
+  totalPurchases: 0,
+  createdAt: '2026-01-01T00:00:00.000Z',
+};
+
 const DEFAULT_CUSTOMERS: Customer[] = [
+  GENERIC_CUSTOMER,
   {
     id: 'cust-1',
     type: 'JURIDICO',

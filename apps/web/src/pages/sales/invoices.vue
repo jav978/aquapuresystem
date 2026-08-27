@@ -253,9 +253,19 @@
         </div>
 
         <form @submit.prevent="emitInvoice" class="space-y-4">
-          <!-- Cédula / RIF con Autocompletado -->
+          <!-- Cédula / RIF con Autocompletado y Botón Rápido -->
           <div>
-            <label class="block text-xs font-semibold text-on-surface-variant mb-1">Cédula o RIF del Cliente *</label>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-semibold text-on-surface-variant">Cédula o RIF del Cliente *</label>
+              <button
+                type="button"
+                @click="fillGenericCustomer"
+                class="text-[11px] font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <span class="material-symbols-outlined text-xs">bolt</span>
+                <span>Usar Consumidor Final</span>
+              </button>
+            </div>
             <div class="flex gap-2">
               <select
                 v-model="emitCustomerForm.docType"
@@ -484,6 +494,7 @@ const formatMoney = (val: number): string => {
 
 const openEmitModal = () => {
   emitError.value = null;
+  emitCustomerForm.docType = 'V';
   emitCustomerForm.docNumber = '';
   emitCustomerForm.name = '';
   emitCustomerForm.address = '';
@@ -493,6 +504,16 @@ const openEmitModal = () => {
   emitForm.bankReference = '';
   emitForm.status = 'PAID';
   showEmitModal.value = true;
+};
+
+const fillGenericCustomer = () => {
+  emitCustomerForm.type = 'NATURAL';
+  emitCustomerForm.docType = 'V';
+  emitCustomerForm.docNumber = '00000000';
+  emitCustomerForm.name = 'Consumidor Final';
+  emitCustomerForm.address = 'Venta Mostrador / Planta';
+  emitCustomerForm.phone = '';
+  emitCustomerForm.email = '';
 };
 
 const onInvoiceDocInput = () => {

@@ -17,6 +17,7 @@
     "db:generate": "turbo run db:generate --filter=@aquasystem/api",
     "db:migrate": "turbo run db:migrate --filter=@aquasystem/api",
     "db:seed": "turbo run db:seed --filter=@aquasystem/api",
+    "db:clean": "turbo run db:clean --filter=@aquasystem/api",
     "db:studio": "turbo run db:studio --filter=@aquasystem/api",
     "db:mirror:push": "pnpm --filter @aquasystem/api run db:mirror:push",
     "format": "prettier --write \"**/*.{ts,tsx,vue,json,md,yml,yaml}\"",

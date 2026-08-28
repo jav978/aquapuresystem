@@ -224,6 +224,46 @@ export const useInventoryStore = defineStore('inventory', () => {
     saveToStorage();
   };
 
+  const addProduct = (prod: Omit<Product, 'id'> & { id?: string }) => {
+    const newProd: Product = {
+      ...prod,
+      id: prod.id || `prod-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    };
+    products.value.unshift(newProd);
+    saveToStorage();
+    return newProd;
+  };
+
+  const updateProduct = (idOrSku: string, patch: Partial<Product>) => {
+    const idx = products.value.findIndex(p => p.id === idOrSku || p.sku === idOrSku);
+    if (idx !== -1) {
+      products.value[idx] = { ...products.value[idx], ...patch };
+      saveToStorage();
+      return products.value[idx];
+    }
+    return undefined;
+  };
+
+  const deleteProduct = (idOrSku: string) => {
+    const initialLen = products.value.length;
+    products.value = products.value.filter(p => p.id !== idOrSku && p.sku !== idOrSku);
+    if (products.value.length !== initialLen) {
+      saveToStorage();
+      return true;
+    }
+    return false;
+  };
+
+  const clearProducts = () => {
+    products.value = [];
+    saveToStorage();
+  };
+
+  const resetToDefault = () => {
+    products.value = [...DEFAULT_PRODUCTS];
+    saveToStorage();
+  };
+
   const init = () => {
     loadFromStorage();
   };
@@ -232,6 +272,11 @@ export const useInventoryStore = defineStore('inventory', () => {
     products,
     getProductById,
     getProductsByCategory,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    clearProducts,
+    resetToDefault,
     deductStock,
     restockItems,
     loadFromStorage,

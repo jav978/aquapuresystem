@@ -360,6 +360,16 @@
             <div class="flex items-center gap-3 flex-wrap sm:flex-nowrap">
               <button
                 type="button"
+                @click="openCleanResetModal"
+                class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-error-red/10 hover:bg-error-red/20 text-error-red font-bold text-xs flex items-center justify-center gap-2 border border-error-red/30 transition-all cursor-pointer active:scale-95"
+                title="Limpiar todos los datos de prueba y dejar solo al Administrador"
+              >
+                <span class="material-symbols-outlined text-base">cleaning_services</span>
+                <span>Limpiar Datos (Producción)</span>
+              </button>
+
+              <button
+                type="button"
                 @click="openRestoreModal"
                 class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-bold text-xs flex items-center justify-center gap-2 border border-black/10 dark:border-white/10 transition-all cursor-pointer active:scale-95"
               >
@@ -717,6 +727,77 @@
       </div>
     </div>
 
+    <!-- Clean Production Reset Modal -->
+    <div v-if="showCleanResetModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="closeCleanResetModal"></div>
+      <div class="relative glass-card w-full max-w-lg p-6 z-10 animate-in border border-error-red/30">
+        <div class="flex items-center justify-between pb-4 border-b border-black/5 dark:border-white/5 mb-4">
+          <div class="flex items-center gap-2">
+            <span class="p-2 rounded-xl bg-error-red/15 text-error-red material-symbols-outlined">cleaning_services</span>
+            <div>
+              <h4 class="text-base font-bold text-on-surface">Limpieza de Datos para Producción</h4>
+              <p class="text-xs text-on-surface-variant">Reinicio a estado limpio conservando únicamente al Administrador</p>
+            </div>
+          </div>
+          <button @click="closeCleanResetModal" class="p-1 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <div v-if="cleanResetError" class="mb-4 p-3 rounded-xl bg-error/10 text-error text-xs font-semibold flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm">error</span>
+          <span>{{ cleanResetError }}</span>
+        </div>
+
+        <div class="space-y-4">
+          <div class="p-4 rounded-xl bg-error-red/10 border border-error-red/20 space-y-2 text-xs text-on-surface">
+            <p class="font-bold text-error-red flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-base">warning</span>
+              ADVERTENCIA DE REINICIO DE DATOS
+            </p>
+            <p class="text-on-surface-variant leading-relaxed">
+              Esta acción eliminará de forma irreversible todas las ventas, facturas, clientes, productos, historial de tanques y usuarios secundarios de prueba.
+            </p>
+            <p class="text-on-surface font-semibold">
+              ✅ El usuario Administrador permanecerá activo con sus credenciales para que pueda comenzar a registrar los datos reales del negocio.
+            </p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-on-surface-variant mb-1">
+              Ingrese el PIN de Supervisor para Confirmar *
+            </label>
+            <input
+              v-model="cleanResetPinInput"
+              type="password"
+              maxlength="8"
+              placeholder="PIN de autorización"
+              class="w-full bg-surface-container border border-error-red/20 rounded-xl px-4 py-2.5 text-on-surface text-sm font-mono text-center tracking-widest focus:ring-2 focus:ring-error-red outline-none shadow-sm"
+            />
+          </div>
+
+          <div class="flex justify-end gap-3 pt-4 border-t border-black/5 dark:border-white/5">
+            <button
+              type="button"
+              @click="closeCleanResetModal"
+              class="px-4 py-2.5 rounded-xl text-xs font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              @click="executeCleanReset"
+              :disabled="!cleanResetPinInput.trim()"
+              class="px-5 py-2.5 rounded-xl bg-error-red hover:bg-red-600 text-white font-bold text-xs flex items-center gap-2 shadow-md cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <span class="material-symbols-outlined text-base">delete_forever</span>
+              <span>Confirmar y Limpiar Base de Datos</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Manual PIN Assignment Modal -->
     <div v-if="showManualPinModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" @click="showManualPinModal = false"></div>
@@ -789,7 +870,8 @@ import {
 } from '~/utils/validators';
 
 definePageMeta({
-  middleware: ['auth'],
+  middleware: ['auth', 'role'],
+  roles: ['ADMIN'],
 });
 
 const themeStore = useThemeStore();
@@ -810,6 +892,11 @@ const showRestoreModal = ref(false);
 const restoreError = ref('');
 const supervisorPinInput = ref('');
 const pendingBackupPackage = ref<any>(null);
+
+// Clean Production Reset State
+const showCleanResetModal = ref(false);
+const cleanResetPinInput = ref('');
+const cleanResetError = ref('');
 
 // Supervisor Security State
 const showSupervisorPin = ref(false);
@@ -1068,6 +1155,38 @@ const executeRestore = () => {
     `Se restauraron exitosamente ${result.stats?.invoices || 0} facturas, ${result.stats?.customers || 0} clientes y niveles de tanque.`
   );
   closeRestoreModal();
+};
+
+const openCleanResetModal = () => {
+  showCleanResetModal.value = true;
+  cleanResetPinInput.value = '';
+  cleanResetError.value = '';
+};
+
+const closeCleanResetModal = () => {
+  showCleanResetModal.value = false;
+  cleanResetPinInput.value = '';
+  cleanResetError.value = '';
+};
+
+const executeCleanReset = () => {
+  cleanResetError.value = '';
+  if (!cleanResetPinInput.value.trim()) {
+    cleanResetError.value = 'Debe ingresar el PIN de Supervisor para autorizar la limpieza de datos.';
+    return;
+  }
+
+  const result = backupStore.resetToCleanProductionState(cleanResetPinInput.value.trim());
+  if (!result.success) {
+    cleanResetError.value = result.error || 'No se pudo realizar la limpieza de datos.';
+    return;
+  }
+
+  toast.success(
+    'Base de Datos Limpia para Producción',
+    'Se eliminaron todas las ventas, productos, clientes de prueba y registros. Solo el Administrador permanece activo.'
+  );
+  closeCleanResetModal();
 };
 
 const formatIsoDate = (iso?: string) => {

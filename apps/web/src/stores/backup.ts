@@ -365,6 +365,65 @@ export const useBackupStore = defineStore('backup', () => {
     }
   };
 
+  const resetToCleanProductionState = (
+    enteredSupervisorPin: string
+  ): { success: boolean; error?: string } => {
+    const salesStore = useSalesStore();
+
+    const authCheck = salesStore.verifySupervisorPin(enteredSupervisorPin);
+    if (!authCheck.success) {
+      return { success: false, error: authCheck.error || 'PIN de Supervisor incorrecto. Acción denegada.' };
+    }
+
+    try {
+      // 1. Limpiar tiendas
+      salesStore.clearSalesAndAudit();
+      const customersStore = useCustomersStore();
+      customersStore.clearCustomers();
+      const inventoryStore = useInventoryStore();
+      inventoryStore.clearProducts();
+      const tanksStore = useTanksStore();
+      tanksStore.clearTankHistoryAndReset(0);
+
+      // 2. Limpiar claves de almacenamiento local
+      safeSetItem('aquapure_sales_invoices_v3', JSON.stringify([]));
+      safeSetItem('aquapure_sales_audit_logs_v1', JSON.stringify([]));
+      safeSetItem('aquapure_customers_directory_v1', JSON.stringify(customersStore.customers));
+      safeSetItem('aquapure_products_catalog_v2', JSON.stringify([]));
+      safeSetItem('aquapure_tanks_history_v2', JSON.stringify([]));
+      safeSetItem('aquapure_master_tank_v2', JSON.stringify(tanksStore.masterTank));
+
+      return { success: true };
+    } catch (e: any) {
+      return { success: false, error: `Error al reiniciar estado: ${e?.message || 'Error desconocido'}` };
+    }
+  };
+
+  const resetToDemoState = (
+    enteredSupervisorPin: string
+  ): { success: boolean; error?: string } => {
+    const salesStore = useSalesStore();
+
+    const authCheck = salesStore.verifySupervisorPin(enteredSupervisorPin);
+    if (!authCheck.success) {
+      return { success: false, error: authCheck.error || 'PIN de Supervisor incorrecto. Acción denegada.' };
+    }
+
+    try {
+      salesStore.resetToDefault();
+      const customersStore = useCustomersStore();
+      customersStore.resetToDefault();
+      const inventoryStore = useInventoryStore();
+      inventoryStore.resetToDefault();
+      const tanksStore = useTanksStore();
+      tanksStore.resetToDefault();
+
+      return { success: true };
+    } catch (e: any) {
+      return { success: false, error: `Error al restablecer demo: ${e?.message || 'Error desconocido'}` };
+    }
+  };
+
   const formattedLastBackup = computed(() => {
     if (!lastBackupTimestamp.value) return 'Sin respaldos registrados';
     try {
@@ -389,5 +448,7 @@ export const useBackupStore = defineStore('backup', () => {
     exportBackupToFile,
     validateBackupContent,
     restoreFromBackupPackage,
+    resetToCleanProductionState,
+    resetToDemoState,
   };
 });

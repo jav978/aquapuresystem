@@ -143,6 +143,13 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken.value = null;
   });
 
+  const setUser = (newUser: User | null, token: string | null = null) => {
+    user.value = newUser;
+    if (token !== undefined) {
+      accessToken.value = token;
+    }
+  };
+
   return {
     user: computed(() => user.value),
     accessToken: computed(() => accessToken.value),
@@ -159,6 +166,7 @@ export const useAuthStore = defineStore('auth', () => {
     canManageSales,
     canViewInvoices,
     hasRole,
+    setUser,
     login,
     logout,
     initialize,

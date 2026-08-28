@@ -231,21 +231,29 @@
               <label class="block text-xs font-semibold text-on-surface-variant mb-1">Nombre *</label>
               <input
                 v-model="userForm.firstName"
+                @input="validateField('firstName')"
+                @blur="validateField('firstName')"
                 type="text"
                 required
                 placeholder="Ej: Carlos"
-                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
+                class="w-full bg-surface-container border rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm transition-colors"
+                :class="formErrors.firstName ? 'border-error-red focus:ring-error-red' : 'border-transparent'"
               />
+              <p v-if="formErrors.firstName" class="text-[11px] text-error-red mt-1 font-medium">{{ formErrors.firstName }}</p>
             </div>
             <div>
               <label class="block text-xs font-semibold text-on-surface-variant mb-1">Apellido *</label>
               <input
                 v-model="userForm.lastName"
+                @input="validateField('lastName')"
+                @blur="validateField('lastName')"
                 type="text"
                 required
                 placeholder="Ej: Pérez"
-                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
+                class="w-full bg-surface-container border rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm transition-colors"
+                :class="formErrors.lastName ? 'border-error-red focus:ring-error-red' : 'border-transparent'"
               />
+              <p v-if="formErrors.lastName" class="text-[11px] text-error-red mt-1 font-medium">{{ formErrors.lastName }}</p>
             </div>
           </div>
 
@@ -253,11 +261,15 @@
             <label class="block text-xs font-semibold text-on-surface-variant mb-1">Correo Electrónico *</label>
             <input
               v-model="userForm.email"
+              @input="validateField('email')"
+              @blur="validateField('email')"
               type="email"
               required
               placeholder="carlos.perez@aquapure.com"
-              class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
+              class="w-full bg-surface-container border rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm transition-colors"
+              :class="formErrors.email ? 'border-error-red focus:ring-error-red' : 'border-transparent'"
             />
+            <p v-if="formErrors.email" class="text-[11px] text-error-red mt-1 font-medium">{{ formErrors.email }}</p>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
@@ -292,11 +304,15 @@
             </label>
             <input
               v-model="userForm.password"
+              @input="validateField('password')"
+              @blur="validateField('password')"
               type="password"
               :required="!isEditing"
               placeholder="••••••••"
-              class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
+              class="w-full bg-surface-container border rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm transition-colors"
+              :class="formErrors.password ? 'border-error-red focus:ring-error-red' : 'border-transparent'"
             />
+            <p v-if="formErrors.password" class="text-[11px] text-error-red mt-1 font-medium">{{ formErrors.password }}</p>
           </div>
 
           <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-black/5 dark:border-white/5">
@@ -327,9 +343,16 @@ import { ref, reactive, onMounted } from 'vue';
 import { useToast } from '~/composables/useToast';
 import { useFeathers } from '~/composables/useFeathers';
 import { useAuthStore } from '~/stores/auth';
+import {
+  validateRequired,
+  validateEmail,
+  validatePassword,
+  sanitizeFormData,
+} from '~/utils/validators';
 
 definePageMeta({
-  middleware: ['auth'],
+  middleware: ['auth', 'role'],
+  roles: ['ADMIN'],
 });
 
 const toast = useToast();
@@ -473,52 +496,71 @@ const openEditModal = (user: UserItem) => {
   showUserModal.value = true;
 };
 
+const formErrors = reactive({
+  firstName: '',
+  lastName: '',
+  email: '',
+  password: '',
+});
+
+const validateField = (field: 'firstName' | 'lastName' | 'email' | 'password') => {
+  if (field === 'firstName') {
+    formErrors.firstName = validateRequired(userForm.firstName, 'El nombre') || '';
+  } else if (field === 'lastName') {
+    formErrors.lastName = validateRequired(userForm.lastName, 'El apellido') || '';
+  } else if (field === 'email') {
+    formErrors.email = validateEmail(userForm.email) || '';
+  } else if (field === 'password') {
+    if (!isEditing.value || userForm.password.length > 0) {
+      formErrors.password = validatePassword(userForm.password, 6) || '';
+    } else {
+      formErrors.password = '';
+    }
+  }
+};
+
 const saveUser = async () => {
   modalError.value = null;
 
-  if (!userForm.firstName.trim()) {
-    modalError.value = 'El nombre es obligatorio.';
-    return;
-  }
-  if (!userForm.lastName.trim()) {
-    modalError.value = 'El apellido es obligatorio.';
-    return;
-  }
-  if (!userForm.email.trim() || !userForm.email.includes('@')) {
-    modalError.value = 'Ingrese un correo electrónico válido.';
-    return;
-  }
-  if (!isEditing.value && (!userForm.password || userForm.password.length < 6)) {
-    modalError.value = 'La contraseña inicial debe tener al menos 6 caracteres.';
+  // Run all field validations
+  validateField('firstName');
+  validateField('lastName');
+  validateField('email');
+  validateField('password');
+
+  if (formErrors.firstName || formErrors.lastName || formErrors.email || formErrors.password) {
+    modalError.value = formErrors.firstName || formErrors.lastName || formErrors.email || formErrors.password;
     return;
   }
 
   isSubmitting.value = true;
   try {
+    const cleaned = sanitizeFormData(userForm);
+
     if (isEditing.value && editingUserId.value) {
       const payload: any = {
-        firstName: userForm.firstName.trim(),
-        lastName: userForm.lastName.trim(),
-        email: userForm.email.trim(),
-        role: userForm.role,
-        isActive: userForm.isActive,
+        firstName: cleaned.firstName,
+        lastName: cleaned.lastName,
+        email: cleaned.email,
+        role: cleaned.role,
+        isActive: cleaned.isActive,
       };
-      if (userForm.password && userForm.password.trim().length > 0) {
-        payload.password = userForm.password.trim();
+      if (cleaned.password && cleaned.password.length > 0) {
+        payload.password = cleaned.password;
       }
 
       await feathers.service('users').patch(editingUserId.value, payload);
-      toast.updateSuccess('Usuario', `Usuario ${userForm.firstName} ${userForm.lastName} actualizado exitosamente.`);
+      toast.updateSuccess('Usuario', `Usuario ${cleaned.firstName} ${cleaned.lastName} actualizado exitosamente.`);
     } else {
       await feathers.service('users').create({
-        firstName: userForm.firstName.trim(),
-        lastName: userForm.lastName.trim(),
-        email: userForm.email.trim(),
-        role: userForm.role,
-        isActive: userForm.isActive,
-        password: userForm.password.trim(),
+        firstName: cleaned.firstName,
+        lastName: cleaned.lastName,
+        email: cleaned.email,
+        role: cleaned.role,
+        isActive: cleaned.isActive,
+        password: cleaned.password,
       });
-      toast.createSuccess('Usuario', `Usuario ${userForm.firstName} ${userForm.lastName} registrado exitosamente.`);
+      toast.createSuccess('Usuario', `Usuario ${cleaned.firstName} ${cleaned.lastName} registrado exitosamente.`);
     }
 
     showUserModal.value = false;

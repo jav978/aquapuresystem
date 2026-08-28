@@ -1269,6 +1269,7 @@ const submitSale = () => {
     }
 
     finalCustomer = cleanedCustomer;
+    customersStore.registerOrUpdateCustomer(finalCustomer);
   }
 
   // Payment method validation

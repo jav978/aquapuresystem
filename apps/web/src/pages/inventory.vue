@@ -259,12 +259,16 @@
               <label class="block text-xs font-semibold text-on-surface-variant mb-1">Código SKU *</label>
               <input
                 v-model="productForm.sku"
+                @input="validateField('sku')"
+                @blur="validateField('sku')"
                 type="text"
                 required
                 :disabled="isEditing"
-                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none font-mono shadow-sm disabled:opacity-50"
+                class="w-full bg-surface-container border rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none font-mono shadow-sm disabled:opacity-50 transition-colors"
+                :class="fieldErrors.sku ? 'border-error-red focus:ring-error-red' : 'border-transparent'"
                 placeholder="Ej: AQ-20L-RET"
               />
+              <p v-if="fieldErrors.sku" class="text-[11px] text-error-red mt-1 font-medium">{{ fieldErrors.sku }}</p>
             </div>
             <div>
               <label class="block text-xs font-semibold text-on-surface-variant mb-1">Categoría *</label>
@@ -286,11 +290,15 @@
             <label class="block text-xs font-semibold text-on-surface-variant mb-1">Nombre del Producto *</label>
             <input
               v-model="productForm.name"
+              @input="validateField('name')"
+              @blur="validateField('name')"
               type="text"
               required
-              class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
+              class="w-full bg-surface-container border rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm transition-colors"
+              :class="fieldErrors.name ? 'border-error-red focus:ring-error-red' : 'border-transparent'"
               placeholder="Ej: Botellón Agua Purificada 20L"
             />
+            <p v-if="fieldErrors.name" class="text-[11px] text-error-red mt-1 font-medium">{{ fieldErrors.name }}</p>
           </div>
 
           <div class="grid grid-cols-2 gap-4">
@@ -298,23 +306,31 @@
               <label class="block text-xs font-semibold text-on-surface-variant mb-1">Stock Actual *</label>
               <input
                 v-model.number="productForm.currentStock"
+                @input="validateField('currentStock')"
+                @blur="validateField('currentStock')"
                 type="number"
                 min="0"
                 step="1"
                 required
-                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
+                class="w-full bg-surface-container border rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm transition-colors"
+                :class="fieldErrors.currentStock ? 'border-error-red focus:ring-error-red' : 'border-transparent'"
               />
+              <p v-if="fieldErrors.currentStock" class="text-[11px] text-error-red mt-1 font-medium">{{ fieldErrors.currentStock }}</p>
             </div>
             <div>
               <label class="block text-xs font-semibold text-on-surface-variant mb-1">Stock Mínimo (Alerta) *</label>
               <input
                 v-model.number="productForm.minStock"
+                @input="validateField('minStock')"
+                @blur="validateField('minStock')"
                 type="number"
                 min="1"
                 step="1"
                 required
-                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm"
+                class="w-full bg-surface-container border rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm transition-colors"
+                :class="fieldErrors.minStock ? 'border-error-red focus:ring-error-red' : 'border-transparent'"
               />
+              <p v-if="fieldErrors.minStock" class="text-[11px] text-error-red mt-1 font-medium">{{ fieldErrors.minStock }}</p>
             </div>
           </div>
 
@@ -323,23 +339,31 @@
               <label class="block text-xs font-semibold text-on-surface-variant mb-1">Costo Unitario ($) *</label>
               <input
                 v-model.number="productForm.cost"
+                @input="validateField('cost')"
+                @blur="validateField('cost')"
                 type="number"
                 min="0.01"
                 step="0.01"
                 required
-                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm font-mono"
+                class="w-full bg-surface-container border rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm font-mono transition-colors"
+                :class="fieldErrors.cost ? 'border-error-red focus:ring-error-red' : 'border-transparent'"
               />
+              <p v-if="fieldErrors.cost" class="text-[11px] text-error-red mt-1 font-medium">{{ fieldErrors.cost }}</p>
             </div>
             <div>
               <label class="block text-xs font-semibold text-on-surface-variant mb-1">Precio Venta ($) *</label>
               <input
                 v-model.number="productForm.price"
+                @input="validateField('price')"
+                @blur="validateField('price')"
                 type="number"
                 min="0.01"
                 step="0.01"
                 required
-                class="w-full bg-surface-container border-0 rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm font-mono"
+                class="w-full bg-surface-container border rounded-xl px-4 py-2.5 text-on-surface text-sm focus:ring-2 focus:ring-primary outline-none shadow-sm font-mono transition-colors"
+                :class="fieldErrors.price ? 'border-error-red focus:ring-error-red' : 'border-transparent'"
               />
+              <p v-if="fieldErrors.price" class="text-[11px] text-error-red mt-1 font-medium">{{ fieldErrors.price }}</p>
             </div>
           </div>
 
@@ -365,13 +389,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, reactive, onMounted } from 'vue';
 import { useToast } from '~/composables/useToast';
 import { useAuthStore } from '~/stores/auth';
+import { useInventoryStore, type Product } from '~/stores/inventory';
 import {
   validateRequired,
   validatePositiveNumber,
   validateNonNegativeNumber,
+  validateNonNegativeInteger,
+  validatePositiveInteger,
   sanitizeFormData,
 } from '~/utils/validators';
 
@@ -380,6 +407,7 @@ definePageMeta({
 });
 
 interface ProductItem {
+  id?: string;
   sku: string;
   name: string;
   category: string;
@@ -388,9 +416,12 @@ interface ProductItem {
   cost: number;
   price: number;
   status: 'ok' | 'low' | 'out';
+  waterLiters?: number;
+  icon?: string;
 }
 
 const authStore = useAuthStore();
+const inventoryStore = useInventoryStore();
 const toast = useToast();
 
 const searchQuery = ref('');
@@ -399,6 +430,15 @@ const selectedStatus = ref('');
 const showModal = ref(false);
 const isEditing = ref(false);
 const formError = ref('');
+
+const fieldErrors = reactive({
+  sku: '',
+  name: '',
+  currentStock: '',
+  minStock: '',
+  cost: '',
+  price: '',
+});
 
 const productForm = ref({
   sku: '',
@@ -410,48 +450,33 @@ const productForm = ref({
   price: 5.0,
 });
 
-const products = ref<ProductItem[]>([
-  {
-    sku: 'AQ-20L-RET',
-    name: 'Botellón Agua 20L (Retornable)',
-    category: 'Agua',
-    currentStock: 450,
-    minStock: 50,
-    cost: 2.50,
-    price: 4.50,
-    status: 'ok',
-  },
-  {
-    sku: 'AQ-15L-DES',
-    name: 'Botellón Agua 15L (Descartable)',
-    category: 'Agua',
-    currentStock: 25,
-    minStock: 30,
-    cost: 3.00,
-    price: 5.50,
-    status: 'low',
-  },
-  {
-    sku: 'CF-ESP-1KG',
-    name: 'Café Espresso Grano 1KG',
-    category: 'Café',
-    currentStock: 0,
-    minStock: 10,
-    cost: 12.00,
-    price: 22.00,
-    status: 'out',
-  },
-  {
-    sku: 'AC-DISP-FRIO',
-    name: 'Dispensador Agua Fría/Caliente',
-    category: 'Accesorios',
-    currentStock: 12,
-    minStock: 5,
-    cost: 85.00,
-    price: 150.00,
-    status: 'ok',
-  },
-]);
+onMounted(() => {
+  inventoryStore.init();
+});
+
+const products = computed<ProductItem[]>(() => {
+  return inventoryStore.products.map(p => {
+    const status: 'ok' | 'low' | 'out' =
+      p.currentStock === 0
+        ? 'out'
+        : p.currentStock <= p.minStock
+        ? 'low'
+        : 'ok';
+    return {
+      id: p.id,
+      sku: p.sku,
+      name: p.name,
+      category: p.category,
+      currentStock: p.currentStock,
+      minStock: p.minStock,
+      cost: p.cost,
+      price: p.price,
+      status,
+      waterLiters: p.waterLiters,
+      icon: p.icon,
+    };
+  });
+});
 
 const stockAlertsCount = computed(() => {
   return products.value.filter(p => p.status === 'low' || p.status === 'out').length;
@@ -477,9 +502,32 @@ const exportData = () => {
   toast.info('Exportando inventario a archivo CSV...');
 };
 
+const validateField = (field: 'sku' | 'name' | 'currentStock' | 'minStock' | 'cost' | 'price') => {
+  if (field === 'sku') {
+    fieldErrors.sku = validateRequired(productForm.value.sku, 'El código SKU') || '';
+  } else if (field === 'name') {
+    fieldErrors.name = validateRequired(productForm.value.name, 'El nombre del producto') || '';
+  } else if (field === 'currentStock') {
+    fieldErrors.currentStock = validateNonNegativeInteger(productForm.value.currentStock, 'El stock actual') || '';
+  } else if (field === 'minStock') {
+    fieldErrors.minStock = validatePositiveInteger(productForm.value.minStock, 'El stock mínimo') || '';
+  } else if (field === 'cost') {
+    fieldErrors.cost = validatePositiveNumber(productForm.value.cost, 'El costo unitario') || '';
+  } else if (field === 'price') {
+    fieldErrors.price = validatePositiveNumber(productForm.value.price, 'El precio de venta') || '';
+  }
+};
+
 const openCreateModal = () => {
   isEditing.value = false;
   formError.value = '';
+  fieldErrors.sku = '';
+  fieldErrors.name = '';
+  fieldErrors.currentStock = '';
+  fieldErrors.minStock = '';
+  fieldErrors.cost = '';
+  fieldErrors.price = '';
+
   productForm.value = {
     sku: '',
     name: '',
@@ -495,6 +543,13 @@ const openCreateModal = () => {
 const openEditModal = (item: ProductItem) => {
   isEditing.value = true;
   formError.value = '';
+  fieldErrors.sku = '';
+  fieldErrors.name = '';
+  fieldErrors.currentStock = '';
+  fieldErrors.minStock = '';
+  fieldErrors.cost = '';
+  fieldErrors.price = '';
+
   productForm.value = {
     sku: item.sku,
     name: item.name,
@@ -511,81 +566,61 @@ const saveProduct = () => {
   formError.value = '';
   const cleaned = sanitizeFormData(productForm.value);
 
-  // Strict Validations
-  const skuError = validateRequired(cleaned.sku, 'El código SKU');
-  if (skuError) {
-    formError.value = skuError;
+  // Validate all fields
+  validateField('sku');
+  validateField('name');
+  validateField('currentStock');
+  validateField('minStock');
+  validateField('cost');
+  validateField('price');
+
+  if (
+    fieldErrors.sku ||
+    fieldErrors.name ||
+    fieldErrors.currentStock ||
+    fieldErrors.minStock ||
+    fieldErrors.cost ||
+    fieldErrors.price
+  ) {
+    formError.value =
+      fieldErrors.sku ||
+      fieldErrors.name ||
+      fieldErrors.currentStock ||
+      fieldErrors.minStock ||
+      fieldErrors.cost ||
+      fieldErrors.price;
     return;
   }
-
-  const nameError = validateRequired(cleaned.name, 'El nombre del producto');
-  if (nameError) {
-    formError.value = nameError;
-    return;
-  }
-
-  const stockError = validateNonNegativeNumber(cleaned.currentStock, 'El stock actual');
-  if (stockError) {
-    formError.value = stockError;
-    return;
-  }
-
-  const minStockError = validatePositiveNumber(cleaned.minStock, 'El stock mínimo');
-  if (minStockError) {
-    formError.value = minStockError;
-    return;
-  }
-
-  const costError = validatePositiveNumber(cleaned.cost, 'El costo unitario');
-  if (costError) {
-    formError.value = costError;
-    return;
-  }
-
-  const priceError = validatePositiveNumber(cleaned.price, 'El precio de venta');
-  if (priceError) {
-    formError.value = priceError;
-    return;
-  }
-
-  const status: 'ok' | 'low' | 'out' =
-    cleaned.currentStock === 0
-      ? 'out'
-      : cleaned.currentStock <= cleaned.minStock
-      ? 'low'
-      : 'ok';
 
   if (isEditing.value) {
-    const idx = products.value.findIndex(p => p.sku === cleaned.sku);
-    if (idx !== -1) {
-      products.value[idx] = {
-        sku: cleaned.sku,
-        name: cleaned.name,
-        category: cleaned.category,
-        currentStock: cleaned.currentStock,
-        minStock: cleaned.minStock,
-        cost: cleaned.cost,
-        price: cleaned.price,
-        status,
-      };
+    const updated = inventoryStore.updateProduct(cleaned.sku, {
+      name: cleaned.name,
+      category: cleaned.category as any,
+      currentStock: Number(cleaned.currentStock),
+      minStock: Number(cleaned.minStock),
+      cost: Number(cleaned.cost),
+      price: Number(cleaned.price),
+    });
+    if (updated) {
       toast.updateSuccess('Producto', `Producto ${cleaned.name} actualizado exitosamente.`);
     }
   } else {
     // Check duplicate SKU
-    if (products.value.some(p => p.sku.toLowerCase() === cleaned.sku.toLowerCase())) {
+    if (inventoryStore.products.some(p => p.sku.toLowerCase() === cleaned.sku.toLowerCase())) {
       formError.value = `Ya existe un producto con el SKU "${cleaned.sku}".`;
       return;
     }
 
-    products.value.unshift({
+    inventoryStore.addProduct({
       sku: cleaned.sku,
       name: cleaned.name,
-      category: cleaned.category,
-      currentStock: cleaned.currentStock,
-      minStock: cleaned.minStock,
-      cost: cleaned.cost,
-      price: cleaned.price,
-      status,
+      category: cleaned.category as any,
+      currentStock: Number(cleaned.currentStock),
+      minStock: Number(cleaned.minStock),
+      cost: Number(cleaned.cost),
+      price: Number(cleaned.price),
+      waterLiters: cleaned.category === 'Agua' ? 20 : 0,
+      icon: cleaned.category === 'Agua' ? 'water_drop' : 'inventory_2',
     });
     toast.createSuccess('Producto', `Producto ${cleaned.name} registrado con SKU ${cleaned.sku}.`);
   }
@@ -594,7 +629,7 @@ const saveProduct = () => {
 };
 
 const deleteProduct = (item: ProductItem) => {
-  products.value = products.value.filter(p => p.sku !== item.sku);
+  inventoryStore.deleteProduct(item.sku);
   toast.deleteSuccess('Producto', `Producto ${item.name} (${item.sku}) eliminado.`);
 };
 </script>

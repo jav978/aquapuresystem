@@ -905,6 +905,20 @@ export const useSalesStore = defineStore('sales', () => {
     saveToStorage();
   };
 
+  const clearSalesAndAudit = () => {
+    invoices.value = [];
+    auditLogs.value = [];
+    saveToStorage();
+    saveAuditToStorage();
+  };
+
+  const resetToDefault = () => {
+    invoices.value = [...DEFAULT_INVOICES];
+    auditLogs.value = [...DEFAULT_AUDIT_LOGS];
+    saveToStorage();
+    saveAuditToStorage();
+  };
+
   const init = () => {
     loadFromStorage();
   };
@@ -935,6 +949,8 @@ export const useSalesStore = defineStore('sales', () => {
     getInvoiceAuditLogs,
     markInvoiceAsPaid,
     deleteInvoice,
+    clearSalesAndAudit,
+    resetToDefault,
     loadFromStorage,
     saveToStorage,
     init,

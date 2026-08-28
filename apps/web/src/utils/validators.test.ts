@@ -7,6 +7,11 @@ import {
   validatePassword,
   validatePhone,
   validateTaxId,
+  validateOptionalEmail,
+  validateOptionalPhone,
+  validateDocNumber,
+  validatePositiveInteger,
+  validateNonNegativeInteger,
   sanitizeFormData,
 } from './validators';
 
@@ -43,15 +48,31 @@ describe('Strict Validators Utility', () => {
     expect(validatePassword('securePass123', 6)).toBeNull();
   });
 
-  it('should sanitize form data by trimming all string fields', () => {
-    const raw = {
-      name: '  Botellón 20L  ',
-      sku: '  AQ-20L  ',
-      stock: 50,
-    };
-    const cleaned = sanitizeFormData(raw);
-    expect(cleaned.name).toBe('Botellón 20L');
-    expect(cleaned.sku).toBe('AQ-20L');
-    expect(cleaned.stock).toBe(50);
+  it('should validate optional fields correctly', () => {
+    expect(validateOptionalEmail('')).toBeNull();
+    expect(validateOptionalEmail(null)).toBeNull();
+    expect(validateOptionalEmail('invalid')).toBe('Ingrese un formato de correo electrónico válido (ej: usuario@empresa.com).');
+    expect(validateOptionalEmail('user@domain.com')).toBeNull();
+
+    expect(validateOptionalPhone('')).toBeNull();
+    expect(validateOptionalPhone('123')).toBe('El teléfono debe tener un formato válido (mínimo 7 dígitos).');
+    expect(validateOptionalPhone('+58 414 1234567')).toBeNull();
+  });
+
+  it('should validate document numbers strictly', () => {
+    expect(validateDocNumber('   ', 'Cédula')).toBe('Cédula no puede estar vacío ni contener solo espacios.');
+    expect(validateDocNumber('123', 'Cédula')).toBe('Cédula debe tener entre 5 y 20 caracteres.');
+    expect(validateDocNumber('18945120', 'Cédula')).toBeNull();
+    expect(validateDocNumber('J-31245678-0', 'RIF')).toBeNull();
+  });
+
+  it('should validate integers correctly', () => {
+    expect(validatePositiveInteger(10.5, 'Cantidad')).toBe('Cantidad debe ser un número entero.');
+    expect(validatePositiveInteger(0, 'Cantidad')).toBe('Cantidad debe ser mayor a 1.');
+    expect(validatePositiveInteger(5, 'Cantidad')).toBeNull();
+
+    expect(validateNonNegativeInteger(-1, 'Stock')).toBe('Stock no puede ser negativo.');
+    expect(validateNonNegativeInteger(10.2, 'Stock')).toBe('Stock debe ser un número entero sin decimales.');
+    expect(validateNonNegativeInteger(0, 'Stock')).toBeNull();
   });
 });

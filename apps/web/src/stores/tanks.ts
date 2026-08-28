@@ -336,6 +336,7 @@ export const useTanksStore = defineStore('tanks', () => {
     saveToStorage();
 
     return {
+      success: true,
       refilled: refillLiters,
       tankName: masterTank.value.name,
       currentLiters: masterTank.value.currentLiters,
@@ -367,8 +368,9 @@ export const useTanksStore = defineStore('tanks', () => {
     saveToStorage();
 
     return {
-      wasted: wasteLiters,
-      remaining: masterTank.value.currentLiters,
+      success: true,
+      wasteLiters,
+      currentLiters: masterTank.value.currentLiters,
       level: masterTank.value.level,
     };
   };
@@ -462,6 +464,37 @@ export const useTanksStore = defineStore('tanks', () => {
     };
   };
 
+  const clearTankHistoryAndReset = (initialLiters = 0, customPhysicalTanks?: PhysicalTank[]) => {
+    const tanksList = customPhysicalTanks && customPhysicalTanks.length > 0 ? customPhysicalTanks : [...DEFAULT_PHYSICAL_TANKS];
+    const totalCapacity = tanksList.reduce((acc, t) => acc + t.capacity, 0);
+    const validCurrent = Math.max(0, Math.min(totalCapacity, initialLiters));
+    const lvl = totalCapacity > 0 ? Math.round((validCurrent / totalCapacity) * 100) : 0;
+
+    masterTank.value = {
+      id: 'master-tank',
+      name: 'Tanque Consolidado de Planta',
+      type: 'Almacenamiento Maestro (Ósmosis + UV)',
+      capacity: totalCapacity,
+      currentLiters: validCurrent,
+      level: lvl,
+      status: calculateStatus(lvl),
+      lastRefillAt: new Date().toISOString(),
+      totalDispensedLiters: 0,
+      totalWashWasteLiters: 0,
+      tankCount: tanksList.length,
+      physicalTanks: tanksList,
+    };
+
+    movements.value = [];
+    saveToStorage();
+  };
+
+  const resetToDefault = () => {
+    masterTank.value = { ...DEFAULT_MASTER_TANK };
+    movements.value = [...DEFAULT_MOVEMENTS];
+    saveToStorage();
+  };
+
   const init = () => {
     loadFromStorage();
   };
@@ -489,6 +522,8 @@ export const useTanksStore = defineStore('tanks', () => {
     setWashWastePercentage,
     setMasterCapacity,
     setTankBattery,
+    clearTankHistoryAndReset,
+    resetToDefault,
     parseLitersFromItemText,
   };
 });

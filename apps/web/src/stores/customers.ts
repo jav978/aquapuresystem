@@ -183,6 +183,28 @@ export const useCustomersStore = defineStore('customers', () => {
     }
   };
 
+  const deleteCustomer = (idOrDoc: string) => {
+    const initialLen = customers.value.length;
+    customers.value = customers.value.filter(
+      (c) => c.id !== idOrDoc && c.fullDoc !== idOrDoc && c.docNumber !== idOrDoc
+    );
+    if (customers.value.length !== initialLen) {
+      saveToStorage();
+      return true;
+    }
+    return false;
+  };
+
+  const clearCustomers = () => {
+    customers.value = [GENERIC_CUSTOMER];
+    saveToStorage();
+  };
+
+  const resetToDefault = () => {
+    customers.value = [...DEFAULT_CUSTOMERS];
+    saveToStorage();
+  };
+
   const init = () => {
     loadFromStorage();
   };
@@ -191,6 +213,9 @@ export const useCustomersStore = defineStore('customers', () => {
     customers,
     findCustomer,
     registerOrUpdateCustomer,
+    deleteCustomer,
+    clearCustomers,
+    resetToDefault,
     loadFromStorage,
     saveToStorage,
     init,

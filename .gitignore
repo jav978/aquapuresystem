@@ -55,6 +55,9 @@ docker-compose.override.yml
 .cache
 .temp
 skills-lock.json
+__pycache__/
+*.pyc
+.~lock.*#
 # InsForge & AI agent skills
 .insforge
 .agent
